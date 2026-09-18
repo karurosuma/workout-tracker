@@ -2,9 +2,11 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>workout-tracker-web-app — 訓練紀錄</title>
   <meta name="theme-color" content="#0b0f14" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f14" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0b0f14" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -38,19 +40,85 @@
 
     * { box-sizing: border-box; }
 
+    html {
+      background-color: #0b0f14;
+      min-height: 100%;
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
+    }
+
     body {
-      background:
+      background-color: #0b0f14;
+      background-image:
         radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
-        radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%),
-        var(--bg);
+        radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
       font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+    }
+
+    .safe-area-fill {
+      position: fixed;
+      left: 0;
+      right: 0;
+      z-index: 5000;
+      pointer-events: none;
+      background: #0b0f14;
+    }
+
+    .safe-area-fill-top {
+      top: 0;
+      height: env(safe-area-inset-top, 0px);
+    }
+
+    .safe-area-fill-bottom {
+      bottom: 0;
+      height: env(safe-area-inset-bottom, 0px);
     }
 
     .navbar {
       background: transparent;
       border-bottom: 0;
+      padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .toolbar-actions,
+    .toolbar-prefs {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-actions {
+      justify-content: flex-start;
+    }
+
+    .toolbar-prefs {
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 767.98px) {
+      .toolbar-actions {
+        justify-content: flex-end;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .toolbar-actions {
+        justify-content: flex-end;
+      }
     }
 
     .card-panel {
@@ -90,7 +158,16 @@
       border-radius: 12px;
     }
 
-    .btn-accent:hover { filter: brightness(1.05); color: #06110b; }
+    .btn-danger-app {
+      background: var(--danger);
+      border: 0;
+      color: #fff;
+      font-weight: 700;
+      border-radius: 12px;
+      min-height: 44px;
+    }
+
+    .btn-danger-app:hover { filter: brightness(1.05); color: #fff; }
 
     .btn-ghost {
       background: transparent;
@@ -208,9 +285,13 @@
       z-index: 2000;
       display: grid;
       place-items: center;
-      padding: 24px;
+      padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
       background: rgba(6, 10, 14, 0.9);
       backdrop-filter: blur(12px);
+    }
+
+    .confirm-overlay {
+      z-index: 6000;
     }
 
     .welcome-overlay.hidden { display: none; }
@@ -231,7 +312,7 @@
       font-size: 0.75rem;
       color: var(--muted);
       letter-spacing: 0.02em;
-      padding: 8px 16px 28px;
+      padding: 8px 16px calc(28px + env(safe-area-inset-bottom, 0px));
     }
 
     .page-author a {
@@ -300,6 +381,8 @@
   </style>
 </head>
 <body>
+  <div class="safe-area-fill safe-area-fill-top" aria-hidden="true"></div>
+  <div class="safe-area-fill safe-area-fill-bottom" aria-hidden="true"></div>
   <div id="welcomeOverlay" class="welcome-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="welcome-card">
       <div class="d-flex justify-content-end mb-3">
@@ -320,8 +403,20 @@
   </div>
 
   <nav class="navbar py-3">
-    <div class="container d-flex align-items-center justify-content-end gap-2">
-      <div class="d-flex flex-wrap gap-2 justify-content-end">
+    <div class="container toolbar">
+      <div class="toolbar-actions">
+        <button class="btn btn-ghost btn-sm" id="loadBtn" type="button">
+          <i class="bi bi-folder2-open me-1"></i><span data-i18n="load">匯入</span>
+        </button>
+        <button class="btn btn-ghost btn-sm" id="saveBtn" type="button">
+          <i class="bi bi-download me-1"></i><span data-i18n="save">匯出</span>
+        </button>
+        <button class="btn btn-ghost btn-sm" id="clearAllBtn" type="button">
+          <i class="bi bi-trash3 me-1"></i><span data-i18n="clear">清除</span>
+        </button>
+        <input id="loadFile" type="file" accept=".json,application/json,text/plain,.csv,text/csv" hidden />
+      </div>
+      <div class="toolbar-prefs">
         <div class="lang-switch" role="group" aria-label="語言">
           <button type="button" id="langZh" class="active">繁</button>
           <button type="button" id="langEn">EN</button>
@@ -330,16 +425,6 @@
           <button type="button" id="unitKg" class="active">kg</button>
           <button type="button" id="unitLbs">lbs</button>
         </div>
-        <button class="btn btn-ghost btn-sm" id="saveBtn" type="button">
-          <i class="bi bi-download me-1"></i><span data-i18n="save">匯出</span>
-        </button>
-        <button class="btn btn-ghost btn-sm" id="loadBtn" type="button">
-          <i class="bi bi-folder2-open me-1"></i><span data-i18n="load">匯入</span>
-        </button>
-        <button class="btn btn-ghost btn-sm" id="clearAllBtn" type="button">
-          <i class="bi bi-trash3 me-1"></i><span data-i18n="clear">清除</span>
-        </button>
-        <input id="loadFile" type="file" accept=".json,application/json,text/plain,.csv,text/csv" hidden />
       </div>
     </div>
   </nav>
@@ -452,7 +537,7 @@
   </main>
 
   <footer class="page-author">
-    <a href="https://github.com/karurosuma/workout-tracker" target="_blank" rel="noopener noreferrer">@karurosuma/workout-tracker</a>
+    <a href="https://github.com/karurosuma/workout-tracker-web-app" target="_blank" rel="noopener noreferrer">@karurosuma/workout-tracker-web-app</a>
   </footer>
 
   <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
@@ -486,6 +571,17 @@
             <button type="submit" class="btn btn-accent" data-i18n="saveChanges">儲存變更</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="clearPrompt" class="welcome-overlay confirm-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="clearPromptTitle">
+    <div class="welcome-card">
+      <h2 class="h4 mb-2" id="clearPromptTitle" data-i18n="clearTitle">清除紀錄</h2>
+      <p class="text-muted-2 mb-4" data-i18n="clearConfirm">確定刪除全部紀錄？此動作無法復原。</p>
+      <div class="d-grid gap-2">
+        <button class="btn btn-danger-app" id="clearConfirmBtn" type="button" data-i18n="clearYes">確定清除</button>
+        <button class="btn btn-ghost" id="clearCancelBtn" type="button" data-i18n="cancel">取消</button>
       </div>
     </div>
   </div>
@@ -555,6 +651,9 @@
           readFail: "無法讀取該檔案。",
           openFail: "無法開啟該檔案。",
           clearConfirm: "確定刪除全部紀錄？此動作無法復原。",
+          clearTitle: "清除紀錄",
+          clearYes: "確定清除",
+          cleared: "已清除全部紀錄。",
           invalidEdit: "請輸入有效的動作、重量與次數。",
           editOnline: "請在連線時開啟此頁以編輯組數，或刪除後重新新增。",
           welcomeTitle: "第一次開啟",
@@ -624,6 +723,9 @@
           readFail: "Could not read that file.",
           openFail: "Could not open that file.",
           clearConfirm: "Delete every logged set? This cannot be undone.",
+          clearTitle: "Clear records",
+          clearYes: "Clear all",
+          cleared: "All records cleared.",
           invalidEdit: "Enter a valid exercise, weight, and reps.",
           editOnline: "Open this file while online to edit sets, or delete and re-add.",
           welcomeTitle: "First time here",
@@ -762,7 +864,7 @@
           el.textContent = t(el.getAttribute("data-i18n"));
         });
         document.getElementById("exercise").setAttribute("placeholder", t("exercisePlaceholder"));
-        document.querySelector(".lang-switch").setAttribute("aria-label", t("language"));
+        document.getElementById("langZh").parentNode.setAttribute("aria-label", t("language"));
         document.getElementById("unitKg").parentNode.setAttribute("aria-label", t("units"));
         document.getElementById("langZh").classList.toggle("active", locale === "zh-Hant");
         document.getElementById("langEn").classList.toggle("active", locale === "en");
@@ -780,16 +882,13 @@
         });
       }
 
-      function getModal() {
+      function getModal(id) {
         try {
           if (window.bootstrap && bootstrap.Modal) {
-            return bootstrap.Modal.getOrCreateInstance(document.getElementById("editModal"));
+            return bootstrap.Modal.getOrCreateInstance(document.getElementById(id || "editModal"));
           }
         } catch (err) {}
-        return {
-          show: function () { alert(t("editOnline")); },
-          hide: function () {}
-        };
+        return null;
       }
 
       function todayISO() {
@@ -1261,7 +1360,9 @@
           document.getElementById("editExercise").value = set.exercise;
           document.getElementById("editWeight").value = formatWeight(set.weight);
           document.getElementById("editReps").value = set.reps;
-          getModal().show();
+          var editModal = getModal("editModal");
+          if (editModal) editModal.show();
+          else alert(t("editOnline"));
         }
       });
 
@@ -1281,7 +1382,8 @@
           return { id: set.id, exercise: exercise, weight: weight, reps: reps, date: set.date, createdAt: set.createdAt };
         });
         saveSets(sets);
-        getModal().hide();
+        var editModal = getModal("editModal");
+        if (editModal) editModal.hide();
         render();
       });
 
@@ -1314,12 +1416,35 @@
         reader.readAsText(file);
       });
 
-      document.getElementById("clearAllBtn").addEventListener("click", function () {
-        if (!loadSets().length) return;
-        if (confirm(t("clearConfirm"))) {
-          saveSets([]);
-          render();
+      function showClearPrompt() {
+        document.getElementById("clearPrompt").classList.remove("hidden");
+        document.body.classList.add("welcome-lock");
+      }
+
+      function hideClearPrompt() {
+        document.getElementById("clearPrompt").classList.add("hidden");
+        if (document.getElementById("welcomeOverlay").classList.contains("hidden")) {
+          document.body.classList.remove("welcome-lock");
         }
+      }
+
+      function doClearAll() {
+        saveSets([]);
+        render();
+        showStatus("ok", t("cleared"));
+        hideClearPrompt();
+      }
+
+      document.getElementById("clearAllBtn").addEventListener("click", function () {
+        showClearPrompt();
+      });
+
+      document.getElementById("clearConfirmBtn").addEventListener("click", function () {
+        doClearAll();
+      });
+
+      document.getElementById("clearCancelBtn").addEventListener("click", function () {
+        hideClearPrompt();
       });
 
       document.getElementById("langZh").addEventListener("click", function () { setLocale("zh-Hant"); });
