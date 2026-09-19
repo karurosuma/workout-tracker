@@ -242,12 +242,29 @@
       border-radius: 12px;
       padding: 10px 12px;
       font-size: 0.92rem;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
     }
 
-    .form-status.show { display: block; }
+    .form-status.show { display: flex; }
     .form-status.ok { background: rgba(61, 255, 154, 0.12); color: var(--accent); }
     .form-status.err { background: rgba(255, 93, 115, 0.14); color: #ff8a9a; }
     .form-status.warn { background: rgba(255, 200, 87, 0.14); color: var(--warn); }
+
+    .form-status-close {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 0 2px;
+      min-width: 28px;
+      min-height: 28px;
+      opacity: 0.7;
+    }
+
+    .form-status-close:hover { opacity: 1; }
 
     .welcome-overlay {
       position: fixed;
@@ -446,9 +463,6 @@
         <button class="nav-link" id="tab-today-btn" data-bs-toggle="tab" data-bs-target="#tab-today" type="button" role="tab" aria-controls="tab-today" aria-selected="false" data-i18n="tabToday">今日</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-history-btn" data-bs-toggle="tab" data-bs-target="#tab-history" type="button" role="tab" aria-controls="tab-history" aria-selected="false" data-i18n="tabHistory">日誌</button>
-      </li>
-      <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-charts-btn" data-bs-toggle="tab" data-bs-target="#tab-charts" type="button" role="tab" aria-controls="tab-charts" aria-selected="false" data-i18n="tabCharts">圖表</button>
       </li>
       <li class="nav-item" role="presentation">
@@ -456,7 +470,10 @@
       </li>
     </ul>
 
-    <div id="formStatus" class="form-status mb-3" role="status"></div>
+    <div id="formStatus" class="form-status mb-3" role="status">
+      <span id="formStatusText"></span>
+      <button type="button" id="formStatusClose" class="form-status-close" aria-label="關閉">&times;</button>
+    </div>
 
     <div class="tab-content">
       <div class="tab-pane fade" id="tab-today" role="tabpanel" aria-labelledby="tab-today-btn" tabindex="0">
@@ -545,10 +562,8 @@
             <div id="exerciseChips" class="d-flex flex-wrap gap-2"></div>
           </div>
         </section>
-      </div>
 
-      <div class="tab-pane fade" id="tab-history" role="tabpanel" aria-labelledby="tab-history-btn" tabindex="0">
-        <section class="card-panel p-4">
+        <section class="card-panel p-4 mt-4">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h2 class="h5 mb-0" data-i18n="workoutLog">訓練日誌</h2>
             <select class="form-select form-select-sm w-auto" id="filterDate">
@@ -715,6 +730,7 @@
           editSet: "編輯組數",
           saveChanges: "儲存變更",
           cancel: "取消",
+          dismiss: "關閉",
           save: "匯出",
           load: "匯入",
           clear: "清除",
@@ -807,6 +823,7 @@
           editSet: "Edit set",
           saveChanges: "Save changes",
           cancel: "Cancel",
+          dismiss: "Dismiss",
           save: "Save",
           load: "Load",
           clear: "Clear",
@@ -1010,6 +1027,7 @@
         document.getElementById("todayBadge").textContent = new Date().toLocaleDateString(dateLocaleName(), {
           weekday: "short", month: "short", day: "numeric"
         });
+        document.getElementById("formStatusClose").setAttribute("aria-label", t("dismiss"));
       }
 
       function getModal(id) {
@@ -1029,7 +1047,11 @@
 
       function showStatus(type, message) {
         statusEl.className = "form-status mb-3 show " + type;
-        statusEl.textContent = message;
+        document.getElementById("formStatusText").textContent = message;
+      }
+
+      function hideStatus() {
+        statusEl.classList.remove("show");
       }
 
       var addSetFlashTimer = null;
@@ -1718,6 +1740,7 @@
       });
 
       filterDate.addEventListener("change", render);
+      document.getElementById("formStatusClose").addEventListener("click", hideStatus);
 
       document.getElementById("chartRangePreset").addEventListener("change", function () {
         applyChartPreset(document.getElementById("chartRangePreset").value, loadSets());
