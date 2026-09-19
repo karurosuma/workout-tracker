@@ -2,8 +2,23 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>workout-tracker-web-app — 訓練紀錄</title>
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f14" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0b0f14" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Workout" />
+  <meta name="application-name" content="workout-tracker-web-app" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -25,19 +40,31 @@
 
     * { box-sizing: border-box; }
 
-    body {
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
-        radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%),
-        var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+    html {
+      background-color: #0b0f14;
+      min-height: 100%;
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
     }
 
-    .navbar {
-      background: transparent;
-      border-bottom: 0;
+    body {
+      background-color: #0b0f14;
+      background-image:
+        radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
+        radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+      padding-right: env(safe-area-inset-right, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+    }
+
+    .status-spacer {
+      height: env(safe-area-inset-top, 0px);
+      background: #0b0f14;
     }
 
     .card-panel {
@@ -75,9 +102,42 @@
       color: #06110b;
       font-weight: 700;
       border-radius: 12px;
+      transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .btn-accent:hover { filter: brightness(1.05); color: #06110b; }
+    #addSetBtn .add-set-done { display: none; }
+    #addSetBtn.is-success .add-set-idle { display: none; }
+    #addSetBtn.is-success .add-set-done { display: inline-flex; align-items: center; justify-content: center; }
+    #addSetBtn.is-success {
+      filter: brightness(1.1);
+      box-shadow: 0 0 0 3px rgba(61, 255, 154, 0.35);
+      animation: addSetPulse 0.45s ease;
+    }
+    #addSetBtn.is-success .bi-check-lg {
+      display: inline-block;
+      animation: checkPop 0.45s ease;
+    }
+    @keyframes checkPop {
+      0% { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+      60% { transform: scale(1.3) rotate(0deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    @keyframes addSetPulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+
+    .btn-danger-app {
+      background: var(--danger);
+      border: 0;
+      color: #fff;
+      font-weight: 700;
+      border-radius: 12px;
+      min-height: 44px;
+    }
+
+    .btn-danger-app:hover { filter: brightness(1.05); color: #fff; }
 
     .btn-ghost {
       background: transparent;
@@ -195,12 +255,20 @@
       z-index: 2000;
       display: grid;
       place-items: center;
-      padding: 24px;
+      padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
       background: rgba(6, 10, 14, 0.9);
       backdrop-filter: blur(12px);
     }
 
-    .welcome-overlay.hidden { display: none; }
+    .confirm-overlay {
+      z-index: 6000;
+    }
+
+    .welcome-overlay.hidden {
+      display: none !important;
+      pointer-events: none !important;
+      visibility: hidden;
+    }
 
     .welcome-card {
       width: min(420px, 100%);
@@ -218,7 +286,7 @@
       font-size: 0.75rem;
       color: var(--muted);
       letter-spacing: 0.02em;
-      padding: 8px 16px 28px;
+      padding: 8px 16px calc(28px + env(safe-area-inset-bottom, 0px));
     }
 
     .page-author a {
@@ -246,8 +314,35 @@
 
     .chart-mount { min-height: 220px; }
 
+    .chart-range {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .chart-range .form-select,
+    .chart-range .form-control {
+      min-height: 44px;
+    }
+
+    @media (min-width: 576px) {
+      .chart-range {
+        grid-template-columns: minmax(140px, 1fr) 1fr 1fr;
+        align-items: end;
+      }
+    }
+
     .app-tabs {
+      display: flex;
+      flex-wrap: nowrap;
       border-bottom: 1px solid var(--line);
+      justify-content: stretch;
+      gap: 0;
+    }
+
+    .app-tabs .nav-item {
+      flex: 1 1 0;
+      min-width: 0;
     }
 
     .app-tabs .nav-link {
@@ -257,8 +352,11 @@
       border-bottom: 2px solid transparent;
       border-radius: 0;
       min-height: 44px;
-      padding: 10px 16px;
+      width: 100%;
+      padding: 10px 4px;
       font-weight: 600;
+      font-size: 0.92rem;
+      text-align: center;
     }
 
     .app-tabs .nav-link:hover { color: var(--text); }
@@ -267,6 +365,37 @@
       color: var(--accent);
       background: transparent;
       border-bottom-color: var(--accent);
+    }
+
+    .settings-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .settings-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .settings-row .btn,
+    .settings-row .lang-switch button {
+      min-height: 44px;
+    }
+
+    .settings-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+
+    @media (min-width: 576px) {
+      .settings-actions {
+        grid-template-columns: 1fr 1fr 1fr;
+        width: auto;
+      }
     }
 
     .unit-btn {
@@ -306,56 +435,15 @@
     </div>
   </div>
 
-  <nav class="navbar py-3">
-    <div class="container d-flex align-items-center justify-content-end gap-2">
-      <div class="d-flex flex-wrap gap-2 justify-content-end">
-        <div class="lang-switch" role="group" aria-label="語言">
-          <button type="button" id="langZh" class="active">繁</button>
-          <button type="button" id="langEn">EN</button>
-        </div>
-        <div class="lang-switch" role="group" aria-label="單位">
-          <button type="button" id="unitKg" class="active">kg</button>
-          <button type="button" id="unitLbs">lbs</button>
-        </div>
-        <button class="btn btn-ghost btn-sm" id="saveBtn" type="button">
-          <i class="bi bi-download me-1"></i><span data-i18n="save">匯出</span>
-        </button>
-        <button class="btn btn-ghost btn-sm" id="loadBtn" type="button">
-          <i class="bi bi-folder2-open me-1"></i><span data-i18n="load">匯入</span>
-        </button>
-        <button class="btn btn-ghost btn-sm" id="clearAllBtn" type="button">
-          <i class="bi bi-trash3 me-1"></i><span data-i18n="clear">清除</span>
-        </button>
-        <input id="loadFile" type="file" accept=".json,application/json,text/plain,.csv,text/csv" hidden />
-      </div>
-    </div>
-  </nav>
+  <div class="status-spacer" aria-hidden="true"></div>
 
   <main class="container py-4 py-md-5">
-    <div class="row g-3 mb-4">
-      <div class="col-4">
-        <div class="stat">
-          <div class="small text-muted-2" data-i18n="setsToday">今日組數</div>
-          <div class="stat-value" id="statSets">0</div>
-        </div>
-      </div>
-      <div class="col-4">
-        <div class="stat">
-          <div class="small text-muted-2" data-i18n="volume">總容量</div>
-          <div class="stat-value" id="statVolume">0</div>
-        </div>
-      </div>
-      <div class="col-4">
-        <div class="stat">
-          <div class="small text-muted-2" data-i18n="exercises">動作數</div>
-          <div class="stat-value" id="statExercises">0</div>
-        </div>
-      </div>
-    </div>
-
     <ul class="nav app-tabs mb-4" id="appTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="tab-log-btn" data-bs-toggle="tab" data-bs-target="#tab-log" type="button" role="tab" aria-controls="tab-log" aria-selected="true" data-i18n="tabLog">記錄</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-today-btn" data-bs-toggle="tab" data-bs-target="#tab-today" type="button" role="tab" aria-controls="tab-today" aria-selected="false" data-i18n="tabToday">今日</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-history-btn" data-bs-toggle="tab" data-bs-target="#tab-history" type="button" role="tab" aria-controls="tab-history" aria-selected="false" data-i18n="tabHistory">日誌</button>
@@ -363,9 +451,52 @@
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-charts-btn" data-bs-toggle="tab" data-bs-target="#tab-charts" type="button" role="tab" aria-controls="tab-charts" aria-selected="false" data-i18n="tabCharts">圖表</button>
       </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-settings-btn" data-bs-toggle="tab" data-bs-target="#tab-settings" type="button" role="tab" aria-controls="tab-settings" aria-selected="false" data-i18n="tabSettings">設定</button>
+      </li>
     </ul>
 
+    <div id="formStatus" class="form-status mb-3" role="status"></div>
+
     <div class="tab-content">
+      <div class="tab-pane fade" id="tab-today" role="tabpanel" aria-labelledby="tab-today-btn" tabindex="0">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h4 mb-0" data-i18n="todayTitle">今日訓練</h1>
+          <span class="badge badge-soft" id="todayBadge">今天</span>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-4">
+            <div class="stat">
+              <div class="small text-muted-2" data-i18n="setsToday">今日組數</div>
+              <div class="stat-value" id="statSets">0</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat">
+              <div class="small text-muted-2" data-i18n="volume">總容量</div>
+              <div class="stat-value" id="statVolume">0</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat">
+              <div class="small text-muted-2" data-i18n="exercises">動作數</div>
+              <div class="stat-value" id="statExercises">0</div>
+            </div>
+          </div>
+        </div>
+        <section class="card-panel p-4 mb-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
+            <span class="small text-muted-2" data-i18n="todayPieHint">依今日容量占比</span>
+          </div>
+          <div id="todayPieMount" class="chart-mount"></div>
+        </section>
+        <section class="card-panel p-4">
+          <h2 class="h5 mb-3" data-i18n="todayLogTitle">今日組數清單</h2>
+          <div id="todayLog"></div>
+        </section>
+      </div>
+
       <div class="tab-pane fade show active" id="tab-log" role="tabpanel" aria-labelledby="tab-log-btn" tabindex="0">
         <section class="card-panel p-4">
           <div class="d-flex justify-content-between align-items-start mb-3">
@@ -373,10 +504,7 @@
               <h1 class="h4 mb-1" data-i18n="logTitle">記錄一組</h1>
               <p class="mb-0 text-muted-2" data-i18n="logSubtitle">追蹤動作、重量與次數。</p>
             </div>
-            <span class="badge badge-soft" id="todayBadge">今天</span>
           </div>
-
-          <div id="formStatus" class="form-status mb-3" role="status"></div>
 
           <form id="setForm" class="row g-3" novalidate>
             <div class="col-12">
@@ -402,7 +530,12 @@
             </div>
             <div class="col-12 d-grid">
               <button class="btn btn-accent py-2" id="addSetBtn" type="submit">
-                <i class="bi bi-plus-lg me-1"></i><span data-i18n="addSet">新增組數</span>
+                <span class="add-set-idle">
+                  <i class="bi bi-plus-lg me-1"></i><span data-i18n="addSet">新增組數</span>
+                </span>
+                <span class="add-set-done">
+                  <i class="bi bi-check-lg me-1"></i><span data-i18n="addedSet">已新增</span>
+                </span>
               </button>
             </div>
           </form>
@@ -432,14 +565,69 @@
             <h2 class="h5 mb-0" data-i18n="chartsTitle">動作進度</h2>
             <span class="small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</span>
           </div>
+          <div class="chart-range mb-3">
+            <select class="form-select" id="chartRangePreset">
+              <option value="all" data-i18n="rangeAll">全部日期</option>
+              <option value="7" data-i18n="range7">近 7 天</option>
+              <option value="30" data-i18n="range30">近 30 天</option>
+              <option value="90" data-i18n="range90">近 90 天</option>
+              <option value="custom" data-i18n="rangeCustom">自訂範圍</option>
+            </select>
+            <div class="chart-range-dates">
+              <label class="form-label mb-1" for="chartFrom" data-i18n="rangeFrom">從</label>
+              <input class="form-control" id="chartFrom" type="date" />
+            </div>
+            <div class="chart-range-dates">
+              <label class="form-label mb-1" for="chartTo" data-i18n="rangeTo">到</label>
+              <input class="form-control" id="chartTo" type="date" />
+            </div>
+          </div>
           <div id="chartsList"></div>
+        </section>
+      </div>
+
+      <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" tabindex="0">
+        <section class="card-panel p-4">
+          <h2 class="h5 mb-3" data-i18n="settingsTitle">設定</h2>
+
+          <div class="settings-row">
+            <div class="fw-semibold" data-i18n="settingsLanguage">語言</div>
+            <div class="lang-switch" role="group" aria-label="語言">
+              <button type="button" id="langZh" class="active">繁</button>
+              <button type="button" id="langEn">EN</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="fw-semibold" data-i18n="settingsUnits">重量單位</div>
+            <div class="lang-switch" role="group" aria-label="單位">
+              <button type="button" id="unitKg" class="active">kg</button>
+              <button type="button" id="unitLbs">lbs</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="fw-semibold mb-1" data-i18n="settingsData">資料</div>
+            <div class="settings-actions">
+              <button class="btn btn-ghost" id="loadBtn" type="button">
+                <i class="bi bi-folder2-open me-1"></i><span data-i18n="load">匯入</span>
+              </button>
+              <button class="btn btn-ghost" id="saveBtn" type="button">
+                <i class="bi bi-download me-1"></i><span data-i18n="save">匯出</span>
+              </button>
+              <button class="btn btn-ghost" id="clearAllBtn" type="button">
+                <i class="bi bi-trash3 me-1"></i><span data-i18n="clear">清除</span>
+              </button>
+              <input id="loadFile" type="file" accept=".json,application/json,text/plain,.csv,text/csv" hidden />
+            </div>
+          </div>
         </section>
       </div>
     </div>
   </main>
 
   <footer class="page-author">
-    <a href="https://github.com/karurosuma/workout-tracker-web-app" target="_blank" rel="noopener noreferrer">@karurosuma/workout-tracker-web-app</a>
+    <a href="https://karurosuma.github.io/workout-tracker/" target="_blank" rel="noopener noreferrer">@karurosuma/workout-tracker</a>
   </footer>
 
   <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
@@ -477,6 +665,17 @@
     </div>
   </div>
 
+  <div id="clearPrompt" class="welcome-overlay confirm-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="clearPromptTitle">
+    <div class="welcome-card">
+      <h2 class="h4 mb-2" id="clearPromptTitle" data-i18n="clearTitle">清除紀錄</h2>
+      <p class="text-muted-2 mb-4" data-i18n="clearConfirm">確定刪除全部紀錄？此動作無法復原。</p>
+      <div class="d-grid gap-2">
+        <button class="btn btn-danger-app" id="clearConfirmBtn" type="button" data-i18n="clearYes">確定清除</button>
+        <button class="btn btn-ghost" id="clearCancelBtn" type="button" data-i18n="cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script>
@@ -503,6 +702,7 @@
           reps: "次數",
           sessionDate: "訓練日期",
           addSet: "新增組數",
+          addedSet: "已新增",
           recentExercises: "常用動作",
           noRecent: "尚無常用動作。",
           setsToday: "今日組數",
@@ -542,6 +742,9 @@
           readFail: "無法讀取該檔案。",
           openFail: "無法開啟該檔案。",
           clearConfirm: "確定刪除全部紀錄？此動作無法復原。",
+          clearTitle: "清除紀錄",
+          clearYes: "確定清除",
+          cleared: "已清除全部紀錄。",
           invalidEdit: "請輸入有效的動作、重量與次數。",
           editOnline: "請在連線時開啟此頁以編輯組數，或刪除後重新新增。",
           welcomeTitle: "第一次開啟",
@@ -553,12 +756,31 @@
           chartWeight: "最高重量",
           chartVolume: "容量",
           chartsEmpty: "記錄至少一組後即可看到各動作圖表。",
+          chartsEmptyRange: "這個日期範圍沒有紀錄。",
           chartsFail: "無法載入圖表，請確認已連上網路。",
+          rangeAll: "全部日期",
+          range7: "近 7 天",
+          range30: "近 30 天",
+          range90: "近 90 天",
+          rangeCustom: "自訂範圍",
+          rangeFrom: "從",
+          rangeTo: "到",
           tabLog: "記錄",
           tabHistory: "日誌",
           tabCharts: "圖表",
+          tabSettings: "設定",
+          tabToday: "今日",
+          todayTitle: "今日訓練",
+          todayLogTitle: "今日組數清單",
+          settingsTitle: "設定",
+          settingsLanguage: "語言",
+          settingsUnits: "重量單位",
+          settingsData: "資料",
           lbs: "磅",
-          units: "重量單位"
+          units: "重量單位",
+          todayPieTitle: "今日動作",
+          todayPieHint: "依今日容量占比",
+          todayPieEmpty: "今天還沒有紀錄。"
         },
         en: {
           brand: "workout-tracker-web-app",
@@ -572,6 +794,7 @@
           reps: "Reps",
           sessionDate: "Session date",
           addSet: "Add set",
+          addedSet: "Added",
           recentExercises: "Recent exercises",
           noRecent: "No saved exercises yet.",
           setsToday: "Sets today",
@@ -611,6 +834,9 @@
           readFail: "Could not read that file.",
           openFail: "Could not open that file.",
           clearConfirm: "Delete every logged set? This cannot be undone.",
+          clearTitle: "Clear records",
+          clearYes: "Clear all",
+          cleared: "All records cleared.",
           invalidEdit: "Enter a valid exercise, weight, and reps.",
           editOnline: "Open this file while online to edit sets, or delete and re-add.",
           welcomeTitle: "First time here",
@@ -622,12 +848,31 @@
           chartWeight: "Best weight",
           chartVolume: "Volume",
           chartsEmpty: "Log at least one set to see per-exercise charts.",
+          chartsEmptyRange: "No sets in this date range.",
           chartsFail: "Charts could not load. Check your network connection.",
+          rangeAll: "All dates",
+          range7: "Last 7 days",
+          range30: "Last 30 days",
+          range90: "Last 90 days",
+          rangeCustom: "Custom range",
+          rangeFrom: "From",
+          rangeTo: "To",
           tabLog: "Log",
           tabHistory: "History",
           tabCharts: "Charts",
+          tabSettings: "Settings",
+          tabToday: "Today",
+          todayTitle: "Today",
+          todayLogTitle: "Today's sets",
+          settingsTitle: "Settings",
+          settingsLanguage: "Language",
+          settingsUnits: "Weight unit",
+          settingsData: "Data",
           lbs: "lbs",
-          units: "Weight unit"
+          units: "Weight unit",
+          todayPieTitle: "Today's exercises",
+          todayPieHint: "Share of today's volume",
+          todayPieEmpty: "No sets logged today."
         }
       };
 
@@ -743,11 +988,13 @@
       function applyStaticI18n() {
         document.documentElement.lang = locale === "zh-Hant" ? "zh-Hant" : "en";
         document.title = t("brand") + " — " + t("tagline");
+        var appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        if (appleTitle) appleTitle.setAttribute("content", t("tagline"));
         document.querySelectorAll("[data-i18n]").forEach(function (el) {
           el.textContent = t(el.getAttribute("data-i18n"));
         });
         document.getElementById("exercise").setAttribute("placeholder", t("exercisePlaceholder"));
-        document.querySelector(".lang-switch").setAttribute("aria-label", t("language"));
+        document.getElementById("langZh").parentNode.setAttribute("aria-label", t("language"));
         document.getElementById("unitKg").parentNode.setAttribute("aria-label", t("units"));
         document.getElementById("langZh").classList.toggle("active", locale === "zh-Hant");
         document.getElementById("langEn").classList.toggle("active", locale === "en");
@@ -765,16 +1012,13 @@
         });
       }
 
-      function getModal() {
+      function getModal(id) {
         try {
           if (window.bootstrap && bootstrap.Modal) {
-            return bootstrap.Modal.getOrCreateInstance(document.getElementById("editModal"));
+            return bootstrap.Modal.getOrCreateInstance(document.getElementById(id || "editModal"));
           }
         } catch (err) {}
-        return {
-          show: function () { alert(t("editOnline")); },
-          hide: function () {}
-        };
+        return null;
       }
 
       function todayISO() {
@@ -786,6 +1030,18 @@
       function showStatus(type, message) {
         statusEl.className = "form-status mb-3 show " + type;
         statusEl.textContent = message;
+      }
+
+      var addSetFlashTimer = null;
+      function flashAddSetSuccess() {
+        var btn = document.getElementById("addSetBtn");
+        btn.classList.remove("is-success");
+        void btn.offsetWidth;
+        btn.classList.add("is-success");
+        clearTimeout(addSetFlashTimer);
+        addSetFlashTimer = setTimeout(function () {
+          btn.classList.remove("is-success");
+        }, 2500);
       }
 
       function parseNumber(value) {
@@ -900,6 +1156,35 @@
         }, null, 2);
       }
 
+      function makeBackupFile(text, filename) {
+        var bytes = new Blob([text], { type: "application/json" });
+        try {
+          return new File([bytes], filename, { type: "application/json", lastModified: Date.now() });
+        } catch (err) {
+          return bytes;
+        }
+      }
+
+      function isAppleTouch() {
+        var ua = String(navigator.userAgent || "");
+        if (/iPad|iPhone|iPod/.test(ua)) return true;
+        return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+      }
+
+      function downloadJsonFile(file, filename) {
+        var url = URL.createObjectURL(file);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      }
+
       async function exportBackup() {
         var sets = loadSets();
         if (!sets.length) {
@@ -908,29 +1193,11 @@
         }
         var text = backupPayload();
         var filename = backupFilename();
-        var blob = new Blob([text], { type: "application/octet-stream" });
-        var file = new File([blob], filename, { type: "application/octet-stream" });
+        var file = makeBackupFile(text, filename);
 
         try {
-          var url = URL.createObjectURL(blob);
-          var link = document.createElement("a");
-          link.href = url;
-          link.download = filename;
-          link.rel = "noopener";
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
-          showStatus("ok", t("exported", { count: sets.length, filename: filename }));
-          return;
-        } catch (err) {}
-
-        try {
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: filename
-            });
+          if (navigator.share && file && file.name && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] });
             showStatus("ok", t("savedShare", { count: sets.length }));
             return;
           }
@@ -938,11 +1205,40 @@
           if (err && err.name === "AbortError") return;
         }
 
+        if (!isAppleTouch()) {
+          try {
+            if (window.showSaveFilePicker) {
+              var handle = await window.showSaveFilePicker({
+                suggestedName: filename,
+                excludeAcceptAllOption: true,
+                types: [
+                  {
+                    description: "JSON",
+                    accept: { "application/json": [".json"] }
+                  }
+                ]
+              });
+              var writable = await handle.createWritable();
+              await writable.write(file);
+              await writable.close();
+              showStatus("ok", t("exported", { count: sets.length, filename: filename }));
+              return;
+            }
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+          }
+        }
+
         try {
-          await navigator.clipboard.writeText(text);
-          showStatus("ok", t("copied"));
-        } catch (clipErr) {
-          showStatus("err", t("exportFail"));
+          downloadJsonFile(file, filename);
+          showStatus("ok", t("exported", { count: sets.length, filename: filename }));
+        } catch (err) {
+          try {
+            await navigator.clipboard.writeText(text);
+            showStatus("ok", t("copied"));
+          } catch (clipErr) {
+            showStatus("err", t("exportFail"));
+          }
         }
       }
 
@@ -973,6 +1269,17 @@
         render();
       }
 
+      function setRowHtml(set) {
+        return "<div class=\"set-row d-flex justify-content-between align-items-center gap-3 mb-2\">" +
+          "<div><div class=\"fw-semibold\">" + escapeHtml(set.exercise) + "</div>" +
+          "<div class=\"small text-muted-2\">" + formatWeight(set.weight) + " " + escapeHtml(unitLabel()) + " × " + set.reps + " " + escapeHtml(t("reps")) + " · " +
+          formatVolume(Number(set.weight) * Number(set.reps)) + " " + escapeHtml(t("vol")) + "</div></div>" +
+          "<div class=\"btn-group\">" +
+            "<button class=\"btn btn-ghost btn-sm\" data-edit=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("editSet")) + "\"><i class=\"bi bi-pencil\"></i></button>" +
+            "<button class=\"btn btn-ghost btn-sm text-danger\" data-delete=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-x-lg\"></i></button>" +
+          "</div></div>";
+      }
+
       function uniqueExercises(sets) {
         var seen = [];
         for (var i = 0; i < sets.length; i++) {
@@ -997,6 +1304,62 @@
           .replace(/</g, "\u0026lt;")
           .replace(/>/g, "\u0026gt;")
           .replace(/"/g, "\u0026quot;");
+      }
+
+      function shiftISO(iso, days) {
+        var date = new Date(iso + "T00:00:00");
+        date.setDate(date.getDate() + days);
+        var offset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+      }
+
+      function setBounds(sets) {
+        var dates = sets.map(function (set) { return set.date; }).filter(Boolean).sort();
+        var min = dates[0] || todayISO();
+        var max = dates.length ? dates[dates.length - 1] : todayISO();
+        var fromEl = document.getElementById("chartFrom");
+        var toEl = document.getElementById("chartTo");
+        fromEl.min = min;
+        fromEl.max = max;
+        toEl.min = min;
+        toEl.max = max;
+        return { min: min, max: max };
+      }
+
+      function applyChartPreset(preset, sets) {
+        var bounds = setBounds(sets);
+        var fromEl = document.getElementById("chartFrom");
+        var toEl = document.getElementById("chartTo");
+        var today = todayISO();
+        if (preset === "7" || preset === "30" || preset === "90") {
+          fromEl.value = shiftISO(today, 1 - Number(preset));
+          toEl.value = today;
+          return;
+        }
+        if (preset === "custom") {
+          if (!fromEl.value) fromEl.value = bounds.min;
+          if (!toEl.value) toEl.value = bounds.max;
+          return;
+        }
+        fromEl.value = bounds.min;
+        toEl.value = bounds.max;
+      }
+
+      function chartRangeSets(sets) {
+        var from = document.getElementById("chartFrom").value;
+        var to = document.getElementById("chartTo").value;
+        if (from && to && from > to) {
+          var swap = from;
+          from = to;
+          to = swap;
+          document.getElementById("chartFrom").value = from;
+          document.getElementById("chartTo").value = to;
+        }
+        return sets.filter(function (set) {
+          if (from && set.date < from) return false;
+          if (to && set.date > to) return false;
+          return true;
+        });
       }
 
       function exerciseProgress(sets) {
@@ -1077,12 +1440,92 @@
         };
       }
 
+      function todayPieSeries(sets) {
+        var today = todayISO();
+        var byName = {};
+        sets.forEach(function (set) {
+          if (set.date !== today) return;
+          var name = String(set.exercise || "").trim();
+          if (!name) return;
+          var key = name.toLowerCase();
+          if (!byName[key]) byName[key] = { name: name, volume: 0, sets: 0 };
+          byName[key].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          byName[key].sets += 1;
+        });
+        return Object.keys(byName).sort(function (a, b) {
+          return byName[b].volume - byName[a].volume;
+        }).map(function (key) {
+          return byName[key];
+        });
+      }
+
+      function pieOptions(rows) {
+        return {
+          chart: {
+            type: "pie",
+            height: 280,
+            background: "transparent",
+            toolbar: { show: false },
+            fontFamily: "Noto Sans TC, PingFang TC, Microsoft JhengHei, Segoe UI, sans-serif",
+            animations: { enabled: true, speed: 400 }
+          },
+          theme: { mode: "dark" },
+          colors: ["#3dff9a", "#2bd4ff", "#ffc857", "#ff5d73", "#c084fc", "#fb923c", "#67e8f9", "#f472b6"],
+          labels: rows.map(function (row) { return row.name; }),
+          series: rows.map(function (row) { return round1(fromKg(row.volume)); }),
+          legend: {
+            position: "bottom",
+            labels: { colors: "#8b9bb0" }
+          },
+          stroke: { width: 0 },
+          dataLabels: {
+            enabled: true,
+            style: { fontSize: "12px", fontWeight: 700 }
+          },
+          tooltip: {
+            theme: "dark",
+            y: {
+              formatter: function (value, opts) {
+                var row = rows[opts.seriesIndex];
+                return formatVolume(row.volume) + " " + t("vol") + " · " + row.sets + " " + t("sets");
+              }
+            }
+          }
+        };
+      }
+
+      function renderTodayPie(sets) {
+        var mount = document.getElementById("todayPieMount");
+        if (!mount) return;
+        var rows = todayPieSeries(sets);
+        if (!rows.length) {
+          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
+          return;
+        }
+        if (typeof ApexCharts === "undefined") {
+          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
+          return;
+        }
+        mount.innerHTML = "";
+        var chart = new ApexCharts(mount, pieOptions(rows));
+        chart.render();
+        chartInstances.push(chart);
+      }
+
       function renderCharts(sets) {
         var list = document.getElementById("chartsList");
         destroyCharts();
-        var progress = exerciseProgress(sets);
+        renderTodayPie(sets);
+        var preset = document.getElementById("chartRangePreset").value || "all";
+        if (!document.getElementById("chartFrom").value || !document.getElementById("chartTo").value) {
+          applyChartPreset(preset, sets);
+        } else {
+          setBounds(sets);
+        }
+        var ranged = chartRangeSets(sets);
+        var progress = exerciseProgress(ranged);
         if (!progress.length) {
-          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsEmpty")) + "</div>";
+          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div>";
           return;
         }
         if (typeof ApexCharts === "undefined") {
@@ -1114,6 +1557,13 @@
         document.getElementById("statSets").textContent = String(todaySets.length);
         document.getElementById("statVolume").textContent = formatVolume(volume);
         document.getElementById("statExercises").textContent = String(Object.keys(exercisesToday).length);
+
+        var todayLog = document.getElementById("todayLog");
+        if (todayLog) {
+          todayLog.innerHTML = todaySets.length
+            ? todaySets.map(setRowHtml).join("")
+            : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
+        }
 
         var names = uniqueExercises(sets);
         exerciseList.innerHTML = names.map(function (name) {
@@ -1147,16 +1597,7 @@
         });
 
         logList.innerHTML = Object.keys(grouped).map(function (date) {
-          var rows = grouped[date].map(function (set) {
-            return "<div class=\"set-row d-flex justify-content-between align-items-center gap-3 mb-2\">" +
-              "<div><div class=\"fw-semibold\">" + escapeHtml(set.exercise) + "</div>" +
-              "<div class=\"small text-muted-2\">" + formatWeight(set.weight) + " " + escapeHtml(unitLabel()) + " × " + set.reps + " " + escapeHtml(t("reps")) + " · " +
-              formatVolume(Number(set.weight) * Number(set.reps)) + " " + escapeHtml(t("vol")) + "</div></div>" +
-              "<div class=\"btn-group\">" +
-                "<button class=\"btn btn-ghost btn-sm\" data-edit=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("editSet")) + "\"><i class=\"bi bi-pencil\"></i></button>" +
-                "<button class=\"btn btn-ghost btn-sm text-danger\" data-delete=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-x-lg\"></i></button>" +
-              "</div></div>";
-          }).join("");
+          var rows = grouped[date].map(setRowHtml).join("");
 
           var sessionVolume = grouped[date].reduce(function (sum, set) {
             return sum + Number(set.weight) * Number(set.reps);
@@ -1207,12 +1648,12 @@
           createdAt: Date.now()
         });
         var persisted = saveSets(sets);
-        document.getElementById("weight").value = "";
         document.getElementById("reps").value = "";
         document.getElementById("sessionDate").value = date;
         if (persisted) {
           showStatus("ok", t("logged", { exercise: exercise, weight: round1(enteredWeight), reps: reps, unit: unitLabel() }));
         }
+        flashAddSetSuccess();
         render();
         document.getElementById("reps").focus();
       });
@@ -1224,7 +1665,7 @@
         document.getElementById("weight").focus();
       });
 
-      logList.addEventListener("click", function (event) {
+      function handleLogClick(event) {
         var deleteBtn = event.target.closest("[data-delete]");
         var editBtn = event.target.closest("[data-edit]");
         var sets = loadSets();
@@ -1246,9 +1687,14 @@
           document.getElementById("editExercise").value = set.exercise;
           document.getElementById("editWeight").value = formatWeight(set.weight);
           document.getElementById("editReps").value = set.reps;
-          getModal().show();
+          var editModal = getModal("editModal");
+          if (editModal) editModal.show();
+          else alert(t("editOnline"));
         }
-      });
+      }
+
+      logList.addEventListener("click", handleLogClick);
+      document.getElementById("todayLog").addEventListener("click", handleLogClick);
 
       editForm.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -1266,11 +1712,25 @@
           return { id: set.id, exercise: exercise, weight: weight, reps: reps, date: set.date, createdAt: set.createdAt };
         });
         saveSets(sets);
-        getModal().hide();
+        var editModal = getModal("editModal");
+        if (editModal) editModal.hide();
         render();
       });
 
       filterDate.addEventListener("change", render);
+
+      document.getElementById("chartRangePreset").addEventListener("change", function () {
+        applyChartPreset(document.getElementById("chartRangePreset").value, loadSets());
+        renderCharts(loadSets());
+      });
+      document.getElementById("chartFrom").addEventListener("change", function () {
+        document.getElementById("chartRangePreset").value = "custom";
+        renderCharts(loadSets());
+      });
+      document.getElementById("chartTo").addEventListener("change", function () {
+        document.getElementById("chartRangePreset").value = "custom";
+        renderCharts(loadSets());
+      });
 
       document.getElementById("saveBtn").addEventListener("click", function () {
         exportBackup();
@@ -1299,12 +1759,35 @@
         reader.readAsText(file);
       });
 
-      document.getElementById("clearAllBtn").addEventListener("click", function () {
-        if (!loadSets().length) return;
-        if (confirm(t("clearConfirm"))) {
-          saveSets([]);
-          render();
+      function showClearPrompt() {
+        document.getElementById("clearPrompt").classList.remove("hidden");
+        document.body.classList.add("welcome-lock");
+      }
+
+      function hideClearPrompt() {
+        document.getElementById("clearPrompt").classList.add("hidden");
+        if (document.getElementById("welcomeOverlay").classList.contains("hidden")) {
+          document.body.classList.remove("welcome-lock");
         }
+      }
+
+      function doClearAll() {
+        saveSets([]);
+        render();
+        showStatus("ok", t("cleared"));
+        hideClearPrompt();
+      }
+
+      document.getElementById("clearAllBtn").addEventListener("click", function () {
+        showClearPrompt();
+      });
+
+      document.getElementById("clearConfirmBtn").addEventListener("click", function () {
+        doClearAll();
+      });
+
+      document.getElementById("clearCancelBtn").addEventListener("click", function () {
+        hideClearPrompt();
       });
 
       document.getElementById("langZh").addEventListener("click", function () { setLocale("zh-Hant"); });
@@ -1318,6 +1801,10 @@
 
       document.getElementById("tab-charts-btn").addEventListener("shown.bs.tab", function () {
         renderCharts(loadSets());
+      });
+      document.getElementById("tab-today-btn").addEventListener("shown.bs.tab", function () {
+        destroyCharts();
+        renderTodayPie(loadSets());
       });
       document.getElementById("appTabs").addEventListener("click", function (event) {
         var btn = event.target.closest("[data-bs-target]");
@@ -1334,6 +1821,10 @@
           pane.classList.toggle("active", on);
         });
         if (target.id === "tab-charts") renderCharts(loadSets());
+        if (target.id === "tab-today") {
+          destroyCharts();
+          renderTodayPie(loadSets());
+        }
       });
 
       function hasMadeFirstChoice() {
@@ -1369,6 +1860,10 @@
       unit = detectUnit();
       setLocale(detectLocale());
       if (!hasMadeFirstChoice()) showWelcome();
+
+      if (window.location.protocol !== "file:" && "serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(function () {});
+      }
     })();
   </script>
 </body>
