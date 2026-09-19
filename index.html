@@ -1569,7 +1569,7 @@
         exerciseList.innerHTML = names.map(function (name) {
           return "<option value=\"" + escapeHtml(name) + "\"></option>";
         }).join("");
-        exerciseChips.innerHTML = names.slice(0, 8).map(function (name) {
+        exerciseChips.innerHTML = names.slice(0, 20).map(function (name) {
           return "<button type=\"button\" class=\"chip\" data-exercise=\"" + escapeHtml(name) + "\">" + escapeHtml(name) + "</button>";
         }).join("") || "<span class=\"text-muted-2 small\">" + escapeHtml(t("noRecent")) + "</span>";
 
