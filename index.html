@@ -88,27 +88,6 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    .app-top-bar {
-      flex: 0 0 auto;
-      height: 48px;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      background: var(--bg);
-      border-bottom: 1px solid var(--line);
-      z-index: 1030;
-    }
-
-    .app-brand {
-      margin: 0;
-      font-weight: 800;
-      font-size: 0.95rem;
-      letter-spacing: -0.03em;
-      color: var(--text);
-    }
-
     .app-nav-bar {
       position: relative !important;
       left: auto;
@@ -116,6 +95,8 @@
       bottom: auto !important;
       top: auto !important;
       flex: 0 0 auto;
+      flex-shrink: 0;
+      margin-top: auto;
       width: 100%;
       background: var(--bg);
       border-top: 1px solid var(--line);
@@ -585,10 +566,6 @@
   </div>
 
   <div class="status-spacer" aria-hidden="true"></div>
-
-  <header class="app-top-bar">
-    <p class="app-brand">workout-tracker</p>
-  </header>
 
   <div class="app-scroll">
   <main class="container py-4 py-md-5">
