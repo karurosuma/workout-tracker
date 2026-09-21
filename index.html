@@ -715,8 +715,8 @@
           <h2 class="h5 mb-0" data-i18n="chartsTitle">動作進度</h2>
           <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
         </div>
-        <section class="card-panel p-4">
-          <div class="chart-range mb-3">
+        <section class="card-panel p-4 mb-4">
+          <div class="chart-range">
             <select class="form-select" id="chartRangePreset">
               <option value="7" selected data-i18n="range7">近 7 天</option>
               <option value="30" data-i18n="range30">近 30 天</option>
@@ -733,13 +733,15 @@
               <input class="form-control" id="chartTo" type="date" />
             </div>
           </div>
-          <div class="section-head mb-2">
-            <h3 class="h6 mb-0" data-i18n="rangePieTitle">容量占比</h3>
-            <span class="small text-muted-2" data-i18n="rangePieHint">依所選日期範圍</span>
-          </div>
-          <div id="rangePieMount" class="chart-mount mb-4"></div>
-          <div id="chartsList"></div>
         </section>
+        <div class="section-head mb-2">
+          <h3 class="h6 mb-0" data-i18n="rangePieTitle">容量占比</h3>
+          <span class="small text-muted-2" data-i18n="rangePieHint">依所選日期範圍</span>
+        </div>
+        <section class="card-panel p-4 mb-4">
+          <div id="rangePieMount" class="chart-mount"></div>
+        </section>
+        <div id="chartsList"></div>
       </div>
 
       <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" tabindex="0">
@@ -1817,15 +1819,16 @@
         renderRangePie(ranged);
         var progress = exerciseProgress(ranged);
         if (!progress.length) {
-          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div>";
+          list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div></section>";
           return;
         }
         if (typeof ApexCharts === "undefined") {
-          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
+          list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div></section>";
           return;
         }
         list.innerHTML = progress.map(function (item, index) {
-          return "<div class=\"chart-card\"><h3>" + escapeHtml(item.name) + "</h3><div class=\"chart-mount\" id=\"chart-" + index + "\"></div></div>";
+          return "<div class=\"mb-4\"><div class=\"section-head mb-2\"><h3 class=\"h6 mb-0\">" + escapeHtml(item.name) + "</h3></div>" +
+            "<section class=\"card-panel p-4\"><div class=\"chart-mount\" id=\"chart-" + index + "\"></div></section></div>";
         }).join("");
         progress.forEach(function (item, index) {
           var chart = new ApexCharts(document.getElementById("chart-" + index), chartOptions(item));
