@@ -110,6 +110,22 @@
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
     }
 
+    .section-head {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .section-head-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 12px;
+      width: 100%;
+    }
+
     .form-control, .form-select {
       background: #0e151c;
       border: 1px solid var(--line);
@@ -535,28 +551,27 @@
             </div>
           </div>
         </div>
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
+          <span class="small text-muted-2" data-i18n="todayPieHint">依今日容量占比</span>
+        </div>
         <section class="card-panel p-4 mb-4">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
-            <span class="small text-muted-2" data-i18n="todayPieHint">依今日容量占比</span>
-          </div>
           <div id="todayPieMount" class="chart-mount"></div>
         </section>
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="todayLogTitle">今日組數清單</h2>
+        </div>
         <section class="card-panel p-4">
-          <h2 class="h5 mb-3" data-i18n="todayLogTitle">今日組數清單</h2>
           <div id="todayLog"></div>
         </section>
       </div>
 
       <div class="tab-pane fade show active" id="tab-log" role="tabpanel" aria-labelledby="tab-log-btn" tabindex="0">
+        <div class="section-head mb-2">
+          <h1 class="h4 mb-1" data-i18n="logTitle">記錄一組</h1>
+          <p class="mb-0 text-muted-2" data-i18n="logSubtitle">追蹤動作、重量與次數。</p>
+        </div>
         <section class="card-panel p-4">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h1 class="h4 mb-1" data-i18n="logTitle">記錄一組</h1>
-              <p class="mb-0 text-muted-2" data-i18n="logSubtitle">追蹤動作、重量與次數。</p>
-            </div>
-          </div>
-
           <form id="setForm" class="row g-3" novalidate>
             <div class="col-12">
               <label class="form-label" for="exercise" data-i18n="exercise">動作</label>
@@ -597,24 +612,26 @@
           </div>
         </section>
 
-        <section class="card-panel p-4 mt-4">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div class="section-head mb-2 mt-4">
+          <div class="section-head-top">
             <h2 class="h5 mb-0" data-i18n="workoutLog">訓練日誌</h2>
             <select class="form-select form-select-sm w-auto" id="filterDate">
               <option value="today" selected data-i18n="today">今天</option>
               <option value="all" data-i18n="allSessions">全部訓練</option>
             </select>
           </div>
+        </div>
+        <section class="card-panel p-4">
           <div id="logList"></div>
         </section>
       </div>
 
       <div class="tab-pane fade" id="tab-charts" role="tabpanel" aria-labelledby="tab-charts-btn" tabindex="0">
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="chartsTitle">動作進度</h2>
+          <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
+        </div>
         <section class="card-panel p-4">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <h2 class="h5 mb-0" data-i18n="chartsTitle">動作進度</h2>
-            <span class="small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</span>
-          </div>
           <div class="chart-range mb-3">
             <select class="form-select" id="chartRangePreset">
               <option value="all" data-i18n="rangeAll">全部日期</option>
@@ -637,9 +654,10 @@
       </div>
 
       <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" tabindex="0">
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="settingsTitle">設定</h2>
+        </div>
         <section class="card-panel p-4">
-          <h2 class="h5 mb-3" data-i18n="settingsTitle">設定</h2>
-
           <div class="settings-row">
             <div class="fw-semibold" data-i18n="settingsLanguage">語言</div>
             <div class="lang-switch" role="group" aria-label="語言">
