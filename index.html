@@ -47,7 +47,7 @@
         radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
         radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%);
       background-attachment: fixed;
-      height: var(--app-h, 100svh);
+      height: 100svh;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -56,8 +56,8 @@
     body {
       background-color: transparent;
       color: var(--text);
-      height: var(--app-h, 100svh);
-      max-height: var(--app-h, 100svh);
+      height: 100svh;
+      max-height: 100svh;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -110,7 +110,8 @@
     }
 
     body.keyboard-open .app-nav-bar {
-      display: none !important;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .card-panel {
@@ -275,6 +276,15 @@
 
     .summary-row + .summary-row { margin-top: 8px; }
 
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .summary-main { min-width: 0; }
+
     .delta-pill {
       font-weight: 800;
       font-size: 0.95rem;
@@ -293,8 +303,9 @@
 
     .summary-deltas {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
       flex-shrink: 0;
     }
 
@@ -1830,13 +1841,16 @@
                 var setLabel = setDiff == null ? "" : ((setDiff > 0 ? "+" : "") + setDiff);
                 var pctLabel = formatDelta(row.changePct);
                 var lastLabel = row.prevVolume != null ? formatVolume(row.prevVolume) : "";
-                return "<div class=\"set-row summary-row d-flex justify-content-between align-items-center gap-2\">" +
+                return "<div class=\"set-row summary-row\">" +
+                  "<div class=\"summary-main\">" +
                   "<div class=\"fw-semibold\">" + escapeHtml(row.name) + "</div>" +
+                  "<div class=\"small text-muted-2\">" + row.sets + " " + escapeHtml(t("sets")) + "</div>" +
+                  "</div>" +
                   "<div class=\"summary-deltas\">" +
                   "<button type=\"button\" class=\"delta-pill " + volClass + "\" data-vol-toggle" +
                   (row.prevVolume != null ? " data-showing=\"pct\" data-pct=\"" + escapeHtml(pctLabel) + "\" data-last=\"" + escapeHtml(lastLabel) + "\"" : "") +
                   ">" + escapeHtml(pctLabel) + "</button>" +
-                  (setLabel ? "<span class=\"delta-pill " + setClass + "\">" + escapeHtml(setLabel) + "</span>" : "") +
+                  (setLabel ? "<span class=\"delta-pill " + setClass + "\">" + escapeHtml(setLabel) + "</span>" : "<span class=\"delta-pill delta-flat\">—</span>") +
                   "</div></div>";
               }).join("")
             : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
@@ -2211,74 +2225,6 @@
       setLocale(detectLocale());
       if (!hasMadeFirstChoice()) showWelcome();
 
-      function isTextField(el) {
-        if (!el || el === document.body || el === document.documentElement) return false;
-        var tag = (el.tagName || "").toLowerCase();
-        if (tag === "textarea") return true;
-        if (tag === "select") return true;
-        if (tag === "input") {
-          var type = String(el.type || "text").toLowerCase();
-          return type !== "button" && type !== "submit" && type !== "reset" && type !== "checkbox" && type !== "radio" && type !== "file" && type !== "hidden";
-        }
-        return !!el.isContentEditable;
-      }
-
-      function measureAppH() {
-        var vv = window.visualViewport;
-        return Math.round((vv && !isTextField(document.activeElement) ? vv.height : window.innerHeight) || window.innerHeight);
-      }
-
-      var lockedAppH = measureAppH();
-      function applyAppH(px) {
-        document.documentElement.style.setProperty("--app-h", px + "px");
-      }
-      applyAppH(lockedAppH);
-
-      function isKeyboardOpen() {
-        if (isTextField(document.activeElement)) return true;
-        var vv = window.visualViewport;
-        if (!vv) return false;
-        return (lockedAppH - vv.height - (vv.offsetTop || 0)) > 80;
-      }
-
-      function lockPageScroll() {
-        window.scrollTo(0, 0);
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      }
-
-      function setKeyboardOpen(open) {
-        document.body.classList.toggle("keyboard-open", open);
-        if (open) {
-          applyAppH(lockedAppH);
-        } else {
-          lockedAppH = measureAppH();
-          applyAppH(lockedAppH);
-        }
-        lockPageScroll();
-      }
-
-      document.addEventListener("focusin", function () {
-        if (isTextField(document.activeElement)) setKeyboardOpen(true);
-      });
-      document.addEventListener("focusout", function () {
-        setTimeout(function () {
-          setKeyboardOpen(isTextField(document.activeElement));
-        }, 80);
-      });
-      window.addEventListener("resize", function () {
-        if (!isTextField(document.activeElement)) {
-          lockedAppH = measureAppH();
-          applyAppH(lockedAppH);
-          setKeyboardOpen(false);
-        } else {
-          lockPageScroll();
-        }
-      });
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", lockPageScroll);
-        window.visualViewport.addEventListener("scroll", lockPageScroll);
-      }
       document.addEventListener("gesturestart", function (event) {
         event.preventDefault();
       });
