@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
   <title>workout-tracker-web-app — 訓練紀錄</title>
   <meta name="theme-color" content="#0b0f14" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f14" />
@@ -39,7 +39,9 @@
       --nav-h: 72px;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; touch-action: manipulation; }
+
+    .form-control, .form-select { font-size: 16px; }
 
     html {
       background-color: var(--bg);
@@ -130,6 +132,7 @@
       border: 1px solid var(--line);
       color: var(--text);
       border-radius: 12px;
+      font-size: 16px;
     }
 
     .form-control:focus, .form-select:focus {
@@ -380,6 +383,36 @@
       margin: 0 0 4px;
     }
 
+    .delta-pill {
+      border: 0;
+      background: transparent;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.2;
+      padding: 0;
+      min-height: 0;
+    }
+    .delta-up { color: var(--accent); }
+    .delta-down { color: var(--danger); }
+    .delta-flat { color: var(--muted); }
+    button.delta-pill[data-toggle-val] { cursor: pointer; }
+
+    .summary-row + .summary-row { margin-top: 8px; }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .summary-main { min-width: 0; }
+    .summary-deltas {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
     .chart-mount { min-height: 220px; }
 
     .chart-range {
@@ -526,14 +559,30 @@
 
     <div class="tab-content">
       <div class="tab-pane fade" id="tab-today" role="tabpanel" aria-labelledby="tab-today-btn" tabindex="0">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h1 class="h4 mb-0" data-i18n="todayTitle">今日訓練</h1>
-          <span class="badge badge-soft" id="todayBadge">今天</span>
+        <div class="section-head mb-3">
+          <div class="section-head-top">
+            <h1 class="h4 mb-0" data-i18n="todayTitle">今日訓練</h1>
+            <input class="form-control form-control-sm w-auto" id="todayDate" type="date" />
+          </div>
         </div>
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
+          <span class="small text-muted-2" data-i18n="todayPieHint">依容量占比</span>
+        </div>
+        <section class="card-panel p-4 mb-4">
+          <div id="todayPieMount" class="chart-mount"></div>
+        </section>
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="todaySummaryTitle">動作摘要</h2>
+          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較組數與容量</span>
+        </div>
+        <section class="card-panel p-4 mb-4">
+          <div id="todaySummary"></div>
+        </section>
         <div class="row g-3 mb-4">
           <div class="col-4">
             <div class="stat">
-              <div class="small text-muted-2" data-i18n="setsToday">今日組數</div>
+              <div class="small text-muted-2" data-i18n="setsToday">組數</div>
               <div class="stat-value" id="statSets">0</div>
             </div>
           </div>
@@ -551,14 +600,7 @@
           </div>
         </div>
         <div class="section-head mb-2">
-          <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
-          <span class="small text-muted-2" data-i18n="todayPieHint">依今日容量占比</span>
-        </div>
-        <section class="card-panel p-4 mb-4">
-          <div id="todayPieMount" class="chart-mount"></div>
-        </section>
-        <div class="section-head mb-2">
-          <h2 class="h5 mb-0" data-i18n="todayLogTitle">今日組數清單</h2>
+          <h2 class="h5 mb-0" data-i18n="todayLogTitle">組數清單</h2>
         </div>
         <section class="card-panel p-4">
           <div id="todayLog"></div>
@@ -593,7 +635,7 @@
               <label class="form-label" for="sessionDate" data-i18n="sessionDate">訓練日期</label>
               <input class="form-control" id="sessionDate" name="sessionDate" type="date" required />
             </div>
-            <div class="col-12 d-grid">
+            <div class="col-12 d-grid gap-2">
               <button class="btn btn-accent py-2" id="addSetBtn" type="submit">
                 <span class="add-set-idle">
                   <i class="bi bi-plus-lg me-1"></i><span data-i18n="addSet">新增組數</span>
@@ -601,6 +643,9 @@
                 <span class="add-set-done">
                   <i class="bi bi-check-lg me-1"></i><span data-i18n="addedSet">已新增</span>
                 </span>
+              </button>
+              <button class="btn btn-ghost py-2" id="lastSetBtn" type="button">
+                <i class="bi bi-arrow-repeat me-1"></i><span data-i18n="lastSet">再加上一組</span>
               </button>
             </div>
           </form>
@@ -630,13 +675,13 @@
           <h2 class="h5 mb-0" data-i18n="chartsTitle">動作進度</h2>
           <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
         </div>
-        <section class="card-panel p-4">
-          <div class="chart-range mb-3">
+        <section class="card-panel p-4 mb-4">
+          <div class="chart-range">
             <select class="form-select" id="chartRangePreset">
-              <option value="all" data-i18n="rangeAll">全部日期</option>
-              <option value="7" data-i18n="range7">近 7 天</option>
+              <option value="7" selected data-i18n="range7">近 7 天</option>
               <option value="30" data-i18n="range30">近 30 天</option>
               <option value="90" data-i18n="range90">近 90 天</option>
+              <option value="all" data-i18n="rangeAll">全部日期</option>
               <option value="custom" data-i18n="rangeCustom">自訂範圍</option>
             </select>
             <div class="chart-range-dates">
@@ -648,8 +693,15 @@
               <input class="form-control" id="chartTo" type="date" />
             </div>
           </div>
-          <div id="chartsList"></div>
         </section>
+        <div class="section-head mb-2">
+          <h3 class="h6 mb-0" data-i18n="rangePieTitle">容量占比</h3>
+          <span class="small text-muted-2" data-i18n="rangePieHint">依所選日期範圍</span>
+        </div>
+        <section class="card-panel p-4 mb-4">
+          <div id="rangePieMount" class="chart-mount"></div>
+        </section>
+        <div id="chartsList"></div>
       </div>
 
       <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" tabindex="0">
@@ -802,6 +854,8 @@
           sessionDate: "訓練日期",
           addSet: "新增組數",
           addedSet: "已新增",
+          lastSet: "再加上一組",
+          lastSetMissing: "還沒有可重複的組數。",
           recentExercises: "常用動作",
           noRecent: "尚無常用動作。",
           setsToday: "今日組數",
@@ -879,8 +933,12 @@
           lbs: "磅",
           units: "重量單位",
           todayPieTitle: "今日動作",
-          todayPieHint: "依今日容量占比",
-          todayPieEmpty: "今天還沒有紀錄。"
+          todayPieHint: "依容量占比",
+          todayPieEmpty: "這天還沒有紀錄。",
+          todaySummaryTitle: "動作摘要",
+          todaySummaryHint: "與上次同動作比較組數與容量",
+          rangePieTitle: "容量占比",
+          rangePieHint: "依所選日期範圍"
         },
         en: {
           brand: "workout-tracker-web-app",
@@ -895,6 +953,8 @@
           sessionDate: "Session date",
           addSet: "Add set",
           addedSet: "Added",
+          lastSet: "Repeat last set",
+          lastSetMissing: "No set to repeat yet.",
           recentExercises: "Recent exercises",
           noRecent: "No saved exercises yet.",
           setsToday: "Sets today",
@@ -972,8 +1032,12 @@
           lbs: "lbs",
           units: "Weight unit",
           todayPieTitle: "Today's exercises",
-          todayPieHint: "Share of today's volume",
-          todayPieEmpty: "No sets logged today."
+          todayPieHint: "Share of volume",
+          todayPieEmpty: "No sets logged on this day.",
+          todaySummaryTitle: "Exercise summary",
+          todaySummaryHint: "Sets and volume vs last session of the same exercise",
+          rangePieTitle: "Share of volume",
+          rangePieHint: "For the selected date range"
         }
       };
 
@@ -1128,6 +1192,11 @@
         var now = new Date();
         var offset = now.getTimezoneOffset() * 60000;
         return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+      }
+
+      function viewDate() {
+        var el = document.getElementById("todayDate");
+        return (el && el.value) || todayISO();
       }
 
       function showStatus(type, message) {
@@ -1547,8 +1616,28 @@
         };
       }
 
+      function formatDelta(pct) {
+        if (pct == null || !isFinite(pct)) return "—";
+        var sign = pct > 0 ? "+" : "";
+        return sign + round1(pct) + "%";
+      }
+
+      function lastSessionStats(sets, name, beforeDate) {
+        var key = String(name || "").trim().toLowerCase();
+        var byDate = {};
+        sets.forEach(function (set) {
+          if (String(set.exercise || "").trim().toLowerCase() !== key) return;
+          if (!set.date || set.date >= beforeDate) return;
+          if (!byDate[set.date]) byDate[set.date] = { volume: 0, sets: 0 };
+          byDate[set.date].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          byDate[set.date].sets += 1;
+        });
+        var dates = Object.keys(byDate).sort();
+        return dates.length ? byDate[dates[dates.length - 1]] : null;
+      }
+
       function todayPieSeries(sets) {
-        var today = todayISO();
+        var today = viewDate();
         var byName = {};
         sets.forEach(function (set) {
           if (set.date !== today) return;
@@ -1562,8 +1651,30 @@
         return Object.keys(byName).sort(function (a, b) {
           return byName[b].volume - byName[a].volume;
         }).map(function (key) {
-          return byName[key];
+          var row = byName[key];
+          var prev = lastSessionStats(sets, row.name, today);
+          row.prevVolume = prev ? prev.volume : null;
+          row.prevSets = prev ? prev.sets : null;
+          row.changePct = prev && prev.volume
+            ? ((row.volume - prev.volume) / prev.volume) * 100
+            : null;
+          return row;
         });
+      }
+
+      function rangePieSeries(sets) {
+        var byName = {};
+        sets.forEach(function (set) {
+          var name = String(set.exercise || "").trim();
+          if (!name) return;
+          var key = name.toLowerCase();
+          if (!byName[key]) byName[key] = { name: name, volume: 0, sets: 0 };
+          byName[key].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          byName[key].sets += 1;
+        });
+        return Object.keys(byName).sort(function (a, b) {
+          return byName[b].volume - byName[a].volume;
+        }).map(function (key) { return byName[key]; });
       }
 
       function pieOptions(rows) {
@@ -1619,28 +1730,48 @@
         chartInstances.push(chart);
       }
 
+      function renderRangePie(sets) {
+        var mount = document.getElementById("rangePieMount");
+        if (!mount) return;
+        var rows = rangePieSeries(sets);
+        if (!rows.length) {
+          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsEmptyRange")) + "</div>";
+          return;
+        }
+        if (typeof ApexCharts === "undefined") {
+          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
+          return;
+        }
+        mount.innerHTML = "";
+        var chart = new ApexCharts(mount, pieOptions(rows));
+        chart.render();
+        chartInstances.push(chart);
+      }
+
       function renderCharts(sets) {
         var list = document.getElementById("chartsList");
         destroyCharts();
         renderTodayPie(sets);
-        var preset = document.getElementById("chartRangePreset").value || "all";
+        var preset = document.getElementById("chartRangePreset").value || "7";
         if (!document.getElementById("chartFrom").value || !document.getElementById("chartTo").value) {
           applyChartPreset(preset, sets);
         } else {
           setBounds(sets);
         }
         var ranged = chartRangeSets(sets);
+        renderRangePie(ranged);
         var progress = exerciseProgress(ranged);
         if (!progress.length) {
-          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div>";
+          list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div></section>";
           return;
         }
         if (typeof ApexCharts === "undefined") {
-          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
+          list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div></section>";
           return;
         }
         list.innerHTML = progress.map(function (item, index) {
-          return "<div class=\"chart-card\"><h3>" + escapeHtml(item.name) + "</h3><div class=\"chart-mount\" id=\"chart-" + index + "\"></div></div>";
+          return "<div class=\"mb-4\"><div class=\"section-head mb-2\"><h3 class=\"h6 mb-0\">" + escapeHtml(item.name) + "</h3></div>" +
+            "<section class=\"card-panel p-4\"><div class=\"chart-mount\" id=\"chart-" + index + "\"></div></section></div>";
         }).join("");
         progress.forEach(function (item, index) {
           var chart = new ApexCharts(document.getElementById("chart-" + index), chartOptions(item));
@@ -1654,7 +1785,7 @@
           return a.date < b.date ? 1 : -1;
         });
 
-        var todaySets = sets.filter(function (set) { return set.date === todayISO(); });
+        var todaySets = sets.filter(function (set) { return set.date === viewDate(); });
         var volume = todaySets.reduce(function (sum, set) {
           return sum + (Number(set.weight) * Number(set.reps));
         }, 0);
@@ -1664,6 +1795,34 @@
         document.getElementById("statSets").textContent = String(todaySets.length);
         document.getElementById("statVolume").textContent = formatVolume(volume);
         document.getElementById("statExercises").textContent = String(Object.keys(exercisesToday).length);
+
+        var summary = document.getElementById("todaySummary");
+        if (summary) {
+          var rows = todayPieSeries(sets);
+          summary.innerHTML = rows.length
+            ? rows.map(function (row) {
+                var volClass = row.changePct == null ? "delta-flat" : (row.changePct > 0 ? "delta-up" : (row.changePct < 0 ? "delta-down" : "delta-flat"));
+                var setDiff = row.prevSets == null ? null : (row.sets - row.prevSets);
+                var setClass = setDiff == null ? "delta-flat" : (setDiff > 0 ? "delta-up" : (setDiff < 0 ? "delta-down" : "delta-flat"));
+                var setLabel = setDiff == null ? "" : ((setDiff > 0 ? "+" : "") + setDiff);
+                var pctLabel = formatDelta(row.changePct);
+                var lastLabel = row.prevVolume != null ? formatVolume(row.prevVolume) : "";
+                return "<div class=\"set-row summary-row\">" +
+                  "<div class=\"summary-main\">" +
+                  "<div class=\"fw-semibold\">" + escapeHtml(row.name) + "</div>" +
+                  "<div class=\"small text-muted-2\">" + row.sets + " " + escapeHtml(t("sets")) + "</div>" +
+                  "</div>" +
+                  "<div class=\"summary-deltas\">" +
+                  "<button type=\"button\" class=\"delta-pill " + volClass + "\" data-toggle-val" +
+                  (row.prevVolume != null ? " data-showing=\"now\" data-now=\"" + escapeHtml(pctLabel) + "\" data-alt=\"" + escapeHtml(lastLabel) + "\"" : "") +
+                  ">" + escapeHtml(pctLabel) + "</button>" +
+                  "<button type=\"button\" class=\"delta-pill " + setClass + "\" data-toggle-val" +
+                  (setLabel && row.prevSets != null ? " data-showing=\"now\" data-now=\"" + escapeHtml(setLabel) + "\" data-alt=\"" + String(row.prevSets) + "\"" : "") +
+                  ">" + escapeHtml(setLabel || "—") + "</button>" +
+                  "</div></div>";
+              }).join("")
+            : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
+        }
 
         var todayLog = document.getElementById("todayLog");
         if (todayLog) {
@@ -1733,6 +1892,11 @@
       }
 
       document.getElementById("sessionDate").value = todayISO();
+      document.getElementById("todayDate").value = todayISO();
+      document.getElementById("todayDate").addEventListener("change", function () {
+        render();
+        renderTodayPie(loadSets());
+      });
 
       form.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -1778,6 +1942,46 @@
         document.getElementById("reps").focus();
       });
 
+      document.getElementById("lastSetBtn").addEventListener("click", function () {
+        var sets = loadSets();
+        if (!sets.length) {
+          showStatus("warn", t("lastSetMissing"));
+          return;
+        }
+        var exercise = document.getElementById("exercise").value.trim().toLowerCase();
+        var match = null;
+        for (var i = sets.length - 1; i >= 0; i--) {
+          if (!exercise || String(sets[i].exercise || "").trim().toLowerCase() === exercise) {
+            match = sets[i];
+            break;
+          }
+        }
+        if (!match) {
+          showStatus("warn", t("lastSetMissing"));
+          return;
+        }
+        var date = document.getElementById("sessionDate").value || todayISO();
+        sets.push({
+          id: uid(),
+          exercise: match.exercise,
+          weight: match.weight,
+          reps: match.reps,
+          date: date,
+          createdAt: Date.now()
+        });
+        var persisted = saveSets(sets);
+        document.getElementById("exercise").value = match.exercise;
+        document.getElementById("weight").value = formatWeight(match.weight);
+        document.getElementById("reps").value = "";
+        document.getElementById("sessionDate").value = date;
+        if (persisted) {
+          showStatus("ok", t("logged", { exercise: match.exercise, weight: formatWeight(match.weight), reps: match.reps, unit: unitLabel() }));
+        }
+        flashAddSetSuccess();
+        render();
+        document.getElementById("reps").focus();
+      });
+
       exerciseChips.addEventListener("click", function (event) {
         var button = event.target.closest("[data-exercise]");
         if (!button) return;
@@ -1815,6 +2019,13 @@
 
       logList.addEventListener("click", handleLogClick);
       document.getElementById("todayLog").addEventListener("click", handleLogClick);
+      document.getElementById("todaySummary").addEventListener("click", function (event) {
+        var el = event.target.closest("[data-toggle-val]");
+        if (!el || !el.getAttribute("data-alt")) return;
+        var showing = el.getAttribute("data-showing") === "alt" ? "now" : "alt";
+        el.setAttribute("data-showing", showing);
+        el.textContent = showing === "alt" ? el.getAttribute("data-alt") : el.getAttribute("data-now");
+      });
 
       editForm.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -1932,7 +2143,12 @@
       });
       document.getElementById("appTabs").addEventListener("click", function (event) {
         var btn = event.target.closest("[data-bs-target]");
-        if (!btn || window.bootstrap) return;
+        if (!btn) return;
+        if (btn.classList.contains("active")) {
+          var scroller = document.querySelector(".app-scroll");
+          if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        if (window.bootstrap) return;
         var target = document.querySelector(btn.getAttribute("data-bs-target"));
         if (!target) return;
         document.querySelectorAll("#appTabs .nav-link").forEach(function (link) {
@@ -2005,6 +2221,9 @@
         var tag = document.activeElement && document.activeElement.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
         fitAppShell();
+      });
+      document.addEventListener("gesturestart", function (event) {
+        event.preventDefault();
       });
 
       if (window.location.protocol !== "file:" && "serviceWorker" in navigator) {
