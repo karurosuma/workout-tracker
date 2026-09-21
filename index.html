@@ -278,6 +278,31 @@
     .delta-down { color: #ff8a9a; }
     .delta-flat { color: var(--muted); }
 
+    .summary-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .summary-compare-cell {
+      background: #101820;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .summary-compare-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .summary-compare-value {
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
     .empty-state {
       border: 1px dashed var(--line);
       border-radius: 16px;
@@ -570,18 +595,18 @@
           </div>
         </div>
         <div class="section-head mb-2">
-          <h2 class="h5 mb-0" data-i18n="todaySummaryTitle">動作摘要</h2>
-          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較容量</span>
-        </div>
-        <section class="card-panel p-4 mb-4">
-          <div id="todaySummary"></div>
-        </section>
-        <div class="section-head mb-2">
           <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
           <span class="small text-muted-2" data-i18n="todayPieHint">依容量占比</span>
         </div>
         <section class="card-panel p-4 mb-4">
           <div id="todayPieMount" class="chart-mount"></div>
+        </section>
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="todaySummaryTitle">動作摘要</h2>
+          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較容量</span>
+        </div>
+        <section class="card-panel p-4 mb-4">
+          <div id="todaySummary"></div>
         </section>
         <div class="section-head mb-2">
           <h2 class="h5 mb-0" data-i18n="todayLogTitle">今日組數清單</h2>
@@ -662,10 +687,10 @@
         <section class="card-panel p-4">
           <div class="chart-range mb-3">
             <select class="form-select" id="chartRangePreset">
-              <option value="all" data-i18n="rangeAll">全部日期</option>
-              <option value="7" data-i18n="range7">近 7 天</option>
+              <option value="7" selected data-i18n="range7">近 7 天</option>
               <option value="30" data-i18n="range30">近 30 天</option>
               <option value="90" data-i18n="range90">近 90 天</option>
+              <option value="all" data-i18n="rangeAll">全部日期</option>
               <option value="custom" data-i18n="rangeCustom">自訂範圍</option>
             </select>
             <div class="chart-range-dates">
@@ -915,7 +940,8 @@
           todaySummaryTitle: "動作摘要",
           todaySummaryHint: "與上次同動作比較容量",
           firstSession: "首次",
-          vsLast: "較上次"
+          volNow: "今次",
+          volLast: "上次"
         },
         en: {
           brand: "workout-tracker-web-app",
@@ -1014,7 +1040,8 @@
           todaySummaryTitle: "Exercise summary",
           todaySummaryHint: "Volume vs last session of the same exercise",
           firstSession: "First",
-          vsLast: "vs last"
+          volNow: "Now",
+          volLast: "Last"
         }
       };
 
@@ -1698,7 +1725,7 @@
         var list = document.getElementById("chartsList");
         destroyCharts();
         renderTodayPie(sets);
-        var preset = document.getElementById("chartRangePreset").value || "all";
+        var preset = document.getElementById("chartRangePreset").value || "7";
         if (!document.getElementById("chartFrom").value || !document.getElementById("chartTo").value) {
           applyChartPreset(preset, sets);
         } else {
@@ -1753,12 +1780,15 @@
                 var deltaClass = row.changePct == null ? "delta-flat" : (row.changePct > 0 ? "delta-up" : (row.changePct < 0 ? "delta-down" : "delta-flat"));
                 return "<div class=\"set-row summary-row\">" +
                   "<div class=\"d-flex justify-content-between align-items-start gap-2\">" +
-                  "<div class=\"fw-semibold\">" + escapeHtml(row.name) + "</div>" +
+                  "<div><div class=\"fw-semibold\">" + escapeHtml(row.name) + "</div>" +
+                  "<div class=\"small text-muted-2\">" + row.sets + " " + escapeHtml(t("sets")) + "</div></div>" +
                   "<div class=\"delta-pill " + deltaClass + "\">" + escapeHtml(formatDelta(row.changePct)) + "</div>" +
                   "</div>" +
-                  "<div class=\"small text-muted-2 mt-1\">" + row.sets + " " + escapeHtml(t("sets")) +
-                  " · " + formatVolume(row.volume) + " " + escapeHtml(t("vol")) +
-                  (row.prevVolume != null ? " · " + escapeHtml(t("vsLast")) + " " + formatVolume(row.prevVolume) : "") +
+                  "<div class=\"summary-compare\">" +
+                  "<div class=\"summary-compare-cell\"><div class=\"summary-compare-label\">" + escapeHtml(t("volNow")) + "</div>" +
+                  "<div class=\"summary-compare-value\">" + formatVolume(row.volume) + "</div></div>" +
+                  "<div class=\"summary-compare-cell\"><div class=\"summary-compare-label\">" + escapeHtml(t("volLast")) + "</div>" +
+                  "<div class=\"summary-compare-value\">" + (row.prevVolume != null ? formatVolume(row.prevVolume) : "—") + "</div></div>" +
                   "</div></div>";
               }).join("")
             : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
