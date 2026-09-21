@@ -36,6 +36,7 @@
       --accent-2: #2bd4ff;
       --danger: #ff5d73;
       --warn: #ffc857;
+      --nav-h: 72px;
     }
 
     * { box-sizing: border-box; }
@@ -57,9 +58,18 @@
       min-height: 100dvh;
       min-height: -webkit-fill-available;
       font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
+      padding-top: 0;
       padding-right: env(safe-area-inset-right, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom, 0px));
       padding-left: env(safe-area-inset-left, 0px);
+    }
+
+    .app-nav-bar {
+      background: #0b0f14;
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      z-index: 1030;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .status-spacer {
@@ -303,7 +313,7 @@
       font-size: 0.75rem;
       color: var(--muted);
       letter-spacing: 0.02em;
-      padding: 8px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+      padding: 16px 16px 8px;
     }
 
     .page-author a {
@@ -352,9 +362,10 @@
     .app-tabs {
       display: flex;
       flex-wrap: nowrap;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 0;
       justify-content: stretch;
       gap: 0;
+      margin-bottom: 0;
     }
 
     .app-tabs .nav-item {
@@ -366,14 +377,25 @@
       color: var(--muted);
       background: transparent;
       border: 0;
-      border-bottom: 2px solid transparent;
+      border-top: 2px solid transparent;
       border-radius: 0;
-      min-height: 44px;
+      min-height: 64px;
       width: 100%;
-      padding: 10px 4px;
+      padding: 8px 4px 6px;
       font-weight: 600;
-      font-size: 0.92rem;
+      font-size: 0.72rem;
+      line-height: 1.2;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .app-tabs .nav-link i {
+      font-size: 1.25rem;
+      line-height: 1;
     }
 
     .app-tabs .nav-link:hover { color: var(--text); }
@@ -381,7 +403,7 @@
     .app-tabs .nav-link.active {
       color: var(--accent);
       background: transparent;
-      border-bottom-color: var(--accent);
+      border-top-color: var(--accent);
     }
 
     .settings-row {
@@ -455,21 +477,6 @@
   <div class="status-spacer" aria-hidden="true"></div>
 
   <main class="container py-4 py-md-5">
-    <ul class="nav app-tabs mb-4" id="appTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-log-btn" data-bs-toggle="tab" data-bs-target="#tab-log" type="button" role="tab" aria-controls="tab-log" aria-selected="true" data-i18n="tabLog">記錄</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-today-btn" data-bs-toggle="tab" data-bs-target="#tab-today" type="button" role="tab" aria-controls="tab-today" aria-selected="false" data-i18n="tabToday">今日</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-charts-btn" data-bs-toggle="tab" data-bs-target="#tab-charts" type="button" role="tab" aria-controls="tab-charts" aria-selected="false" data-i18n="tabCharts">圖表</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-settings-btn" data-bs-toggle="tab" data-bs-target="#tab-settings" type="button" role="tab" aria-controls="tab-settings" aria-selected="false" data-i18n="tabSettings">設定</button>
-      </li>
-    </ul>
-
     <div id="formStatus" class="form-status mb-3" role="status">
       <span id="formStatusText"></span>
       <button type="button" id="formStatusClose" class="form-status-close" aria-label="關閉">&times;</button>
@@ -567,7 +574,8 @@
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h2 class="h5 mb-0" data-i18n="workoutLog">訓練日誌</h2>
             <select class="form-select form-select-sm w-auto" id="filterDate">
-              <option value="all">全部訓練</option>
+              <option value="today" selected data-i18n="today">今天</option>
+              <option value="all" data-i18n="allSessions">全部訓練</option>
             </select>
           </div>
           <div id="logList"></div>
@@ -644,6 +652,37 @@
   <footer class="page-author">
     <a href="https://karurosuma.github.io/workout-tracker/" target="_blank" rel="noopener noreferrer">@karurosuma/workout-tracker</a>
   </footer>
+
+  <nav class="app-nav-bar fixed-bottom" aria-label="Primary">
+    <div class="container">
+      <ul class="nav app-tabs" id="appTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tab-log-btn" data-bs-toggle="tab" data-bs-target="#tab-log" type="button" role="tab" aria-controls="tab-log" aria-selected="true">
+            <i class="bi bi-journal-plus" aria-hidden="true"></i>
+            <span data-i18n="tabLog">記錄</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-today-btn" data-bs-toggle="tab" data-bs-target="#tab-today" type="button" role="tab" aria-controls="tab-today" aria-selected="false">
+            <i class="bi bi-sun" aria-hidden="true"></i>
+            <span data-i18n="tabToday">今日</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-charts-btn" data-bs-toggle="tab" data-bs-target="#tab-charts" type="button" role="tab" aria-controls="tab-charts" aria-selected="false">
+            <i class="bi bi-graph-up" aria-hidden="true"></i>
+            <span data-i18n="tabCharts">圖表</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-settings-btn" data-bs-toggle="tab" data-bs-target="#tab-settings" type="button" role="tab" aria-controls="tab-settings" aria-selected="false">
+            <i class="bi bi-gear" aria-hidden="true"></i>
+            <span data-i18n="tabSettings">設定</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
 
   <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -906,6 +945,7 @@
       var memoryStore = { sets: [] };
       var persistWarningShown = false;
       var chartInstances = [];
+      var logFilter = "today";
 
       function t(key, vars) {
         var pack = I18N[locale] || I18N["zh-Hant"];
@@ -1599,26 +1639,39 @@
         sets.forEach(function (set) {
           if (dates.indexOf(set.date) === -1) dates.push(set.date);
         });
-        var currentFilter = filterDate.value || "all";
-        filterDate.innerHTML = "<option value=\"all\">" + escapeHtml(t("allSessions")) + "</option>" +
-          dates.map(function (date) {
+        dates.sort(function (a, b) { return a < b ? 1 : a > b ? -1 : 0; });
+        var today = todayISO();
+        if (dates.indexOf(today) === -1) dates.unshift(today);
+        if (!logFilter || logFilter === "today") logFilter = today;
+        if (logFilter !== "all" && dates.indexOf(logFilter) === -1) logFilter = today;
+        filterDate.innerHTML = "<option value=\"" + today + "\">" + escapeHtml(t("today")) + "</option>" +
+          "<option value=\"all\">" + escapeHtml(t("allSessions")) + "</option>" +
+          dates.filter(function (date) { return date !== today; }).map(function (date) {
             return "<option value=\"" + date + "\">" + escapeHtml(formatDateLabel(date)) + "</option>";
           }).join("");
-        filterDate.value = dates.indexOf(currentFilter) !== -1 || currentFilter === "all" ? currentFilter : "all";
+        filterDate.value = logFilter;
+        if (filterDate.value !== logFilter) {
+          filterDate.selectedIndex = logFilter === "all" ? 1 : 0;
+          logFilter = filterDate.value || today;
+        }
 
         var visible = filterDate.value === "all" ? sets : sets.filter(function (set) {
           return set.date === filterDate.value;
         });
 
         if (!visible.length) {
-          logList.innerHTML = "<div class=\"empty-state\"><i class=\"bi bi-activity fs-2 d-block mb-2\"></i>" + escapeHtml(t("emptyLog")) + "</div>";
+          var emptyMsg = filterDate.value === today ? t("todayPieEmpty") : t("emptyLog");
+          logList.innerHTML = "<div class=\"empty-state\"><i class=\"bi bi-activity fs-2 d-block mb-2\"></i>" + escapeHtml(emptyMsg) + "</div>";
         } else {
         var grouped = {};
         visible.forEach(function (set) {
           (grouped[set.date] || (grouped[set.date] = [])).push(set);
         });
+        var groupDates = Object.keys(grouped).sort(function (a, b) {
+          return a < b ? 1 : a > b ? -1 : 0;
+        });
 
-        logList.innerHTML = Object.keys(grouped).map(function (date) {
+        logList.innerHTML = groupDates.map(function (date) {
           var rows = grouped[date].map(setRowHtml).join("");
 
           var sessionVolume = grouped[date].reduce(function (sum, set) {
@@ -1739,7 +1792,10 @@
         render();
       });
 
-      filterDate.addEventListener("change", render);
+      filterDate.addEventListener("change", function () {
+        logFilter = filterDate.value;
+        render();
+      });
       document.getElementById("formStatusClose").addEventListener("click", hideStatus);
 
       document.getElementById("chartRangePreset").addEventListener("change", function () {
