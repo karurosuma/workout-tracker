@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v55";
+const CACHE = "workout-tracker-web-app-v56";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -9,22 +9,13 @@ const PRECACHE = [
   "./apple-touch-icon.png",
   "./icon-192.png",
   "./icon-512.png",
-  "./icon-512-maskable.png",
-  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
-  "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css",
-  "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2",
-  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js",
-  "https://cdn.jsdelivr.net/npm/apexcharts"
+  "./icon-512-maskable.png"
 ];
 
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
-      return Promise.all(
-        PRECACHE.map(function (url) {
-          return cache.add(url).catch(function () {});
-        })
-      );
+      return cache.addAll(PRECACHE);
     }).then(function () {
       return self.skipWaiting();
     })
@@ -34,11 +25,11 @@ self.addEventListener("install", function (event) {
 self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(
-        keys.filter(function (key) { return key !== CACHE; }).map(function (key) {
-          return caches.delete(key);
-        })
-      );
+      return Promise.all(keys.filter(function (key) {
+        return key !== CACHE;
+      }).map(function (key) {
+        return caches.delete(key);
+      }));
     }).then(function () {
       return self.clients.claim();
     })
@@ -46,27 +37,23 @@ self.addEventListener("activate", function (event) {
 });
 
 self.addEventListener("fetch", function (event) {
-  var request = event.request;
-  if (request.method !== "GET") return;
-
+  var req = event.request;
+  if (req.method !== "GET") return;
   event.respondWith(
-    caches.match(request).then(function (cached) {
-      var networked = fetch(request).then(function (response) {
-        if (response && response.status === 200 && (request.url.indexOf("http") === 0)) {
-          var copy = response.clone();
+    caches.match(req).then(function (cached) {
+      if (cached) return cached;
+      return fetch(req).then(function (res) {
+        var copy = res.clone();
+        if (res.ok && new URL(req.url).origin === self.location.origin) {
           caches.open(CACHE).then(function (cache) {
-            cache.put(request, copy);
+            cache.put(req, copy);
           });
         }
-        return response;
+        return res;
       }).catch(function () {
-        if (cached) return cached;
-        if (request.mode === "navigate") {
-          return caches.match("./index.html");
-        }
-        return cached;
+        if (req.mode === "navigate") return caches.match("./index.html");
+        return caches.match(req);
       });
-      return cached || networked;
     })
   );
 });
