@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=overlays-content" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
   <title>workout-tracker-web-app — 訓練紀錄</title>
   <meta name="theme-color" content="#0b0f14" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f14" />
@@ -39,7 +39,7 @@
       --nav-h: 72px;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; touch-action: manipulation; }
 
     html {
       background-color: var(--bg);
@@ -47,18 +47,20 @@
         radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
         radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%);
       background-attachment: fixed;
-      height: 100%;
-      height: 100dvh;
+      height: var(--app-h, 100svh);
       overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
     }
 
     body {
       background-color: transparent;
       color: var(--text);
-      height: 100%;
-      height: 100dvh;
-      max-height: 100dvh;
+      height: var(--app-h, 100svh);
+      max-height: var(--app-h, 100svh);
       overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
       display: flex;
       flex-direction: column;
       font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
@@ -66,6 +68,10 @@
       padding-right: env(safe-area-inset-right, 0px);
       padding-bottom: 0;
       padding-left: env(safe-area-inset-left, 0px);
+    }
+
+    .form-control, .form-select {
+      font-size: 16px;
     }
 
     .status-spacer {
@@ -104,7 +110,7 @@
     }
 
     body.keyboard-open .app-nav-bar {
-      display: none;
+      display: none !important;
     }
 
     .card-panel {
@@ -135,6 +141,7 @@
       border: 1px solid var(--line);
       color: var(--text);
       border-radius: 12px;
+      font-size: 16px;
     }
 
     .form-control:focus, .form-select:focus {
@@ -282,7 +289,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 4px;
     }
 
     .summary-compare-cell {
@@ -603,7 +610,7 @@
         </section>
         <div class="section-head mb-2">
           <h2 class="h5 mb-0" data-i18n="todaySummaryTitle">動作摘要</h2>
-          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較容量</span>
+          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較組數與容量</span>
         </div>
         <section class="card-panel p-4 mb-4">
           <div id="todaySummary"></div>
@@ -702,6 +709,11 @@
               <input class="form-control" id="chartTo" type="date" />
             </div>
           </div>
+          <div class="section-head mb-2">
+            <h3 class="h6 mb-0" data-i18n="rangePieTitle">容量占比</h3>
+            <span class="small text-muted-2" data-i18n="rangePieHint">依所選日期範圍</span>
+          </div>
+          <div id="rangePieMount" class="chart-mount mb-4"></div>
           <div id="chartsList"></div>
         </section>
       </div>
@@ -938,10 +950,14 @@
           todayPieHint: "依容量占比",
           todayPieEmpty: "這天還沒有紀錄。",
           todaySummaryTitle: "動作摘要",
-          todaySummaryHint: "與上次同動作比較容量",
+          todaySummaryHint: "與上次同動作比較組數與容量",
           firstSession: "首次",
-          volNow: "今次",
-          volLast: "上次"
+          volNow: "今次容量",
+          volLast: "上次容量",
+          setsNow: "今次組數",
+          setsLast: "上次組數",
+          rangePieTitle: "容量占比",
+          rangePieHint: "依所選日期範圍"
         },
         en: {
           brand: "workout-tracker-web-app",
@@ -1038,10 +1054,14 @@
           todayPieHint: "Share of volume",
           todayPieEmpty: "No sets logged on this day.",
           todaySummaryTitle: "Exercise summary",
-          todaySummaryHint: "Volume vs last session of the same exercise",
+          todaySummaryHint: "Sets and volume vs last session of the same exercise",
           firstSession: "First",
-          volNow: "Now",
-          volLast: "Last"
+          volNow: "Volume now",
+          volLast: "Volume last",
+          setsNow: "Sets now",
+          setsLast: "Sets last",
+          rangePieTitle: "Share of volume",
+          rangePieHint: "For the selected date range"
         }
       };
 
@@ -1620,14 +1640,16 @@
         };
       }
 
-      function previousExerciseVolume(sets, name, day) {
+      function previousExerciseStats(sets, name, day) {
         var key = String(name || "").trim().toLowerCase();
         if (!key) return null;
         var byDate = {};
         sets.forEach(function (set) {
           if (String(set.exercise || "").trim().toLowerCase() !== key) return;
           if (!set.date || set.date >= day) return;
-          byDate[set.date] = (byDate[set.date] || 0) + (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          if (!byDate[set.date]) byDate[set.date] = { volume: 0, sets: 0 };
+          byDate[set.date].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          byDate[set.date].sets += 1;
         });
         var dates = Object.keys(byDate).sort();
         if (!dates.length) return null;
@@ -1662,8 +1684,11 @@
           return byName[b].volume - byName[a].volume;
         }).map(function (key) {
           var row = byName[key];
-          row.prevVolume = previousExerciseVolume(sets, row.name, day);
+          var prev = previousExerciseStats(sets, row.name, day);
+          row.prevVolume = prev ? prev.volume : null;
+          row.prevSets = prev ? prev.sets : null;
           row.changePct = volumeChangePct(row.volume, row.prevVolume);
+          row.setsChangePct = volumeChangePct(row.sets, row.prevSets);
           return row;
         });
       }
@@ -1703,6 +1728,39 @@
         };
       }
 
+      function rangePieSeries(sets) {
+        var byName = {};
+        sets.forEach(function (set) {
+          var name = String(set.exercise || "").trim();
+          if (!name) return;
+          var key = name.toLowerCase();
+          if (!byName[key]) byName[key] = { name: name, volume: 0, sets: 0 };
+          byName[key].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          byName[key].sets += 1;
+        });
+        return Object.keys(byName).sort(function (a, b) {
+          return byName[b].volume - byName[a].volume;
+        }).map(function (key) { return byName[key]; });
+      }
+
+      function renderRangePie(sets) {
+        var mount = document.getElementById("rangePieMount");
+        if (!mount) return;
+        var rows = rangePieSeries(sets);
+        if (!rows.length) {
+          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsEmptyRange")) + "</div>";
+          return;
+        }
+        if (typeof ApexCharts === "undefined") {
+          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
+          return;
+        }
+        mount.innerHTML = "";
+        var chart = new ApexCharts(mount, pieOptions(rows));
+        chart.render();
+        chartInstances.push(chart);
+      }
+
       function renderTodayPie(sets) {
         var mount = document.getElementById("todayPieMount");
         if (!mount) return;
@@ -1732,6 +1790,7 @@
           setBounds(sets);
         }
         var ranged = chartRangeSets(sets);
+        renderRangePie(ranged);
         var progress = exerciseProgress(ranged);
         if (!progress.length) {
           list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div>";
@@ -1777,18 +1836,21 @@
           var rows = todayPieSeries(sets);
           summary.innerHTML = rows.length
             ? rows.map(function (row) {
-                var deltaClass = row.changePct == null ? "delta-flat" : (row.changePct > 0 ? "delta-up" : (row.changePct < 0 ? "delta-down" : "delta-flat"));
+                var volClass = row.changePct == null ? "delta-flat" : (row.changePct > 0 ? "delta-up" : (row.changePct < 0 ? "delta-down" : "delta-flat"));
+                var setClass = row.setsChangePct == null ? "delta-flat" : (row.setsChangePct > 0 ? "delta-up" : (row.setsChangePct < 0 ? "delta-down" : "delta-flat"));
                 return "<div class=\"set-row summary-row\">" +
-                  "<div class=\"d-flex justify-content-between align-items-start gap-2\">" +
-                  "<div><div class=\"fw-semibold\">" + escapeHtml(row.name) + "</div>" +
-                  "<div class=\"small text-muted-2\">" + row.sets + " " + escapeHtml(t("sets")) + "</div></div>" +
-                  "<div class=\"delta-pill " + deltaClass + "\">" + escapeHtml(formatDelta(row.changePct)) + "</div>" +
-                  "</div>" +
+                  "<div class=\"fw-semibold mb-2\">" + escapeHtml(row.name) + "</div>" +
                   "<div class=\"summary-compare\">" +
                   "<div class=\"summary-compare-cell\"><div class=\"summary-compare-label\">" + escapeHtml(t("volNow")) + "</div>" +
-                  "<div class=\"summary-compare-value\">" + formatVolume(row.volume) + "</div></div>" +
+                  "<div class=\"summary-compare-value\">" + formatVolume(row.volume) + "</div>" +
+                  "<div class=\"delta-pill " + volClass + "\">" + escapeHtml(formatDelta(row.changePct)) + "</div></div>" +
                   "<div class=\"summary-compare-cell\"><div class=\"summary-compare-label\">" + escapeHtml(t("volLast")) + "</div>" +
                   "<div class=\"summary-compare-value\">" + (row.prevVolume != null ? formatVolume(row.prevVolume) : "—") + "</div></div>" +
+                  "<div class=\"summary-compare-cell\"><div class=\"summary-compare-label\">" + escapeHtml(t("setsNow")) + "</div>" +
+                  "<div class=\"summary-compare-value\">" + row.sets + "</div>" +
+                  "<div class=\"delta-pill " + setClass + "\">" + escapeHtml(formatDelta(row.setsChangePct)) + "</div></div>" +
+                  "<div class=\"summary-compare-cell\"><div class=\"summary-compare-label\">" + escapeHtml(t("setsLast")) + "</div>" +
+                  "<div class=\"summary-compare-value\">" + (row.prevSets != null ? String(row.prevSets) : "—") + "</div></div>" +
                   "</div></div>";
               }).join("")
             : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
@@ -2098,7 +2160,12 @@
       });
       document.getElementById("appTabs").addEventListener("click", function (event) {
         var btn = event.target.closest("[data-bs-target]");
-        if (!btn || window.bootstrap) return;
+        if (!btn) return;
+        if (btn.classList.contains("active")) {
+          var scroller = document.querySelector(".app-scroll");
+          if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        if (window.bootstrap) return;
         var target = document.querySelector(btn.getAttribute("data-bs-target"));
         if (!target) return;
         document.querySelectorAll("#appTabs .nav-link").forEach(function (link) {
@@ -2163,27 +2230,80 @@
         return !!el.isContentEditable;
       }
 
+      function measureAppH() {
+        var vv = window.visualViewport;
+        return Math.round((vv && !isTextField(document.activeElement) ? vv.height : window.innerHeight) || window.innerHeight);
+      }
+
+      var lockedAppH = measureAppH();
+      function applyAppH(px) {
+        document.documentElement.style.setProperty("--app-h", px + "px");
+      }
+      applyAppH(lockedAppH);
+
       function isKeyboardOpen() {
         if (isTextField(document.activeElement)) return true;
         var vv = window.visualViewport;
         if (!vv) return false;
-        var covered = window.innerHeight - vv.height - (vv.offsetTop || 0);
-        return covered > 80;
+        return (lockedAppH - vv.height - (vv.offsetTop || 0)) > 80;
+      }
+
+      function lockPageScroll() {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+
+      function scrollFieldIntoView(el) {
+        var scroller = document.querySelector(".app-scroll");
+        if (!scroller || !el || !el.getBoundingClientRect) return;
+        var vv = window.visualViewport;
+        var visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+        var rect = el.getBoundingClientRect();
+        if (rect.bottom > visibleBottom - 12) {
+          scroller.scrollTop += rect.bottom - visibleBottom + 24;
+        }
       }
 
       function syncKeyboardNav() {
-        document.body.classList.toggle("keyboard-open", isKeyboardOpen());
+        var open = isKeyboardOpen();
+        document.body.classList.toggle("keyboard-open", open);
+        if (open) {
+          applyAppH(lockedAppH);
+        } else {
+          lockedAppH = measureAppH();
+          applyAppH(lockedAppH);
+        }
+        lockPageScroll();
       }
 
-      document.addEventListener("focusin", syncKeyboardNav);
-      document.addEventListener("focusout", function () {
-        setTimeout(syncKeyboardNav, 50);
+      document.addEventListener("focusin", function (event) {
+        syncKeyboardNav();
+        setTimeout(function () {
+          syncKeyboardNav();
+          scrollFieldIntoView(event.target);
+        }, 300);
       });
-      window.addEventListener("resize", syncKeyboardNav);
+      document.addEventListener("focusout", function () {
+        setTimeout(syncKeyboardNav, 80);
+      });
+      window.addEventListener("resize", function () {
+        if (!isKeyboardOpen()) {
+          lockedAppH = measureAppH();
+          applyAppH(lockedAppH);
+        }
+        syncKeyboardNav();
+      });
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", syncKeyboardNav);
-        window.visualViewport.addEventListener("scroll", syncKeyboardNav);
+        window.visualViewport.addEventListener("scroll", function () {
+          lockPageScroll();
+          syncKeyboardNav();
+        });
       }
+      document.addEventListener("gesturestart", function (event) {
+        event.preventDefault();
+      });
 
       if (window.location.protocol !== "file:" && "serviceWorker" in navigator) {
         navigator.serviceWorker.register("./sw.js").catch(function () {});
