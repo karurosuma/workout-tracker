@@ -106,7 +106,7 @@
       border-bottom: 0;
       z-index: 1030;
       padding-top: 0;
-      padding-bottom: 8px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .app-nav-bar .container {
@@ -2235,6 +2235,62 @@
       setLocale(detectLocale());
       if (!hasMadeFirstChoice()) showWelcome();
 
+      function isTextField(el) {
+        if (!el || el === document.body || el === document.documentElement) return false;
+        var tag = (el.tagName || "").toLowerCase();
+        if (tag === "textarea" || tag === "select") return true;
+        if (tag === "input") {
+          var type = String(el.type || "text").toLowerCase();
+          return type !== "button" && type !== "submit" && type !== "reset" && type !== "checkbox" && type !== "radio" && type !== "file" && type !== "hidden";
+        }
+        return !!el.isContentEditable;
+      }
+
+      var shellH = document.documentElement.clientHeight || window.innerHeight;
+      var keyboardLock = false;
+
+      function snapshotShell() {
+        if (keyboardLock) return;
+        shellH = document.documentElement.clientHeight || window.innerHeight;
+      }
+
+      function setKeyboardLock(on) {
+        if (on === keyboardLock) return;
+        keyboardLock = on;
+        document.body.classList.toggle("keyboard-open", on);
+        if (on) {
+          document.body.style.position = "fixed";
+          document.body.style.top = "0";
+          document.body.style.left = "0";
+          document.body.style.right = "0";
+          document.body.style.width = "100%";
+          document.body.style.height = shellH + "px";
+          document.body.style.maxHeight = shellH + "px";
+        } else {
+          document.body.style.position = "";
+          document.body.style.top = "";
+          document.body.style.left = "";
+          document.body.style.right = "";
+          document.body.style.width = "";
+          document.body.style.height = "";
+          document.body.style.maxHeight = "";
+          snapshotShell();
+        }
+      }
+
+      snapshotShell();
+      window.addEventListener("orientationchange", function () {
+        setTimeout(snapshotShell, 250);
+      });
+      window.addEventListener("resize", snapshotShell);
+      document.addEventListener("focusin", function () {
+        if (isTextField(document.activeElement)) setKeyboardLock(true);
+      });
+      document.addEventListener("focusout", function () {
+        setTimeout(function () {
+          setKeyboardLock(isTextField(document.activeElement));
+        }, 50);
+      });
       document.addEventListener("gesturestart", function (event) {
         event.preventDefault();
       });
