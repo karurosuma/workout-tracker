@@ -88,6 +88,27 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    .app-top-bar {
+      flex: 0 0 auto;
+      height: 48px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      z-index: 1030;
+    }
+
+    .app-brand {
+      margin: 0;
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
     .app-nav-bar {
       position: relative !important;
       left: auto;
@@ -295,7 +316,7 @@
       color: inherit;
     }
 
-    button.delta-pill[data-vol-toggle] { cursor: pointer; }
+    button.delta-pill[data-toggle-val] { cursor: pointer; }
 
     .delta-up { color: var(--accent); }
     .delta-down { color: #ff8a9a; }
@@ -564,6 +585,10 @@
   </div>
 
   <div class="status-spacer" aria-hidden="true"></div>
+
+  <header class="app-top-bar">
+    <p class="app-brand">workout-tracker</p>
+  </header>
 
   <div class="app-scroll">
   <main class="container py-4 py-md-5">
@@ -1847,10 +1872,12 @@
                   "<div class=\"small text-muted-2\">" + row.sets + " " + escapeHtml(t("sets")) + "</div>" +
                   "</div>" +
                   "<div class=\"summary-deltas\">" +
-                  "<button type=\"button\" class=\"delta-pill " + volClass + "\" data-vol-toggle" +
-                  (row.prevVolume != null ? " data-showing=\"pct\" data-pct=\"" + escapeHtml(pctLabel) + "\" data-last=\"" + escapeHtml(lastLabel) + "\"" : "") +
+                  "<button type=\"button\" class=\"delta-pill " + volClass + "\" data-toggle-val" +
+                  (row.prevVolume != null ? " data-showing=\"now\" data-now=\"" + escapeHtml(pctLabel) + "\" data-alt=\"" + escapeHtml(lastLabel) + "\"" : "") +
                   ">" + escapeHtml(pctLabel) + "</button>" +
-                  (setLabel ? "<span class=\"delta-pill " + setClass + "\">" + escapeHtml(setLabel) + "</span>" : "<span class=\"delta-pill delta-flat\">—</span>") +
+                  "<button type=\"button\" class=\"delta-pill " + setClass + "\" data-toggle-val" +
+                  (setLabel && row.prevSets != null ? " data-showing=\"now\" data-now=\"" + escapeHtml(setLabel) + "\" data-alt=\"" + String(row.prevSets) + "\"" : "") +
+                  ">" + escapeHtml(setLabel || "—") + "</button>" +
                   "</div></div>";
               }).join("")
             : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
@@ -2040,11 +2067,11 @@
       logList.addEventListener("click", handleLogClick);
       document.getElementById("todayLog").addEventListener("click", handleLogClick);
       document.getElementById("todaySummary").addEventListener("click", function (event) {
-        var el = event.target.closest("[data-vol-toggle]");
-        if (!el || !el.getAttribute("data-pct")) return;
-        var showing = el.getAttribute("data-showing") === "last" ? "pct" : "last";
+        var el = event.target.closest("[data-toggle-val]");
+        if (!el || !el.getAttribute("data-alt")) return;
+        var showing = el.getAttribute("data-showing") === "alt" ? "now" : "alt";
         el.setAttribute("data-showing", showing);
-        el.textContent = showing === "last" ? el.getAttribute("data-last") : el.getAttribute("data-pct");
+        el.textContent = showing === "alt" ? el.getAttribute("data-alt") : el.getAttribute("data-now");
       });
 
       editForm.addEventListener("submit", function (event) {
