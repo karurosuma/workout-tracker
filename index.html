@@ -47,7 +47,9 @@
       background-image:
         radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
         radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%);
-      height: 100%;
+      height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
+      min-height: -webkit-fill-available;
+      min-height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -56,8 +58,10 @@
     body {
       background-color: transparent;
       color: var(--text);
-      min-height: 100%;
-      height: 100%;
+      height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
+      min-height: -webkit-fill-available;
+      min-height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
+      max-height: none;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -86,7 +90,7 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: calc(52px + max(12px, var(--safe-bottom)));
+      padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
     }
 
     .app-nav-bar {
@@ -99,7 +103,7 @@
       border-top: 1px solid var(--line);
       z-index: 1030;
       padding-top: 0;
-      padding-bottom: max(12px, var(--safe-bottom));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .app-nav-bar .container {
@@ -2239,16 +2243,19 @@
         return !!el.isContentEditable;
       }
 
-      function measureSafeBottom() {
+      function fitAppShell() {
         var probe = document.createElement("div");
-        probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom, 0px)";
+        probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px)";
         document.body.appendChild(probe);
-        var value = parseFloat(window.getComputedStyle(probe).paddingBottom) || 0;
+        var inset = parseFloat(window.getComputedStyle(probe).paddingBottom) || 0;
         probe.remove();
+        var base = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+        var screenH = (window.screen && window.screen.height) || 0;
         var standalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
-        if (standalone && value < 34) value = 34;
-        if (value > 48) value = 48;
-        document.documentElement.style.setProperty("--safe-bottom", value + "px");
+        var h = base;
+        if (inset > 0 && screenH && base + 8 < screenH) h = base + inset;
+        if (standalone && screenH > h) h = screenH;
+        document.documentElement.style.setProperty("--app-h", h + "px");
       }
 
       function restoreShell() {
@@ -2258,10 +2265,11 @@
         document.documentElement.style.transform = "";
         document.body.style.transform = "";
         document.body.classList.remove("keyboard-open");
-        measureSafeBottom();
+        fitAppShell();
       }
 
-      measureSafeBottom();
+      fitAppShell();
+      window.addEventListener("orientationchange", function () { setTimeout(fitAppShell, 300); });
 
       function onKeyboardMaybeClose() {
         if (isTextField(document.activeElement)) return;
