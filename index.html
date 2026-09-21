@@ -46,14 +46,7 @@
       background-image:
         radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
         radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%);
-      background-attachment: fixed;
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: auto;
+      height: 100%;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -62,14 +55,8 @@
     body {
       background-color: transparent;
       color: var(--text);
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: auto;
-      max-height: none;
+      min-height: 100%;
+      height: 100%;
       overflow: hidden;
       overscroll-behavior: none;
       touch-action: manipulation;
@@ -98,20 +85,20 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(52px + var(--safe-bottom, 20px));
     }
 
     .app-nav-bar {
-      flex: 0 0 auto;
-      flex-shrink: 0;
-      margin-top: auto;
-      margin-bottom: 0;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
       width: 100%;
       background: var(--bg);
       border-top: 1px solid var(--line);
-      border-bottom: 0;
       z-index: 1030;
       padding-top: 0;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-bottom: var(--safe-bottom, 20px);
     }
 
     .app-nav-bar .container {
@@ -2251,6 +2238,17 @@
         return !!el.isContentEditable;
       }
 
+      function measureSafeBottom() {
+        var probe = document.createElement("div");
+        probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom, 0px)";
+        document.body.appendChild(probe);
+        var value = parseFloat(window.getComputedStyle(probe).paddingBottom) || 0;
+        probe.remove();
+        if (value > 34) value = 34;
+        if (value < 8) value = 8;
+        document.documentElement.style.setProperty("--safe-bottom", value + "px");
+      }
+
       function restoreShell() {
         window.scrollTo(0, 0);
         document.documentElement.scrollTop = 0;
@@ -2258,7 +2256,10 @@
         document.documentElement.style.transform = "";
         document.body.style.transform = "";
         document.body.classList.remove("keyboard-open");
+        measureSafeBottom();
       }
+
+      measureSafeBottom();
 
       function onKeyboardMaybeClose() {
         if (isTextField(document.activeElement)) return;
