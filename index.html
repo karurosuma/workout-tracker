@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>workout-tracker-web-app — 訓練紀錄</title>
   <meta name="theme-color" content="#0b0f14" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f14" />
@@ -39,27 +39,28 @@
       --nav-h: 72px;
     }
 
-    * { box-sizing: border-box; touch-action: manipulation; }
+    * { box-sizing: border-box; }
 
     html {
       background-color: var(--bg);
       background-image:
         radial-gradient(1200px 600px at 10% -10%, rgba(61, 255, 154, 0.08), transparent 50%),
         radial-gradient(900px 500px at 100% 0%, rgba(43, 212, 255, 0.07), transparent 45%);
-      height: 100%;
+      background-attachment: fixed;
+      height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
+      min-height: -webkit-fill-available;
+      min-height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
       overflow: hidden;
-      overscroll-behavior: none;
-      touch-action: manipulation;
     }
 
     body {
       background-color: transparent;
       color: var(--text);
-      min-height: 100%;
-      height: 100%;
+      height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
+      min-height: -webkit-fill-available;
+      min-height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
+      max-height: none;
       overflow: hidden;
-      overscroll-behavior: none;
-      touch-action: manipulation;
       display: flex;
       flex-direction: column;
       font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Segoe UI", system-ui, sans-serif;
@@ -67,10 +68,6 @@
       padding-right: env(safe-area-inset-right, 0px);
       padding-bottom: 0;
       padding-left: env(safe-area-inset-left, 0px);
-    }
-
-    .form-control, .form-select {
-      font-size: 16px;
     }
 
     .status-spacer {
@@ -85,30 +82,24 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: calc(52px + var(--safe-bottom, 20px));
     }
 
     .app-nav-bar {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      position: relative;
+      flex: 0 0 auto;
+      flex-shrink: 0;
+      margin-top: auto;
       width: 100%;
       background: var(--bg);
       border-top: 1px solid var(--line);
       z-index: 1030;
       padding-top: 0;
-      padding-bottom: var(--safe-bottom, 20px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .app-nav-bar .container {
       padding-top: 0;
       padding-bottom: 0;
-    }
-
-    body.keyboard-open .app-nav-bar {
-      visibility: hidden;
-      pointer-events: none;
     }
 
     .card-panel {
@@ -139,7 +130,6 @@
       border: 1px solid var(--line);
       color: var(--text);
       border-radius: 12px;
-      font-size: 16px;
     }
 
     .form-control:focus, .form-select:focus {
@@ -269,41 +259,6 @@
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px 14px;
-    }
-
-    .summary-row + .summary-row { margin-top: 8px; }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .summary-main { min-width: 0; }
-
-    .delta-pill {
-      font-weight: 800;
-      font-size: 0.95rem;
-      white-space: nowrap;
-      border: 0;
-      background: transparent;
-      padding: 0;
-      color: inherit;
-    }
-
-    button.delta-pill[data-toggle-val] { cursor: pointer; }
-
-    .delta-up { color: var(--accent); }
-    .delta-down { color: #ff8a9a; }
-    .delta-flat { color: var(--muted); }
-
-    .summary-deltas {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-      flex-shrink: 0;
     }
 
     .empty-state {
@@ -571,11 +526,9 @@
 
     <div class="tab-content">
       <div class="tab-pane fade" id="tab-today" role="tabpanel" aria-labelledby="tab-today-btn" tabindex="0">
-        <div class="section-head mb-3">
-          <div class="section-head-top">
-            <h1 class="h4 mb-0" data-i18n="todayTitle">今日訓練</h1>
-            <input class="form-control form-control-sm w-auto" id="todayDate" type="date" />
-          </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="h4 mb-0" data-i18n="todayTitle">今日訓練</h1>
+          <span class="badge badge-soft" id="todayBadge">今天</span>
         </div>
         <div class="row g-3 mb-4">
           <div class="col-4">
@@ -599,17 +552,10 @@
         </div>
         <div class="section-head mb-2">
           <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
-          <span class="small text-muted-2" data-i18n="todayPieHint">依容量占比</span>
+          <span class="small text-muted-2" data-i18n="todayPieHint">依今日容量占比</span>
         </div>
         <section class="card-panel p-4 mb-4">
           <div id="todayPieMount" class="chart-mount"></div>
-        </section>
-        <div class="section-head mb-2">
-          <h2 class="h5 mb-0" data-i18n="todaySummaryTitle">動作摘要</h2>
-          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較組數與容量</span>
-        </div>
-        <section class="card-panel p-4 mb-4">
-          <div id="todaySummary"></div>
         </section>
         <div class="section-head mb-2">
           <h2 class="h5 mb-0" data-i18n="todayLogTitle">今日組數清單</h2>
@@ -647,7 +593,7 @@
               <label class="form-label" for="sessionDate" data-i18n="sessionDate">訓練日期</label>
               <input class="form-control" id="sessionDate" name="sessionDate" type="date" required />
             </div>
-            <div class="col-12 d-grid gap-2">
+            <div class="col-12 d-grid">
               <button class="btn btn-accent py-2" id="addSetBtn" type="submit">
                 <span class="add-set-idle">
                   <i class="bi bi-plus-lg me-1"></i><span data-i18n="addSet">新增組數</span>
@@ -655,9 +601,6 @@
                 <span class="add-set-done">
                   <i class="bi bi-check-lg me-1"></i><span data-i18n="addedSet">已新增</span>
                 </span>
-              </button>
-              <button class="btn btn-ghost py-2" id="lastSetBtn" type="button">
-                <i class="bi bi-arrow-repeat me-1"></i><span data-i18n="lastSet">再加上一組</span>
               </button>
             </div>
           </form>
@@ -687,13 +630,13 @@
           <h2 class="h5 mb-0" data-i18n="chartsTitle">動作進度</h2>
           <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
         </div>
-        <section class="card-panel p-4 mb-4">
-          <div class="chart-range">
+        <section class="card-panel p-4">
+          <div class="chart-range mb-3">
             <select class="form-select" id="chartRangePreset">
-              <option value="7" selected data-i18n="range7">近 7 天</option>
+              <option value="all" data-i18n="rangeAll">全部日期</option>
+              <option value="7" data-i18n="range7">近 7 天</option>
               <option value="30" data-i18n="range30">近 30 天</option>
               <option value="90" data-i18n="range90">近 90 天</option>
-              <option value="all" data-i18n="rangeAll">全部日期</option>
               <option value="custom" data-i18n="rangeCustom">自訂範圍</option>
             </select>
             <div class="chart-range-dates">
@@ -705,15 +648,8 @@
               <input class="form-control" id="chartTo" type="date" />
             </div>
           </div>
+          <div id="chartsList"></div>
         </section>
-        <div class="section-head mb-2">
-          <h3 class="h6 mb-0" data-i18n="rangePieTitle">容量占比</h3>
-          <span class="small text-muted-2" data-i18n="rangePieHint">依所選日期範圍</span>
-        </div>
-        <section class="card-panel p-4 mb-4">
-          <div id="rangePieMount" class="chart-mount"></div>
-        </section>
-        <div id="chartsList"></div>
       </div>
 
       <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" tabindex="0">
@@ -866,8 +802,6 @@
           sessionDate: "訓練日期",
           addSet: "新增組數",
           addedSet: "已新增",
-          lastSet: "再加上一組",
-          noLastSet: "還沒有可重複的組數。",
           recentExercises: "常用動作",
           noRecent: "尚無常用動作。",
           setsToday: "今日組數",
@@ -944,18 +878,9 @@
           settingsData: "資料",
           lbs: "磅",
           units: "重量單位",
-          todayPieTitle: "當日動作",
-          todayPieHint: "依容量占比",
-          todayPieEmpty: "這天還沒有紀錄。",
-          todaySummaryTitle: "動作摘要",
-          todaySummaryHint: "與上次同動作比較組數與容量",
-          firstSession: "首次",
-          volNow: "今次容量",
-          volLast: "上次容量",
-          setsNow: "今次組數",
-          setsLast: "上次組數",
-          rangePieTitle: "容量占比",
-          rangePieHint: "依所選日期範圍"
+          todayPieTitle: "今日動作",
+          todayPieHint: "依今日容量占比",
+          todayPieEmpty: "今天還沒有紀錄。"
         },
         en: {
           brand: "workout-tracker-web-app",
@@ -970,8 +895,6 @@
           sessionDate: "Session date",
           addSet: "Add set",
           addedSet: "Added",
-          lastSet: "Repeat last set",
-          noLastSet: "No previous set to repeat.",
           recentExercises: "Recent exercises",
           noRecent: "No saved exercises yet.",
           setsToday: "Sets today",
@@ -1048,18 +971,9 @@
           settingsData: "Data",
           lbs: "lbs",
           units: "Weight unit",
-          todayPieTitle: "Day's exercises",
-          todayPieHint: "Share of volume",
-          todayPieEmpty: "No sets logged on this day.",
-          todaySummaryTitle: "Exercise summary",
-          todaySummaryHint: "Sets and volume vs last session of the same exercise",
-          firstSession: "First",
-          volNow: "Volume now",
-          volLast: "Volume last",
-          setsNow: "Sets now",
-          setsLast: "Sets last",
-          rangePieTitle: "Share of volume",
-          rangePieHint: "For the selected date range"
+          todayPieTitle: "Today's exercises",
+          todayPieHint: "Share of today's volume",
+          todayPieEmpty: "No sets logged today."
         }
       };
 
@@ -1077,7 +991,6 @@
       var persistWarningShown = false;
       var chartInstances = [];
       var logFilter = "today";
-      var todayViewDate = "";
 
       function t(key, vars) {
         var pack = I18N[locale] || I18N["zh-Hant"];
@@ -1196,6 +1109,9 @@
         document.getElementById("formUnitKg").textContent = t("kg");
         document.getElementById("formUnitLbs").textContent = t("lbs");
         document.getElementById("editWeightUnit").textContent = unitLabel();
+        document.getElementById("todayBadge").textContent = new Date().toLocaleDateString(dateLocaleName(), {
+          weekday: "short", month: "short", day: "numeric"
+        });
         document.getElementById("formStatusClose").setAttribute("aria-label", t("dismiss"));
       }
 
@@ -1212,13 +1128,6 @@
         var now = new Date();
         var offset = now.getTimezoneOffset() * 60000;
         return new Date(now.getTime() - offset).toISOString().slice(0, 10);
-      }
-
-      function viewDate() {
-        var el = document.getElementById("todayDate");
-        var val = el && el.value ? String(el.value) : todayViewDate;
-        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-        return todayISO();
       }
 
       function showStatus(type, message) {
@@ -1638,39 +1547,11 @@
         };
       }
 
-      function previousExerciseStats(sets, name, day) {
-        var key = String(name || "").trim().toLowerCase();
-        if (!key) return null;
-        var byDate = {};
-        sets.forEach(function (set) {
-          if (String(set.exercise || "").trim().toLowerCase() !== key) return;
-          if (!set.date || set.date >= day) return;
-          if (!byDate[set.date]) byDate[set.date] = { volume: 0, sets: 0 };
-          byDate[set.date].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
-          byDate[set.date].sets += 1;
-        });
-        var dates = Object.keys(byDate).sort();
-        if (!dates.length) return null;
-        return byDate[dates[dates.length - 1]];
-      }
-
-      function volumeChangePct(nowVol, prevVol) {
-        if (prevVol == null || !isFinite(prevVol) || prevVol <= 0) return null;
-        return ((nowVol - prevVol) / prevVol) * 100;
-      }
-
-      function formatDelta(pct) {
-        if (pct == null || !isFinite(pct)) return t("firstSession");
-        var rounded = Math.round(pct);
-        if (rounded === 0) return "0%";
-        return (rounded > 0 ? "+" : "") + rounded + "%";
-      }
-
       function todayPieSeries(sets) {
-        var day = viewDate();
+        var today = todayISO();
         var byName = {};
         sets.forEach(function (set) {
-          if (set.date !== day) return;
+          if (set.date !== today) return;
           var name = String(set.exercise || "").trim();
           if (!name) return;
           var key = name.toLowerCase();
@@ -1681,13 +1562,7 @@
         return Object.keys(byName).sort(function (a, b) {
           return byName[b].volume - byName[a].volume;
         }).map(function (key) {
-          var row = byName[key];
-          var prev = previousExerciseStats(sets, row.name, day);
-          row.prevVolume = prev ? prev.volume : null;
-          row.prevSets = prev ? prev.sets : null;
-          row.changePct = volumeChangePct(row.volume, row.prevVolume);
-          row.setsChangePct = volumeChangePct(row.sets, row.prevSets);
-          return row;
+          return byName[key];
         });
       }
 
@@ -1726,39 +1601,6 @@
         };
       }
 
-      function rangePieSeries(sets) {
-        var byName = {};
-        sets.forEach(function (set) {
-          var name = String(set.exercise || "").trim();
-          if (!name) return;
-          var key = name.toLowerCase();
-          if (!byName[key]) byName[key] = { name: name, volume: 0, sets: 0 };
-          byName[key].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
-          byName[key].sets += 1;
-        });
-        return Object.keys(byName).sort(function (a, b) {
-          return byName[b].volume - byName[a].volume;
-        }).map(function (key) { return byName[key]; });
-      }
-
-      function renderRangePie(sets) {
-        var mount = document.getElementById("rangePieMount");
-        if (!mount) return;
-        var rows = rangePieSeries(sets);
-        if (!rows.length) {
-          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsEmptyRange")) + "</div>";
-          return;
-        }
-        if (typeof ApexCharts === "undefined") {
-          mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
-          return;
-        }
-        mount.innerHTML = "";
-        var chart = new ApexCharts(mount, pieOptions(rows));
-        chart.render();
-        chartInstances.push(chart);
-      }
-
       function renderTodayPie(sets) {
         var mount = document.getElementById("todayPieMount");
         if (!mount) return;
@@ -1781,26 +1623,24 @@
         var list = document.getElementById("chartsList");
         destroyCharts();
         renderTodayPie(sets);
-        var preset = document.getElementById("chartRangePreset").value || "7";
+        var preset = document.getElementById("chartRangePreset").value || "all";
         if (!document.getElementById("chartFrom").value || !document.getElementById("chartTo").value) {
           applyChartPreset(preset, sets);
         } else {
           setBounds(sets);
         }
         var ranged = chartRangeSets(sets);
-        renderRangePie(ranged);
         var progress = exerciseProgress(ranged);
         if (!progress.length) {
-          list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div></section>";
+          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div>";
           return;
         }
         if (typeof ApexCharts === "undefined") {
-          list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div></section>";
+          list.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
           return;
         }
         list.innerHTML = progress.map(function (item, index) {
-          return "<div class=\"mb-4\"><div class=\"section-head mb-2\"><h3 class=\"h6 mb-0\">" + escapeHtml(item.name) + "</h3></div>" +
-            "<section class=\"card-panel p-4\"><div class=\"chart-mount\" id=\"chart-" + index + "\"></div></section></div>";
+          return "<div class=\"chart-card\"><h3>" + escapeHtml(item.name) + "</h3><div class=\"chart-mount\" id=\"chart-" + index + "\"></div></div>";
         }).join("");
         progress.forEach(function (item, index) {
           var chart = new ApexCharts(document.getElementById("chart-" + index), chartOptions(item));
@@ -1814,12 +1654,7 @@
           return a.date < b.date ? 1 : -1;
         });
 
-        var day = viewDate();
-        var todayDateEl = document.getElementById("todayDate");
-        if (todayDateEl && todayDateEl.value !== day) todayDateEl.value = day;
-        todayViewDate = day;
-
-        var todaySets = sets.filter(function (set) { return set.date === day; });
+        var todaySets = sets.filter(function (set) { return set.date === todayISO(); });
         var volume = todaySets.reduce(function (sum, set) {
           return sum + (Number(set.weight) * Number(set.reps));
         }, 0);
@@ -1829,34 +1664,6 @@
         document.getElementById("statSets").textContent = String(todaySets.length);
         document.getElementById("statVolume").textContent = formatVolume(volume);
         document.getElementById("statExercises").textContent = String(Object.keys(exercisesToday).length);
-
-        var summary = document.getElementById("todaySummary");
-        if (summary) {
-          var rows = todayPieSeries(sets);
-          summary.innerHTML = rows.length
-            ? rows.map(function (row) {
-                var volClass = row.changePct == null ? "delta-flat" : (row.changePct > 0 ? "delta-up" : (row.changePct < 0 ? "delta-down" : "delta-flat"));
-                var setDiff = row.prevSets == null ? null : (row.sets - row.prevSets);
-                var setClass = setDiff == null ? "delta-flat" : (setDiff > 0 ? "delta-up" : (setDiff < 0 ? "delta-down" : "delta-flat"));
-                var setLabel = setDiff == null ? "" : ((setDiff > 0 ? "+" : "") + setDiff);
-                var pctLabel = formatDelta(row.changePct);
-                var lastLabel = row.prevVolume != null ? formatVolume(row.prevVolume) : "";
-                return "<div class=\"set-row summary-row\">" +
-                  "<div class=\"summary-main\">" +
-                  "<div class=\"fw-semibold\">" + escapeHtml(row.name) + "</div>" +
-                  "<div class=\"small text-muted-2\">" + row.sets + " " + escapeHtml(t("sets")) + "</div>" +
-                  "</div>" +
-                  "<div class=\"summary-deltas\">" +
-                  "<button type=\"button\" class=\"delta-pill " + volClass + "\" data-toggle-val" +
-                  (row.prevVolume != null ? " data-showing=\"now\" data-now=\"" + escapeHtml(pctLabel) + "\" data-alt=\"" + escapeHtml(lastLabel) + "\"" : "") +
-                  ">" + escapeHtml(pctLabel) + "</button>" +
-                  "<button type=\"button\" class=\"delta-pill " + setClass + "\" data-toggle-val" +
-                  (setLabel && row.prevSets != null ? " data-showing=\"now\" data-now=\"" + escapeHtml(setLabel) + "\" data-alt=\"" + String(row.prevSets) + "\"" : "") +
-                  ">" + escapeHtml(setLabel || "—") + "</button>" +
-                  "</div></div>";
-              }).join("")
-            : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
-        }
 
         var todayLog = document.getElementById("todayLog");
         if (todayLog) {
@@ -1872,8 +1679,6 @@
         exerciseChips.innerHTML = names.slice(0, 20).map(function (name) {
           return "<button type=\"button\" class=\"chip\" data-exercise=\"" + escapeHtml(name) + "\">" + escapeHtml(name) + "</button>";
         }).join("") || "<span class=\"text-muted-2 small\">" + escapeHtml(t("noRecent")) + "</span>";
-        var lastBtn = document.getElementById("lastSetBtn");
-        if (lastBtn) lastBtn.disabled = !sets.length;
 
         var dates = [];
         sets.forEach(function (set) {
@@ -1928,35 +1733,31 @@
       }
 
       document.getElementById("sessionDate").value = todayISO();
-      document.getElementById("todayDate").value = todayISO();
-      todayViewDate = todayISO();
 
-      function lastAddedSet() {
-        var sets = loadSets();
-        if (!sets.length) return null;
-        return sets.slice().sort(function (a, b) {
-          return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
-        })[0];
-      }
-
-      function logSetValues(exercise, enteredWeight, reps, date, clearReps) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var exercise = document.getElementById("exercise").value.trim();
+        var enteredWeight = parseNumber(document.getElementById("weight").value);
         var weight = toKg(enteredWeight);
+        var reps = parseNumber(document.getElementById("reps").value);
+        var date = document.getElementById("sessionDate").value || todayISO();
+
         if (!exercise) {
           showStatus("err", t("needExercise"));
           document.getElementById("exercise").focus();
-          return false;
+          return;
         }
         if (!isFinite(enteredWeight) || enteredWeight < 0) {
           showStatus("err", t("needWeight"));
           document.getElementById("weight").focus();
-          return false;
+          return;
         }
         if (!isFinite(reps) || reps < 1 || Math.floor(reps) !== reps) {
           showStatus("err", t("needReps"));
           document.getElementById("reps").focus();
-          return false;
+          return;
         }
-        date = date || todayISO();
+
         var sets = loadSets();
         sets.push({
           id: uid(),
@@ -1967,7 +1768,7 @@
           createdAt: Date.now()
         });
         var persisted = saveSets(sets);
-        if (clearReps) document.getElementById("reps").value = "";
+        document.getElementById("reps").value = "";
         document.getElementById("sessionDate").value = date;
         if (persisted) {
           showStatus("ok", t("logged", { exercise: exercise, weight: round1(enteredWeight), reps: reps, unit: unitLabel() }));
@@ -1975,33 +1776,6 @@
         flashAddSetSuccess();
         render();
         document.getElementById("reps").focus();
-        return true;
-      }
-
-      form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        logSetValues(
-          document.getElementById("exercise").value.trim(),
-          parseNumber(document.getElementById("weight").value),
-          parseNumber(document.getElementById("reps").value),
-          document.getElementById("sessionDate").value || todayISO(),
-          true
-        );
-      });
-
-      document.getElementById("lastSetBtn").addEventListener("click", function () {
-        var last = lastAddedSet();
-        if (!last) {
-          showStatus("err", t("noLastSet"));
-          return;
-        }
-        var date = document.getElementById("sessionDate").value || last.date || todayISO();
-        var shownWeight = fromKg(Number(last.weight) || 0);
-        document.getElementById("exercise").value = last.exercise;
-        document.getElementById("weight").value = String(round1(shownWeight));
-        document.getElementById("reps").value = String(last.reps);
-        document.getElementById("sessionDate").value = date;
-        logSetValues(last.exercise, shownWeight, Number(last.reps), date, false);
       });
 
       exerciseChips.addEventListener("click", function (event) {
@@ -2041,13 +1815,6 @@
 
       logList.addEventListener("click", handleLogClick);
       document.getElementById("todayLog").addEventListener("click", handleLogClick);
-      document.getElementById("todaySummary").addEventListener("click", function (event) {
-        var el = event.target.closest("[data-toggle-val]");
-        if (!el || !el.getAttribute("data-alt")) return;
-        var showing = el.getAttribute("data-showing") === "alt" ? "now" : "alt";
-        el.setAttribute("data-showing", showing);
-        el.textContent = showing === "alt" ? el.getAttribute("data-alt") : el.getAttribute("data-now");
-      });
 
       editForm.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -2072,10 +1839,6 @@
 
       filterDate.addEventListener("change", function () {
         logFilter = filterDate.value;
-        render();
-      });
-      document.getElementById("todayDate").addEventListener("change", function () {
-        todayViewDate = viewDate();
         render();
       });
       document.getElementById("formStatusClose").addEventListener("click", hideStatus);
@@ -2169,12 +1932,7 @@
       });
       document.getElementById("appTabs").addEventListener("click", function (event) {
         var btn = event.target.closest("[data-bs-target]");
-        if (!btn) return;
-        if (btn.classList.contains("active")) {
-          var scroller = document.querySelector(".app-scroll");
-          if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
-        }
-        if (window.bootstrap) return;
+        if (!btn || window.bootstrap) return;
         var target = document.querySelector(btn.getAttribute("data-bs-target"));
         if (!target) return;
         document.querySelectorAll("#appTabs .nav-link").forEach(function (link) {
@@ -2227,55 +1985,26 @@
       setLocale(detectLocale());
       if (!hasMadeFirstChoice()) showWelcome();
 
-      function isTextField(el) {
-        if (!el || el === document.body || el === document.documentElement) return false;
-        var tag = (el.tagName || "").toLowerCase();
-        if (tag === "textarea" || tag === "select") return true;
-        if (tag === "input") {
-          var type = String(el.type || "text").toLowerCase();
-          return type !== "button" && type !== "submit" && type !== "reset" && type !== "checkbox" && type !== "radio" && type !== "file" && type !== "hidden";
-        }
-        return !!el.isContentEditable;
-      }
-
-      function measureSafeBottom() {
+      function fitAppShell() {
         var probe = document.createElement("div");
-        probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom, 0px)";
+        probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px)";
         document.body.appendChild(probe);
-        var value = parseFloat(window.getComputedStyle(probe).paddingBottom) || 0;
+        var inset = parseFloat(window.getComputedStyle(probe).paddingBottom) || 0;
         probe.remove();
-        if (value > 34) value = 34;
-        if (value < 8) value = 8;
-        document.documentElement.style.setProperty("--safe-bottom", value + "px");
+        var base = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+        var screenH = (window.screen && window.screen.height) || 0;
+        var standalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+        var h = base;
+        if (inset > 0 && base + 8 < screenH) h = base + inset;
+        if (standalone && screenH > h) h = screenH;
+        document.documentElement.style.setProperty("--app-h", h + "px");
       }
-
-      function restoreShell() {
-        window.scrollTo(0, 0);
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        document.documentElement.style.transform = "";
-        document.body.style.transform = "";
-        document.body.classList.remove("keyboard-open");
-        measureSafeBottom();
-      }
-
-      measureSafeBottom();
-
-      function onKeyboardMaybeClose() {
-        if (isTextField(document.activeElement)) return;
-        restoreShell();
-      }
-
-      document.addEventListener("focusout", function () {
-        setTimeout(onKeyboardMaybeClose, 50);
-        setTimeout(onKeyboardMaybeClose, 350);
-      });
-      window.addEventListener("resize", onKeyboardMaybeClose);
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", onKeyboardMaybeClose);
-      }
-      document.addEventListener("gesturestart", function (event) {
-        event.preventDefault();
+      fitAppShell();
+      window.addEventListener("orientationchange", function () { setTimeout(fitAppShell, 300); });
+      window.addEventListener("resize", function () {
+        var tag = document.activeElement && document.activeElement.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        fitAppShell();
       });
 
       if (window.location.protocol !== "file:" && "serviceWorker" in navigator) {
