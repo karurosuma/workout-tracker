@@ -19,11 +19,9 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="vendor/noto-sans-tc.css" />
+  <link rel="stylesheet" href="vendor/bootstrap.min.css" />
+  <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
   <style>
     :root {
       --bg: #0b0f14;
@@ -543,6 +541,32 @@
     @media (max-width: 767.98px) {
       .stat-value { font-size: 1.15rem; }
     }
+
+    @media (orientation: landscape) and (max-height: 560px) {
+      .status-spacer { height: 0; }
+      main.container {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+      }
+      .app-scroll { padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)); }
+      .app-nav-bar { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .app-tabs .nav-link {
+        min-height: 40px;
+        padding: 2px 2px 1px;
+        font-size: 0.64rem;
+      }
+      .app-tabs .nav-link i { font-size: 1.05rem; }
+      .chart-mount { min-height: 150px; }
+      .card-panel { box-shadow: none; }
+      #setForm {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+      }
+      #setForm > .col-12:first-child,
+      #setForm > .col-12:last-child,
+      #setForm > .mt-4 { grid-column: 1 / -1; }
+    }
   </style>
 </head>
 <body>
@@ -744,6 +768,7 @@
 
           <div class="settings-row">
             <div class="fw-semibold mb-1" data-i18n="settingsData">資料</div>
+            <p class="small text-muted-2 mb-2" data-i18n="storageSqlite">資料存在本機 SQLite。</p>
             <div class="settings-actions">
               <button class="btn btn-ghost" id="loadBtn" type="button">
                 <i class="bi bi-folder2-open me-1"></i><span data-i18n="load">匯入</span>
@@ -844,8 +869,9 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="vendor/sql-wasm.js"></script>
+  <script src="vendor/bootstrap.bundle.min.js"></script>
+  <script src="vendor/apexcharts.min.js"></script>
   <script>
     (function () {
       var STORAGE_KEY = "workout-tracker-web-app.sets.v1";
@@ -875,6 +901,7 @@
           noLastSet: "還沒有可重複的組數。",
           recentExercises: "常用動作",
           noRecent: "尚無常用動作。",
+          logMore: "再顯示 {count} 組",
           setsToday: "今日組數",
           volume: "總容量",
           exercises: "動作數",
@@ -947,6 +974,7 @@
           settingsLanguage: "語言",
           settingsUnits: "重量單位",
           settingsData: "資料",
+          storageSqlite: "資料存在本機 SQLite。",
           lbs: "磅",
           units: "重量單位",
           todayPieTitle: "當日動作",
@@ -954,6 +982,7 @@
           todayPieEmpty: "這天還沒有紀錄。",
           todaySummaryTitle: "動作摘要",
           todaySummaryHint: "與上次同動作比較組數與容量",
+          other: "其他",
           firstSession: "首次",
           volNow: "今次容量",
           volLast: "上次容量",
@@ -979,6 +1008,7 @@
           noLastSet: "No previous set to repeat.",
           recentExercises: "Recent exercises",
           noRecent: "No saved exercises yet.",
+          logMore: "Show {count} more",
           setsToday: "Sets today",
           volume: "Volume",
           exercises: "Exercises",
@@ -1051,6 +1081,7 @@
           settingsLanguage: "Language",
           settingsUnits: "Weight unit",
           settingsData: "Data",
+          storageSqlite: "Stored locally in SQLite.",
           lbs: "lbs",
           units: "Weight unit",
           todayPieTitle: "Day's exercises",
@@ -1058,6 +1089,7 @@
           todayPieEmpty: "No sets logged on this day.",
           todaySummaryTitle: "Exercise summary",
           todaySummaryHint: "Sets and volume vs last session of the same exercise",
+          other: "Other",
           firstSession: "First",
           volNow: "Volume now",
           volLast: "Volume last",
@@ -1082,6 +1114,9 @@
       var persistWarningShown = false;
       var chartInstances = [];
       var logFilter = "today";
+      var logLimit = 80;
+      var chartsDirty = true;
+      var todayDirty = true;
       var todayViewDate = "";
 
       function t(key, vars) {
@@ -1259,35 +1294,165 @@
       }
 
       function loadSets() {
-        try {
-          var raw = storageRead(STORAGE_KEY, LEGACY_STORAGE_KEY);
-          if (raw) {
-            var parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              memoryStore.sets = parsed;
-              return parsed.slice();
-            }
-          }
-        } catch (err) {
-          if (!persistWarningShown) {
-            persistWarningShown = true;
-            showStatus("warn", t("persistWarn"));
-          }
-        }
         return memoryStore.sets.slice();
+      }
+
+      function replaceSqlSets(sets) {
+        if (!sqlDb) return false;
+        sqlDb.run("BEGIN");
+        sqlDb.run("DELETE FROM sets");
+        var stmt = sqlDb.prepare("INSERT INTO sets (id, exercise, weight, reps, date, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+        sets.forEach(function (set) {
+          stmt.run([
+            String(set.id),
+            String(set.exercise || ""),
+            Number(set.weight) || 0,
+            Math.floor(Number(set.reps) || 0),
+            String(set.date || ""),
+            Number(set.createdAt) || Date.now()
+          ]);
+        });
+        stmt.free();
+        sqlDb.run("COMMIT");
+        return true;
+      }
+
+      function persistSql() {
+        if (!sqlDb) return Promise.resolve(false);
+        try {
+          var bytes = sqlDb.export();
+          return idbPut(bytes).then(function () { return true; }).catch(function () {
+            showStatus("warn", t("tabOnly"));
+            return false;
+          });
+        } catch (err) {
+          showStatus("warn", t("tabOnly"));
+          return Promise.resolve(false);
+        }
       }
 
       function saveSets(sets) {
         memoryStore.sets = sets.slice();
         try {
-          var payload = JSON.stringify(sets);
-          localStorage.setItem(STORAGE_KEY, payload);
-          if (localStorage.getItem(STORAGE_KEY) !== payload) throw new Error("storage verify failed");
+          if (!replaceSqlSets(memoryStore.sets)) {
+            showStatus("warn", t("tabOnly"));
+            return false;
+          }
+          persistSql();
           return true;
         } catch (err) {
           showStatus("warn", t("tabOnly"));
           return false;
         }
+      }
+
+      var SQL_READY = null;
+      var sqlDb = null;
+      var IDB_NAME = "workout-tracker-web-app";
+      var IDB_STORE = "sqlite";
+      var IDB_KEY = "sets";
+
+      function idbOpen() {
+        return new Promise(function (resolve, reject) {
+          var req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = function () {
+            if (!req.result.objectStoreNames.contains(IDB_STORE)) {
+              req.result.createObjectStore(IDB_STORE);
+            }
+          };
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () { reject(req.error); };
+        });
+      }
+
+      function idbGet() {
+        return idbOpen().then(function (db) {
+          return new Promise(function (resolve, reject) {
+            var tx = db.transaction(IDB_STORE, "readonly");
+            var req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+            req.onsuccess = function () { resolve(req.result || null); };
+            req.onerror = function () { reject(req.error); };
+          });
+        });
+      }
+
+      function idbPut(bytes) {
+        return idbOpen().then(function (db) {
+          return new Promise(function (resolve, reject) {
+            var tx = db.transaction(IDB_STORE, "readwrite");
+            tx.objectStore(IDB_STORE).put(bytes, IDB_KEY);
+            tx.oncomplete = function () { resolve(); };
+            tx.onerror = function () { reject(tx.error); };
+          });
+        });
+      }
+
+      function rowsFromSql() {
+        if (!sqlDb) return [];
+        var stmt = sqlDb.prepare("SELECT id, exercise, weight, reps, date, created_at FROM sets");
+        var rows = [];
+        while (stmt.step()) {
+          var row = stmt.getAsObject();
+          rows.push({
+            id: String(row.id),
+            exercise: String(row.exercise || ""),
+            weight: Number(row.weight) || 0,
+            reps: Number(row.reps) || 0,
+            date: String(row.date || ""),
+            createdAt: Number(row.created_at) || 0
+          });
+        }
+        stmt.free();
+        return rows;
+      }
+
+      function ensureSchema() {
+        sqlDb.run("CREATE TABLE IF NOT EXISTS sets (id TEXT PRIMARY KEY, exercise TEXT NOT NULL, weight REAL NOT NULL, reps INTEGER NOT NULL, date TEXT NOT NULL, created_at INTEGER NOT NULL)");
+        sqlDb.run("CREATE INDEX IF NOT EXISTS idx_sets_date ON sets(date)");
+        sqlDb.run("CREATE INDEX IF NOT EXISTS idx_sets_exercise ON sets(exercise)");
+      }
+
+      function migrateLegacyJson() {
+        var existing = rowsFromSql();
+        if (existing.length) {
+          memoryStore.sets = existing;
+          return;
+        }
+        var raw = storageRead(STORAGE_KEY, LEGACY_STORAGE_KEY);
+        var parsed = [];
+        if (raw) {
+          try {
+            var data = JSON.parse(raw);
+            if (Array.isArray(data)) parsed = data.map(normalizeSet).filter(Boolean);
+          } catch (err) {}
+        }
+        memoryStore.sets = parsed;
+        if (parsed.length) {
+          replaceSqlSets(parsed);
+          persistSql();
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(LEGACY_STORAGE_KEY);
+          } catch (err) {}
+        }
+      }
+
+      function initDb() {
+        if (SQL_READY) return SQL_READY;
+        SQL_READY = Promise.resolve().then(function () {
+          if (typeof initSqlJs !== "function") throw new Error("sqljs");
+          return initSqlJs({ locateFile: function (file) { return "vendor/" + file; } });
+        }).then(function (SQL) {
+          return idbGet().catch(function () { return null; }).then(function (saved) {
+            sqlDb = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
+            ensureSchema();
+            migrateLegacyJson();
+          });
+        }).catch(function () {
+          sqlDb = null;
+          showStatus("warn", t("persistWarn"));
+        });
+        return SQL_READY;
       }
 
       function normalizeSet(raw, index) {
@@ -1484,14 +1649,49 @@
       }
 
       function uniqueExercises(sets) {
-        var seen = [];
-        for (var i = 0; i < sets.length; i++) {
+        var seen = {};
+        var names = [];
+        sets.forEach(function (set) {
+          var name = String(set.exercise || "").trim();
+          var key = name.toLowerCase();
+          if (!name || seen[key]) return;
+          seen[key] = true;
+          names.push(name);
+        });
+        names.sort(function (a, b) { return a.localeCompare(b, dateLocaleName()); });
+        return names;
+      }
+
+      function recentExercises(sets, limit) {
+        var seen = {};
+        var out = [];
+        for (var i = 0; i < sets.length && out.length < limit; i++) {
           var name = String(sets[i].exercise || "").trim();
-          if (name && !seen.some(function (item) { return item.toLowerCase() === name.toLowerCase(); })) {
-            seen.push(name);
-          }
+          var key = name.toLowerCase();
+          if (!name || seen[key]) continue;
+          seen[key] = true;
+          out.push(name);
         }
-        return seen.sort(function (a, b) { return a.localeCompare(b, dateLocaleName()); });
+        return out;
+      }
+
+      function sessionIndex(sets) {
+        var byEx = {};
+        sets.forEach(function (set) {
+          var key = String(set.exercise || "").trim().toLowerCase();
+          if (!key || !set.date) return;
+          var bucket = byEx[key] || (byEx[key] = {});
+          var day = bucket[set.date] || (bucket[set.date] = { volume: 0, sets: 0 });
+          day.volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          day.sets += 1;
+        });
+        return byEx;
+      }
+
+      function previousFromIndex(index, name, day) {
+        var key = String(name || "").trim().toLowerCase();
+        var dates = Object.keys(index[key] || {}).filter(function (d) { return d < day; }).sort();
+        return dates.length ? index[key][dates[dates.length - 1]] : null;
       }
 
       function formatDateLabel(iso) {
@@ -1609,7 +1809,7 @@
             toolbar: { show: false },
             zoom: { enabled: false },
             fontFamily: "Noto Sans TC, PingFang TC, Microsoft JhengHei, Segoe UI, sans-serif",
-            animations: { enabled: true, speed: 400 }
+            animations: { enabled: false }
           },
           theme: { mode: "dark" },
           colors: ["#3dff9a", "#2bd4ff"],
@@ -1671,7 +1871,7 @@
         return (rounded > 0 ? "+" : "") + rounded + "%";
       }
 
-      function todayPieSeries(sets) {
+      function todayPieSeries(sets, index) {
         var day = viewDate();
         var byName = {};
         sets.forEach(function (set) {
@@ -1683,17 +1883,31 @@
           byName[key].volume += (Number(set.weight) || 0) * (Number(set.reps) || 0);
           byName[key].sets += 1;
         });
+        var lookup = index || sessionIndex(sets);
         return Object.keys(byName).sort(function (a, b) {
           return byName[b].volume - byName[a].volume;
         }).map(function (key) {
           var row = byName[key];
-          var prev = previousExerciseStats(sets, row.name, day);
+          var prev = previousFromIndex(lookup, row.name, day);
           row.prevVolume = prev ? prev.volume : null;
           row.prevSets = prev ? prev.sets : null;
           row.changePct = volumeChangePct(row.volume, row.prevVolume);
           row.setsChangePct = volumeChangePct(row.sets, row.prevSets);
           return row;
         });
+      }
+
+      function pieRows(rows) {
+        if (rows.length <= 10) return rows;
+        var head = rows.slice(0, 10);
+        var rest = rows.slice(10);
+        var other = rest.reduce(function (acc, row) {
+          acc.volume += row.volume;
+          acc.sets += row.sets;
+          return acc;
+        }, { name: t("other"), volume: 0, sets: 0 });
+        head.push(other);
+        return head;
       }
 
       function pieOptions(rows) {
@@ -1704,7 +1918,7 @@
             background: "transparent",
             toolbar: { show: false },
             fontFamily: "Noto Sans TC, PingFang TC, Microsoft JhengHei, Segoe UI, sans-serif",
-            animations: { enabled: true, speed: 400 }
+            animations: { enabled: false }
           },
           theme: { mode: "dark" },
           colors: ["#3dff9a", "#2bd4ff", "#ffc857", "#ff5d73", "#c084fc", "#fb923c", "#67e8f9", "#f472b6"],
@@ -1749,7 +1963,7 @@
       function renderRangePie(sets) {
         var mount = document.getElementById("rangePieMount");
         if (!mount) return;
-        var rows = rangePieSeries(sets);
+        var rows = pieRows(rangePieSeries(sets));
         if (!rows.length) {
           mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsEmptyRange")) + "</div>";
           return;
@@ -1767,25 +1981,28 @@
       function renderTodayPie(sets) {
         var mount = document.getElementById("todayPieMount");
         if (!mount) return;
-        var rows = todayPieSeries(sets);
+        destroyCharts();
+        var rows = pieRows(todayPieSeries(sets));
         if (!rows.length) {
           mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
+          todayDirty = false;
           return;
         }
         if (typeof ApexCharts === "undefined") {
           mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div>";
+          todayDirty = false;
           return;
         }
         mount.innerHTML = "";
         var chart = new ApexCharts(mount, pieOptions(rows));
         chart.render();
         chartInstances.push(chart);
+        todayDirty = false;
       }
 
       function renderCharts(sets) {
         var list = document.getElementById("chartsList");
         destroyCharts();
-        renderTodayPie(sets);
         var preset = document.getElementById("chartRangePreset").value || "7";
         if (!document.getElementById("chartFrom").value || !document.getElementById("chartTo").value) {
           applyChartPreset(preset, sets);
@@ -1797,10 +2014,12 @@
         var progress = exerciseProgress(ranged);
         if (!progress.length) {
           list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div></section>";
+          chartsDirty = false;
           return;
         }
         if (typeof ApexCharts === "undefined") {
           list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(t("chartsFail")) + "</div></section>";
+          chartsDirty = false;
           return;
         }
         list.innerHTML = progress.map(function (item, index) {
@@ -1812,6 +2031,7 @@
           chart.render();
           chartInstances.push(chart);
         });
+        chartsDirty = false;
       }
       function render() {
         var sets = loadSets().sort(function (a, b) {
@@ -1835,9 +2055,10 @@
         document.getElementById("statVolume").textContent = formatVolume(volume);
         document.getElementById("statExercises").textContent = String(Object.keys(exercisesToday).length);
 
+        var index = sessionIndex(sets);
         var summary = document.getElementById("todaySummary");
         if (summary) {
-          var rows = todayPieSeries(sets);
+          var rows = todayPieSeries(sets, index);
           summary.innerHTML = rows.length
             ? rows.map(function (row) {
                 var volClass = row.changePct == null ? "delta-flat" : (row.changePct > 0 ? "delta-up" : (row.changePct < 0 ? "delta-down" : "delta-flat"));
@@ -1874,17 +2095,16 @@
         exerciseList.innerHTML = names.map(function (name) {
           return "<option value=\"" + escapeHtml(name) + "\"></option>";
         }).join("");
-        exerciseChips.innerHTML = names.slice(0, 20).map(function (name) {
+        var recent = recentExercises(sets, 20);
+        exerciseChips.innerHTML = recent.map(function (name) {
           return "<button type=\"button\" class=\"chip\" data-exercise=\"" + escapeHtml(name) + "\">" + escapeHtml(name) + "</button>";
         }).join("") || "<span class=\"text-muted-2 small\">" + escapeHtml(t("noRecent")) + "</span>";
         var lastBtn = document.getElementById("lastSetBtn");
         if (lastBtn) lastBtn.disabled = !sets.length;
 
-        var dates = [];
-        sets.forEach(function (set) {
-          if (dates.indexOf(set.date) === -1) dates.push(set.date);
-        });
-        dates.sort(function (a, b) { return a < b ? 1 : a > b ? -1 : 0; });
+        var dateMap = {};
+        sets.forEach(function (set) { if (set.date) dateMap[set.date] = true; });
+        var dates = Object.keys(dateMap).sort(function (a, b) { return a < b ? 1 : a > b ? -1 : 0; });
         var today = todayISO();
         if (dates.indexOf(today) === -1) dates.unshift(today);
         if (!logFilter || logFilter === "today") logFilter = today;
@@ -1908,17 +2128,17 @@
           var emptyMsg = filterDate.value === today ? t("todayPieEmpty") : t("emptyLog");
           logList.innerHTML = "<div class=\"empty-state\"><i class=\"bi bi-activity fs-2 d-block mb-2\"></i>" + escapeHtml(emptyMsg) + "</div>";
         } else {
+        var shown = visible.slice(0, logLimit);
         var grouped = {};
-        visible.forEach(function (set) {
+        shown.forEach(function (set) {
           (grouped[set.date] || (grouped[set.date] = [])).push(set);
         });
         var groupDates = Object.keys(grouped).sort(function (a, b) {
           return a < b ? 1 : a > b ? -1 : 0;
         });
 
-        logList.innerHTML = groupDates.map(function (date) {
+        var html = groupDates.map(function (date) {
           var rows = grouped[date].map(setRowHtml).join("");
-
           var sessionVolume = grouped[date].reduce(function (sum, set) {
             return sum + Number(set.weight) * Number(set.reps);
           }, 0);
@@ -1927,9 +2147,19 @@
             "<span class=\"small text-muted-2\">" + grouped[date].length + " " + escapeHtml(t("sets")) + " · " + formatVolume(sessionVolume) + " " + escapeHtml(t("vol")) + "</span>" +
             "</div>" + rows + "</div>";
         }).join("");
+        if (visible.length > shown.length) {
+          html += "<button type=\"button\" class=\"btn btn-ghost w-100\" id=\"logMoreBtn\">" +
+            escapeHtml(t("logMore", { count: Math.min(80, visible.length - shown.length) })) + "</button>";
+        }
+        logList.innerHTML = html;
         }
 
-        renderCharts(sets);
+        chartsDirty = true;
+        todayDirty = true;
+        var tab = document.querySelector("#appTabs .nav-link.active");
+        var target = tab ? tab.getAttribute("data-bs-target") : "#tab-log";
+        if (target === "#tab-charts") renderCharts(sets);
+        else if (target === "#tab-today") renderTodayPie(sets);
       }
 
       document.getElementById("sessionDate").value = todayISO();
@@ -2017,6 +2247,12 @@
       });
 
       function handleLogClick(event) {
+        var more = event.target.closest("#logMoreBtn");
+        if (more) {
+          logLimit += 80;
+          render();
+          return;
+        }
         var deleteBtn = event.target.closest("[data-delete]");
         var editBtn = event.target.closest("[data-edit]");
         var sets = loadSets();
@@ -2077,6 +2313,7 @@
 
       filterDate.addEventListener("change", function () {
         logFilter = filterDate.value;
+        logLimit = 80;
         render();
       });
       document.getElementById("todayDate").addEventListener("change", function () {
@@ -2166,11 +2403,10 @@
       document.getElementById("formUnitLbs").addEventListener("click", function () { setUnit("lbs"); });
 
       document.getElementById("tab-charts-btn").addEventListener("shown.bs.tab", function () {
-        renderCharts(loadSets());
+        if (chartsDirty) renderCharts(loadSets());
       });
       document.getElementById("tab-today-btn").addEventListener("shown.bs.tab", function () {
-        destroyCharts();
-        renderTodayPie(loadSets());
+        if (todayDirty) renderTodayPie(loadSets());
       });
       document.getElementById("appTabs").addEventListener("click", function (event) {
         var btn = event.target.closest("[data-bs-target]");
@@ -2191,11 +2427,8 @@
           pane.classList.toggle("show", on);
           pane.classList.toggle("active", on);
         });
-        if (target.id === "tab-charts") renderCharts(loadSets());
-        if (target.id === "tab-today") {
-          destroyCharts();
-          renderTodayPie(loadSets());
-        }
+        if (target.id === "tab-charts" && chartsDirty) renderCharts(loadSets());
+        if (target.id === "tab-today" && todayDirty) renderTodayPie(loadSets());
       });
 
       function hasMadeFirstChoice() {
@@ -2228,9 +2461,11 @@
         hideWelcome();
       });
 
-      unit = detectUnit();
-      setLocale(detectLocale());
-      if (!hasMadeFirstChoice()) showWelcome();
+      initDb().then(function () {
+        unit = detectUnit();
+        setLocale(detectLocale());
+        if (!hasMadeFirstChoice()) showWelcome();
+      });
 
       function isTextField(el) {
         if (!el || el === document.body || el === document.documentElement) return false;
@@ -2244,18 +2479,11 @@
       }
 
       function fitAppShell() {
-        var probe = document.createElement("div");
-        probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px)";
-        document.body.appendChild(probe);
-        var inset = parseFloat(window.getComputedStyle(probe).paddingBottom) || 0;
-        probe.remove();
-        var base = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
-        var screenH = (window.screen && window.screen.height) || 0;
-        var standalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
-        var h = base;
-        if (inset > 0 && screenH && base + 8 < screenH) h = base + inset;
-        if (standalone && screenH > h) h = screenH;
-        document.documentElement.style.setProperty("--app-h", h + "px");
+        if (isTextField(document.activeElement)) return;
+        var vv = window.visualViewport;
+        var h = (vv && vv.height) || window.innerHeight || document.documentElement.clientHeight || 0;
+        if (!h) return;
+        document.documentElement.style.setProperty("--app-h", Math.round(h) + "px");
       }
 
       function restoreShell() {
@@ -2269,7 +2497,13 @@
       }
 
       fitAppShell();
-      window.addEventListener("orientationchange", function () { setTimeout(fitAppShell, 300); });
+      function onOrientation() {
+        setTimeout(fitAppShell, 50);
+        setTimeout(fitAppShell, 300);
+        setTimeout(fitAppShell, 800);
+      }
+      window.addEventListener("orientationchange", onOrientation);
+      window.addEventListener("resize", onOrientation);
 
       function onKeyboardMaybeClose() {
         if (isTextField(document.activeElement)) return;

@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v57";
+const CACHE = "workout-tracker-web-app-v60";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -9,7 +9,21 @@ const PRECACHE = [
   "./apple-touch-icon.png",
   "./icon-192.png",
   "./icon-512.png",
-  "./icon-512-maskable.png"
+  "./icon-512-maskable.png",
+  "./vendor/bootstrap.min.css",
+  "./vendor/bootstrap.bundle.min.js",
+  "./vendor/bootstrap-icons.min.css",
+  "./vendor/apexcharts.min.js",
+  "./vendor/sql-wasm.js",
+  "./vendor/sql-wasm.wasm",
+  "./vendor/noto-sans-tc.css",
+  "./vendor/fonts/bootstrap-icons.woff2",
+  "./vendor/fonts/bootstrap-icons.woff",
+  "./vendor/fonts/noto-sans-tc-400.woff2",
+  "./vendor/fonts/noto-sans-tc-500.woff2",
+  "./vendor/fonts/noto-sans-tc-600.woff2",
+  "./vendor/fonts/noto-sans-tc-700.woff2",
+  "./vendor/fonts/noto-sans-tc-800.woff2"
 ];
 
 self.addEventListener("install", function (event) {
