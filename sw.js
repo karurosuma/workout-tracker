@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v64";
+const CACHE = "workout-tracker-web-app-v66";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -10,6 +10,14 @@ const PRECACHE = [
   "./icon-192.png",
   "./icon-512.png",
   "./icon-512-maskable.png",
+  "./splash/splash-1170x2532.png",
+  "./splash/splash-1179x2556.png",
+  "./splash/splash-1290x2796.png",
+  "./splash/splash-1125x2436.png",
+  "./splash/splash-828x1792.png",
+  "./splash/splash-750x1334.png",
+  "./splash/splash-1242x2208.png",
+  "./splash/splash-1080x1920.png",
   "./vendor/bootstrap.min.css",
   "./vendor/bootstrap.bundle.min.js",
   "./vendor/bootstrap-icons.min.css",

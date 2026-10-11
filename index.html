@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
   <title>workout-tracker-web-app — 訓練紀錄</title>
+  <meta name="color-scheme" content="dark" />
+  <meta name="format-detection" content="telephone=no" />
   <meta name="theme-color" content="#0b0f14" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f14" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0b0f14" />
@@ -19,6 +21,13 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="apple-touch-startup-image" href="splash/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />
   <link rel="stylesheet" href="vendor/noto-sans-tc.css" />
   <link rel="stylesheet" href="vendor/bootstrap.min.css" />
   <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
@@ -38,7 +47,10 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * { box-sizing: border-box; touch-action: manipulation; }
+    * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    html { color-scheme: dark; }
+    button, .nav-link, .chip { -webkit-touch-callout: none; user-select: none; }
+    input, textarea { user-select: text; }
 
     html {
       background-color: var(--bg);
@@ -546,9 +558,24 @@
       }
     }
 
-    .form-select-unit {
-      max-width: 96px;
-      flex: 0 0 96px;
+    .unit-btn {
+      cursor: pointer;
+      min-width: 52px;
+    }
+    .unit-btn.active {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .set-name-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .set-time {
+      margin-left: auto;
+      text-align: right;
+      white-space: nowrap;
     }
 
     body.welcome-lock { overflow: hidden; }
@@ -616,17 +643,15 @@
     <div class="tab-content">
       <div class="tab-pane fade" id="tab-today" role="tabpanel" aria-labelledby="tab-today-btn" tabindex="0">
         <div class="section-head mb-3">
-          <div class="section-head-top">
-            <h1 class="h4 mb-0" data-i18n="todayTitle">表現</h1>
-            <div class="date-nav">
-              <button class="btn btn-ghost btn-sm date-nav-btn" id="todayPrev" type="button" aria-label="Previous">
-                <i class="bi bi-chevron-left"></i>
-              </button>
-              <input class="form-control form-control-sm" id="todayDate" type="date" />
-              <button class="btn btn-ghost btn-sm date-nav-btn" id="todayNext" type="button" aria-label="Next">
-                <i class="bi bi-chevron-right"></i>
-              </button>
-            </div>
+          <h1 class="h4 mb-2" data-i18n="todayTitle">表現</h1>
+          <div class="date-nav">
+            <button class="btn btn-ghost btn-sm date-nav-btn" id="todayPrev" type="button" aria-label="Previous">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <input class="form-control form-control-sm" id="todayDate" type="date" />
+            <button class="btn btn-ghost btn-sm date-nav-btn" id="todayNext" type="button" aria-label="Next">
+              <i class="bi bi-chevron-right"></i>
+            </button>
           </div>
         </div>
         <div class="row g-3 mb-4">
@@ -691,10 +716,8 @@
               <label class="form-label" for="weight" data-i18n="weight">重量</label>
               <div class="input-group">
                 <input class="form-control" id="weight" name="weight" type="text" inputmode="decimal" placeholder="60" required />
-                <select class="form-select form-select-unit" id="formUnitSelect" aria-label="unit">
-                  <option value="kg">kg</option>
-                  <option value="lbs">lbs</option>
-                </select>
+                <button class="input-group-text unit-btn" id="formUnitKg" type="button">kg</button>
+                <button class="input-group-text unit-btn" id="formUnitLbs" type="button">lbs</button>
               </div>
             </div>
             <div class="col-12">
@@ -772,6 +795,14 @@
           <h2 class="h5 mb-0" data-i18n="settingsTitle">設定</h2>
         </div>
         <section class="card-panel p-4">
+          <div class="settings-row" id="installRow">
+            <div>
+              <div class="fw-semibold" data-i18n="installTitle">安裝到主畫面</div>
+              <p class="small text-muted-2 mb-0" id="installHint" data-i18n="installHint">加到主畫面後可離線使用，並填滿狀態列。</p>
+            </div>
+            <button class="btn btn-accent" id="installBtn" type="button" data-i18n="installBtn">安裝</button>
+          </div>
+
           <div class="settings-row">
             <div class="fw-semibold" data-i18n="settingsLanguage">語言</div>
             <div class="lang-switch" role="group" aria-label="語言">
@@ -782,10 +813,10 @@
 
           <div class="settings-row">
             <div class="fw-semibold" data-i18n="settingsUnits">重量單位</div>
-            <select class="form-select form-select-sm w-auto" id="unitSelect" aria-label="單位">
-              <option value="kg">kg</option>
-              <option value="lbs">lbs</option>
-            </select>
+            <div class="lang-switch" role="group" aria-label="單位">
+              <button type="button" id="unitKg" class="active">kg</button>
+              <button type="button" id="unitLbs">lbs</button>
+            </div>
           </div>
 
           <div class="settings-row">
@@ -1004,6 +1035,11 @@
           settingsUnits: "重量單位",
           settingsData: "資料",
           storageSqlite: "資料存在本機 SQLite。匯出檔為 .sqlite。",
+          installTitle: "安裝到主畫面",
+          installHint: "加到主畫面後可離線使用，並填滿狀態列。",
+          installBtn: "安裝",
+          installIos: "在 Safari 按分享，再選「加入主畫面」。",
+          installReady: "已以 App 模式開啟。",
           migrate: "遷移 JSON",
           migrateHint: "把舊的 JSON 備份轉進 SQLite。",
           migrated: "已把 {count} 組從 JSON 遷移到 SQLite。",
@@ -1118,6 +1154,11 @@
           settingsUnits: "Weight unit",
           settingsData: "Data",
           storageSqlite: "Stored locally in SQLite. Exports are .sqlite files.",
+          installTitle: "Add to Home Screen",
+          installHint: "Install for offline use and a full-screen app.",
+          installBtn: "Install",
+          installIos: "In Safari, tap Share, then Add to Home Screen.",
+          installReady: "Already running as an app.",
           migrate: "Migrate JSON",
           migrateHint: "Import an old JSON backup into SQLite.",
           migrated: "Migrated {count} sets from JSON into SQLite.",
@@ -1264,16 +1305,20 @@
         });
         document.getElementById("exercise").setAttribute("placeholder", t("exercisePlaceholder"));
         document.getElementById("langZh").parentNode.setAttribute("aria-label", t("language"));
-        var unitSelect = document.getElementById("unitSelect");
-        var formUnitSelect = document.getElementById("formUnitSelect");
-        if (unitSelect) unitSelect.value = unit;
-        if (formUnitSelect) formUnitSelect.value = unit;
+        document.getElementById("unitKg").parentNode.setAttribute("aria-label", t("units"));
         document.getElementById("langZh").classList.toggle("active", locale === "zh-Hant");
         document.getElementById("langEn").classList.toggle("active", locale === "en");
         document.getElementById("overlayLangZh").classList.toggle("active", locale === "zh-Hant");
         document.getElementById("overlayLangEn").classList.toggle("active", locale === "en");
+        document.getElementById("unitKg").classList.toggle("active", unit === "kg");
+        document.getElementById("unitLbs").classList.toggle("active", unit === "lbs");
+        document.getElementById("formUnitKg").classList.toggle("active", unit === "kg");
+        document.getElementById("formUnitLbs").classList.toggle("active", unit === "lbs");
+        document.getElementById("formUnitKg").textContent = t("kg");
+        document.getElementById("formUnitLbs").textContent = t("lbs");
         document.getElementById("editWeightUnit").textContent = unitLabel();
         document.getElementById("formStatusClose").setAttribute("aria-label", t("dismiss"));
+        if (typeof updateInstallUi === "function") updateInstallUi();
       }
 
       function getModal(id) {
@@ -1764,10 +1809,13 @@
         if (timeMode === "ago") timeText = formatTimeAgo(set.createdAt);
         else if (timeMode === "stamp") timeText = formatStamp(set.createdAt);
         return "<div class=\"set-row d-flex justify-content-between align-items-center gap-3 mb-2\">" +
-          "<div><div class=\"fw-semibold\">" + escapeHtml(set.exercise) + "</div>" +
+          "<div class=\"flex-grow-1 min-w-0\">" +
+          "<div class=\"set-name-row\">" +
+          "<div class=\"fw-semibold\">" + escapeHtml(set.exercise) + "</div>" +
+          (timeText ? "<div class=\"small text-muted-2 set-time\">" + escapeHtml(timeText) + "</div>" : "") +
+          "</div>" +
           "<div class=\"small text-muted-2\">" + formatWeight(set.weight) + " " + escapeHtml(unitLabel()) + " × " + set.reps + " " + escapeHtml(t("reps")) + " · " +
           formatVolume(Number(set.weight) * Number(set.reps)) + " " + escapeHtml(t("vol")) + "</div>" +
-          (timeText ? "<div class=\"small text-muted-2\">" + escapeHtml(timeText) + "</div>" : "") +
           "</div>" +
           "<div class=\"btn-group\">" +
             "<button class=\"btn btn-ghost btn-sm\" data-edit=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("editSet")) + "\"><i class=\"bi bi-pencil\"></i></button>" +
@@ -2548,8 +2596,10 @@
       document.getElementById("langEn").addEventListener("click", function () { setLocale("en"); });
       document.getElementById("overlayLangZh").addEventListener("click", function () { setLocale("zh-Hant"); });
       document.getElementById("overlayLangEn").addEventListener("click", function () { setLocale("en"); });
-      document.getElementById("unitSelect").addEventListener("change", function () { setUnit(this.value); });
-      document.getElementById("formUnitSelect").addEventListener("change", function () { setUnit(this.value); });
+      document.getElementById("unitKg").addEventListener("click", function () { setUnit("kg"); });
+      document.getElementById("unitLbs").addEventListener("click", function () { setUnit("lbs"); });
+      document.getElementById("formUnitKg").addEventListener("click", function () { setUnit("kg"); });
+      document.getElementById("formUnitLbs").addEventListener("click", function () { setUnit("lbs"); });
 
       document.getElementById("tab-charts-btn").addEventListener("shown.bs.tab", function () {
         if (chartsDirty) renderCharts(loadSets());
@@ -2613,6 +2663,7 @@
       initDb().then(function () {
         unit = detectUnit();
         setLocale(detectLocale());
+        updateInstallUi();
         if (!hasMadeFirstChoice()) showWelcome();
       });
 
@@ -2669,6 +2720,53 @@
       }
       document.addEventListener("gesturestart", function (event) {
         event.preventDefault();
+      });
+
+      var deferredInstall = null;
+      function isStandalone() {
+        return window.navigator.standalone === true ||
+          (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+      }
+      function isIos() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      }
+      function updateInstallUi() {
+        var row = document.getElementById("installRow");
+        var btn = document.getElementById("installBtn");
+        var hint = document.getElementById("installHint");
+        if (!row || !btn || !hint) return;
+        if (isStandalone()) {
+          document.documentElement.classList.add("standalone");
+          hint.textContent = t("installReady");
+          btn.hidden = true;
+          return;
+        }
+        if (deferredInstall) {
+          hint.textContent = t("installHint");
+          btn.hidden = false;
+          btn.textContent = t("installBtn");
+          return;
+        }
+        if (isIos()) {
+          hint.textContent = t("installIos");
+          btn.hidden = true;
+          return;
+        }
+        btn.hidden = true;
+      }
+      window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault();
+        deferredInstall = event;
+        updateInstallUi();
+      });
+      document.getElementById("installBtn").addEventListener("click", function () {
+        if (!deferredInstall) return;
+        deferredInstall.prompt();
+        deferredInstall.userChoice.finally(function () {
+          deferredInstall = null;
+          updateInstallUi();
+        });
       });
 
       if (window.location.protocol !== "file:" && "serviceWorker" in navigator) {
