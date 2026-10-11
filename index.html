@@ -521,8 +521,8 @@
 
     @media (min-width: 576px) {
       .settings-actions {
-        grid-template-columns: 1fr 1fr 1fr;
-        width: auto;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
       }
     }
 
@@ -768,7 +768,7 @@
 
           <div class="settings-row">
             <div class="fw-semibold mb-1" data-i18n="settingsData">資料</div>
-            <p class="small text-muted-2 mb-2" data-i18n="storageSqlite">資料存在本機 SQLite。</p>
+            <p class="small text-muted-2 mb-2" data-i18n="storageSqlite">資料存在本機 SQLite。匯出檔為 .sqlite。</p>
             <div class="settings-actions">
               <button class="btn btn-ghost" id="loadBtn" type="button">
                 <i class="bi bi-folder2-open me-1"></i><span data-i18n="load">匯入</span>
@@ -776,10 +776,14 @@
               <button class="btn btn-ghost" id="saveBtn" type="button">
                 <i class="bi bi-download me-1"></i><span data-i18n="save">匯出</span>
               </button>
+              <button class="btn btn-ghost" id="migrateBtn" type="button">
+                <i class="bi bi-arrow-repeat me-1"></i><span data-i18n="migrate">遷移 JSON</span>
+              </button>
               <button class="btn btn-ghost" id="clearAllBtn" type="button">
                 <i class="bi bi-trash3 me-1"></i><span data-i18n="clear">清除</span>
               </button>
-              <input id="loadFile" type="file" accept=".json,application/json,text/plain,.csv,text/csv" hidden />
+              <input id="loadFile" type="file" accept=".sqlite,.db,application/x-sqlite3" hidden />
+              <input id="migrateFile" type="file" accept=".json,application/json,text/plain,.csv,text/csv" hidden />
             </div>
           </div>
         </section>
@@ -928,7 +932,7 @@
           nothingToSave: "尚無資料可匯出。請先記錄一組。",
           savedShare: "已儲存 {count} 組。請將檔案保留在「檔案」或 iCloud。",
           exported: "已匯出 {count} 組至 {filename}。",
-          copied: "無法下載檔案，已改為複製備份 JSON 到剪貼簿。",
+          copied: "無法下載檔案。",
           exportFail: "此瀏覽器無法匯出檔案。",
           loadReplace: "要從此檔案載入 {incoming} 組嗎？\n\n確定：覆蓋目前的 {current} 組。\n取消：合併兩邊的紀錄。",
           loaded: "已從檔案載入 {count} 組。",
@@ -974,7 +978,11 @@
           settingsLanguage: "語言",
           settingsUnits: "重量單位",
           settingsData: "資料",
-          storageSqlite: "資料存在本機 SQLite。",
+          storageSqlite: "資料存在本機 SQLite。匯出檔為 .sqlite。",
+          migrate: "遷移 JSON",
+          migrateHint: "把舊的 JSON 備份轉進 SQLite。",
+          migrated: "已把 {count} 組從 JSON 遷移到 SQLite。",
+          badSqlite: "這不是有效的 SQLite 檔。",
           lbs: "磅",
           units: "重量單位",
           todayPieTitle: "當日動作",
@@ -1035,7 +1043,7 @@
           nothingToSave: "Nothing to save yet. Log a set first.",
           savedShare: "Saved {count} sets. Keep the file in Files or iCloud.",
           exported: "Exported {count} sets to {filename}.",
-          copied: "Could not download. Backup JSON was copied to the clipboard instead.",
+          copied: "Could not download the file.",
           exportFail: "Could not export the file in this browser.",
           loadReplace: "Load {incoming} sets from this file?\n\nOK replaces your current {current} sets.\nCancel keeps both (merge).",
           loaded: "Loaded {count} sets from file.",
@@ -1081,7 +1089,11 @@
           settingsLanguage: "Language",
           settingsUnits: "Weight unit",
           settingsData: "Data",
-          storageSqlite: "Stored locally in SQLite.",
+          storageSqlite: "Stored locally in SQLite. Exports are .sqlite files.",
+          migrate: "Migrate JSON",
+          migrateHint: "Import an old JSON backup into SQLite.",
+          migrated: "Migrated {count} sets from JSON into SQLite.",
+          badSqlite: "That is not a valid SQLite file.",
           lbs: "lbs",
           units: "Weight unit",
           todayPieTitle: "Day's exercises",
@@ -1347,6 +1359,7 @@
       }
 
       var SQL_READY = null;
+      var SQL_LIB = null;
       var sqlDb = null;
       var IDB_NAME = "workout-tracker-web-app";
       var IDB_STORE = "sqlite";
@@ -1443,6 +1456,7 @@
           if (typeof initSqlJs !== "function") throw new Error("sqljs");
           return initSqlJs({ locateFile: function (file) { return "vendor/" + file; } });
         }).then(function (SQL) {
+          SQL_LIB = SQL;
           return idbGet().catch(function () { return null; }).then(function (saved) {
             sqlDb = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
             ensureSchema();
@@ -1511,35 +1525,19 @@
       }
 
       function backupFilename() {
-        return "workout-tracker-web-app-" + todayISO() + ".json";
+        return "workout-tracker-" + todayISO() + ".sqlite";
       }
 
-      function backupPayload() {
-        return JSON.stringify({
-          app: "workout-tracker-web-app",
-          version: 1,
-          weightUnit: "kg",
-          exportedAt: new Date().toISOString(),
-          sets: loadSets()
-        }, null, 2);
-      }
-
-      function makeBackupFile(text, filename) {
-        var bytes = new Blob([text], { type: "application/json" });
+      function makeSqliteFile(bytes, filename) {
+        var blob = new Blob([bytes], { type: "application/x-sqlite3" });
         try {
-          return new File([bytes], filename, { type: "application/json", lastModified: Date.now() });
+          return new File([blob], filename, { type: "application/x-sqlite3", lastModified: Date.now() });
         } catch (err) {
-          return bytes;
+          return blob;
         }
       }
 
-      function isAppleTouch() {
-        var ua = String(navigator.userAgent || "");
-        if (/iPad|iPhone|iPod/.test(ua)) return true;
-        return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-      }
-
-      function downloadJsonFile(file, filename) {
+      function downloadBinaryFile(file, filename) {
         var url = URL.createObjectURL(file);
         var link = document.createElement("a");
         link.href = url;
@@ -1553,15 +1551,21 @@
         setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
       }
 
+      function isAppleTouch() {
+        var ua = String(navigator.userAgent || "");
+        if (/iPad|iPhone|iPod/.test(ua)) return true;
+        return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+      }
+
       async function exportBackup() {
         var sets = loadSets();
-        if (!sets.length) {
+        if (!sets.length || !sqlDb) {
           showStatus("err", t("nothingToSave"));
           return;
         }
-        var text = backupPayload();
         var filename = backupFilename();
-        var file = makeBackupFile(text, filename);
+        var bytes = sqlDb.export();
+        var file = makeSqliteFile(bytes, filename);
 
         try {
           if (navigator.share && file && file.name && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1581,8 +1585,8 @@
                 excludeAcceptAllOption: true,
                 types: [
                   {
-                    description: "JSON",
-                    accept: { "application/json": [".json"] }
+                    description: "SQLite",
+                    accept: { "application/x-sqlite3": [".sqlite"] }
                   }
                 ]
               });
@@ -1598,20 +1602,14 @@
         }
 
         try {
-          downloadJsonFile(file, filename);
+          downloadBinaryFile(file, filename);
           showStatus("ok", t("exported", { count: sets.length, filename: filename }));
         } catch (err) {
-          try {
-            await navigator.clipboard.writeText(text);
-            showStatus("ok", t("copied"));
-          } catch (clipErr) {
-            showStatus("err", t("exportFail"));
-          }
+          showStatus("err", t("exportFail"));
         }
       }
 
-      function importBackupText(text) {
-        var incoming = parseBackup(text);
+      function applyImportedSets(incoming) {
         if (!incoming.length) throw new Error("noValidSets");
         var current = loadSets();
         if (current.length) {
@@ -1635,6 +1633,54 @@
           showStatus("ok", t("loaded", { count: incoming.length }));
         }
         render();
+      }
+
+      function isSqliteBytes(bytes) {
+        var head = "SQLite format 3";
+        if (!bytes || bytes.length < head.length) return false;
+        for (var i = 0; i < head.length; i++) {
+          if (bytes[i] !== head.charCodeAt(i)) return false;
+        }
+        return true;
+      }
+
+      function rowsFromDatabase(db) {
+        var stmt = db.prepare("SELECT id, exercise, weight, reps, date, created_at FROM sets");
+        var rows = [];
+        while (stmt.step()) {
+          var row = stmt.getAsObject();
+          rows.push(normalizeSet({
+            id: row.id,
+            exercise: row.exercise,
+            weight: row.weight,
+            reps: row.reps,
+            date: row.date,
+            createdAt: row.created_at
+          }));
+        }
+        stmt.free();
+        return rows.filter(Boolean);
+      }
+
+      function importSqliteBytes(buffer) {
+        if (!SQL_LIB) throw new Error("badSqlite");
+        var bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+        if (!isSqliteBytes(bytes)) throw new Error("badSqlite");
+        var incomingDb = new SQL_LIB.Database(bytes);
+        var rows;
+        try {
+          rows = rowsFromDatabase(incomingDb);
+        } finally {
+          try { incomingDb.close(); } catch (err) {}
+        }
+        applyImportedSets(rows);
+      }
+
+      function migrateJsonText(text) {
+        var incoming = parseBackup(text);
+        if (!incoming.length) throw new Error("noValidSets");
+        applyImportedSets(incoming);
+        showStatus("ok", t("migrated", { count: incoming.length }));
       }
 
       function setRowHtml(set) {
@@ -2350,7 +2396,30 @@
         var reader = new FileReader();
         reader.onload = function () {
           try {
-            importBackupText(String(reader.result || ""));
+            importSqliteBytes(reader.result);
+          } catch (err) {
+            var code = err && err.message;
+            showStatus("err", t(code) !== code ? t(code) : t("readFail"));
+          }
+        };
+        reader.onerror = function () {
+          showStatus("err", t("openFail"));
+        };
+        reader.readAsArrayBuffer(file);
+      });
+
+      var migrateFile = document.getElementById("migrateFile");
+      document.getElementById("migrateBtn").addEventListener("click", function () {
+        migrateFile.value = "";
+        migrateFile.click();
+      });
+      migrateFile.addEventListener("change", function (event) {
+        var file = event.target.files && event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            migrateJsonText(String(reader.result || ""));
           } catch (err) {
             var code = err && err.message;
             showStatus("err", t(code) !== code ? t(code) : t("readFail"));
