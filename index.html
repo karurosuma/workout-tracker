@@ -579,10 +579,49 @@
       justify-content: space-between;
       gap: 12px;
     }
-    .set-time {
-      margin-top: 2px;
-      text-align: left;
-      white-space: nowrap;
+    .body-map {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .body-col { min-width: 0; }
+    .body-view-label {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .body-stage {
+      position: relative;
+      width: 100%;
+      max-width: 220px;
+      margin: 0 auto;
+    }
+    .body-stage svg { width: 100%; height: auto; display: block; }
+    .body-pct {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      min-width: 42px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(11, 15, 20, 0.82);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-align: center;
+      pointer-events: none;
+      line-height: 1.2;
+    }
+    .body-pct.on {
+      color: #06110b;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .body-unmatched {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
     }
 
     .file-input {
@@ -691,6 +730,61 @@
             </div>
           </div>
         </div>
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="bodyMapTitle">部位分布</h2>
+          <span class="small text-muted-2" data-i18n="bodyMapHint">依當日容量占比</span>
+        </div>
+        <section class="card-panel p-4 mb-4">
+          <div class="body-map">
+            <div class="body-col">
+              <div class="body-view-label" data-i18n="bodyFront">正面</div>
+              <div class="body-stage">
+                <svg viewBox="0 0 200 430" aria-hidden="true">
+                  <ellipse cx="100" cy="28" rx="18" ry="22" fill="#1c2733" stroke="#3a4b5c" />
+                  <rect x="92" y="48" width="16" height="14" rx="6" fill="#1c2733" />
+                  <path id="region-shoulders-f" d="M62 70 Q100 58 138 70 L146 92 Q100 84 54 92 Z" fill="#243140" />
+                  <path id="region-chest" d="M68 92 Q100 108 132 92 L128 128 Q100 140 72 128 Z" fill="#243140" />
+                  <path id="region-arms-f" d="M54 92 Q36 120 30 168 Q42 172 48 150 Q58 120 66 100 Z M146 92 Q164 120 170 168 Q158 172 152 150 Q142 120 134 100 Z" fill="#243140" />
+                  <path id="region-core" d="M74 128 Q100 142 126 128 L122 188 Q100 198 78 188 Z" fill="#243140" />
+                  <path id="region-quads" d="M78 188 L96 196 L94 292 L72 286 Z M122 188 L104 196 L106 292 L128 286 Z" fill="#243140" />
+                  <path id="region-calves-f" d="M74 292 L92 298 L90 372 L76 366 Z M126 292 L108 298 L110 372 L124 366 Z" fill="#243140" />
+                  <ellipse cx="84" cy="384" rx="12" ry="6" fill="#1c2733" />
+                  <ellipse cx="116" cy="384" rx="12" ry="6" fill="#1c2733" />
+                </svg>
+                <span class="body-pct" data-part="shoulders" style="left:50%;top:18%">0%</span>
+                <span class="body-pct" data-part="chest" style="left:50%;top:28%">0%</span>
+                <span class="body-pct" data-part="arms" style="left:16%;top:34%">0%</span>
+                <span class="body-pct" data-part="core" style="left:50%;top:40%">0%</span>
+                <span class="body-pct" data-part="quads" style="left:50%;top:58%">0%</span>
+                <span class="body-pct" data-part="calves" style="left:50%;top:78%">0%</span>
+              </div>
+            </div>
+            <div class="body-col">
+              <div class="body-view-label" data-i18n="bodyBack">背面</div>
+              <div class="body-stage">
+                <svg viewBox="0 0 200 430" aria-hidden="true">
+                  <ellipse cx="100" cy="28" rx="18" ry="22" fill="#1c2733" stroke="#3a4b5c" />
+                  <rect x="92" y="48" width="16" height="14" rx="6" fill="#1c2733" />
+                  <path id="region-shoulders-b" d="M62 70 Q100 58 138 70 L146 92 Q100 84 54 92 Z" fill="#243140" />
+                  <path id="region-back" d="M68 92 Q100 100 132 92 L128 168 Q100 178 72 168 Z" fill="#243140" />
+                  <path id="region-arms-b" d="M54 92 Q36 120 30 168 Q42 172 48 150 Q58 120 66 100 Z M146 92 Q164 120 170 168 Q158 172 152 150 Q142 120 134 100 Z" fill="#243140" />
+                  <path id="region-glutes" d="M74 168 Q100 160 126 168 L130 208 Q100 222 70 208 Z" fill="#243140" />
+                  <path id="region-hamstrings" d="M74 208 L96 214 L94 292 L70 284 Z M126 208 L104 214 L106 292 L130 284 Z" fill="#243140" />
+                  <path id="region-calves-b" d="M74 292 L92 298 L90 372 L76 366 Z M126 292 L108 298 L110 372 L124 366 Z" fill="#243140" />
+                  <ellipse cx="84" cy="384" rx="12" ry="6" fill="#1c2733" />
+                  <ellipse cx="116" cy="384" rx="12" ry="6" fill="#1c2733" />
+                </svg>
+                <span class="body-pct" data-part="shoulders" style="left:50%;top:18%">0%</span>
+                <span class="body-pct" data-part="back" style="left:50%;top:30%">0%</span>
+                <span class="body-pct" data-part="arms" style="left:84%;top:34%">0%</span>
+                <span class="body-pct" data-part="glutes" style="left:50%;top:45%">0%</span>
+                <span class="body-pct" data-part="hamstrings" style="left:50%;top:60%">0%</span>
+                <span class="body-pct" data-part="calves" style="left:50%;top:78%">0%</span>
+              </div>
+            </div>
+          </div>
+          <div class="body-unmatched" id="bodyUnmatched"></div>
+        </section>
         <div class="section-head mb-2">
           <h2 class="h5 mb-0" data-i18n="todayPieTitle">今日動作</h2>
           <span class="small text-muted-2" data-i18n="todayPieHint">依容量占比</span>
@@ -1044,6 +1138,20 @@
           tabToday: "表現",
           todayTitle: "表現",
           todayLogTitle: "今日組數清單",
+          bodyMapTitle: "部位分布",
+          bodyMapHint: "依當日容量占比",
+          bodyFront: "正面",
+          bodyBack: "背面",
+          bodyUnmatched: "未對應部位：{names}",
+          partChest: "胸",
+          partBack: "背",
+          partShoulders: "肩",
+          partArms: "手臂",
+          partCore: "核心",
+          partQuads: "股四",
+          partHamstrings: "腿後",
+          partGlutes: "臀",
+          partCalves: "小腿",
           justNow: "剛剛",
           minutesAgo: "{n} 分鐘前",
           hoursAgo: "{n} 小時前",
@@ -1163,6 +1271,20 @@
           tabToday: "Performance",
           todayTitle: "Performance",
           todayLogTitle: "Today's sets",
+          bodyMapTitle: "Body map",
+          bodyMapHint: "Share of today's volume",
+          bodyFront: "Front",
+          bodyBack: "Back",
+          bodyUnmatched: "Unmatched: {names}",
+          partChest: "Chest",
+          partBack: "Back",
+          partShoulders: "Shoulders",
+          partArms: "Arms",
+          partCore: "Core",
+          partQuads: "Quads",
+          partHamstrings: "Hamstrings",
+          partGlutes: "Glutes",
+          partCalves: "Calves",
           justNow: "just now",
           minutesAgo: "{n} min ago",
           hoursAgo: "{n} hr ago",
@@ -2067,6 +2189,79 @@
         return (rounded > 0 ? "+" : "") + rounded + "%";
       }
 
+      var BODY_PARTS = [
+        { id: "chest", label: "partChest", regions: ["region-chest"], keys: ["bench", "chest", "pec", "fly", "flye", "push-up", "pushup", "push up", "臥推", "胸", "飛鳥", "伏地挺身", "夾胸"] },
+        { id: "back", label: "partBack", regions: ["region-back"], keys: ["row", "pull-up", "pullup", "pulldown", "lat", "back", "deadlift", "划船", "引體", "引体", "下拉", "背", "硬舉", "硬拉"] },
+        { id: "shoulders", label: "partShoulders", regions: ["region-shoulders-f", "region-shoulders-b"], keys: ["shoulder", "ohp", "overhead", "lateral", "front raise", "rear delt", "military", "肩", "推舉", "側平舉", "前平舉", "後束"] },
+        { id: "arms", label: "partArms", regions: ["region-arms-f", "region-arms-b"], keys: ["curl", "bicep", "tricep", "skull", "pushdown", "dip", "彎舉", "二頭", "三頭", "臂屈伸", "雙槓"] },
+        { id: "core", label: "partCore", regions: ["region-core"], keys: ["plank", "crunch", "abs", "core", "sit-up", "situp", "腹", "核心", "仰臥", "平板", "捲腹", "卷腹"] },
+        { id: "quads", label: "partQuads", regions: ["region-quads"], keys: ["squat", "lunge", "leg press", "leg extension", "深蹲", "弓步", "腿推", "股四", "腿伸"] },
+        { id: "hamstrings", label: "partHamstrings", regions: ["region-hamstrings"], keys: ["leg curl", "hamstring", "rdl", "腿彎", "腿後", "腿后", "硬舉", "硬拉"] },
+        { id: "glutes", label: "partGlutes", regions: ["region-glutes"], keys: ["hip thrust", "glute", "臀", "橋式", "kickback", "squat", "深蹲", "硬舉", "硬拉"] },
+        { id: "calves", label: "partCalves", regions: ["region-calves-f", "region-calves-b"], keys: ["calf", "calves", "小腿", "提踵"] }
+      ];
+
+      function classifyBodyParts(name) {
+        var text = String(name || "").toLowerCase();
+        var hits = [];
+        BODY_PARTS.forEach(function (part) {
+          for (var i = 0; i < part.keys.length; i++) {
+            if (text.indexOf(part.keys[i]) !== -1) {
+              hits.push(part.id);
+              break;
+            }
+          }
+        });
+        return hits;
+      }
+
+      function bodyColor(pct) {
+        if (!pct) return "#243140";
+        var t = Math.min(1, pct / 40);
+        var r = Math.round(36 + (61 - 36) * t);
+        var g = Math.round(49 + (255 - 49) * t);
+        var b = Math.round(64 + (154 - 64) * t);
+        return "rgb(" + r + "," + g + "," + b + ")";
+      }
+
+      function renderBodyMap(sets) {
+        var totals = {};
+        var unmatched = {};
+        var grand = 0;
+        BODY_PARTS.forEach(function (part) { totals[part.id] = 0; });
+        sets.forEach(function (set) {
+          var volume = (Number(set.weight) || 0) * (Number(set.reps) || 0);
+          if (volume <= 0) volume = Number(set.reps) || 1;
+          var parts = classifyBodyParts(set.exercise);
+          if (!parts.length) {
+            unmatched[String(set.exercise || "").trim()] = true;
+            return;
+          }
+          var share = volume / parts.length;
+          parts.forEach(function (id) { totals[id] += share; });
+          grand += volume;
+        });
+        var pct = {};
+        BODY_PARTS.forEach(function (part) {
+          pct[part.id] = grand > 0 ? Math.round((totals[part.id] / grand) * 100) : 0;
+          part.regions.forEach(function (id) {
+            var node = document.getElementById(id);
+            if (node) node.setAttribute("fill", bodyColor(pct[part.id]));
+          });
+        });
+        document.querySelectorAll(".body-pct").forEach(function (el) {
+          var id = el.getAttribute("data-part");
+          var value = pct[id] || 0;
+          el.textContent = value + "%";
+          el.classList.toggle("on", value > 0);
+        });
+        var names = Object.keys(unmatched).filter(Boolean);
+        var box = document.getElementById("bodyUnmatched");
+        if (box) {
+          box.textContent = names.length ? t("bodyUnmatched", { names: names.join(", ") }) : "";
+        }
+      }
+
       function todayPieSeries(sets, index) {
         var day = viewDate();
         var byName = {};
@@ -2304,6 +2499,7 @@
               }).join("")
             : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
         }
+        renderBodyMap(todaySets);
 
         var names = uniqueExercises(sets);
         exerciseList.innerHTML = names.map(function (name) {
