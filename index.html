@@ -169,6 +169,11 @@
       transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
     }
 
+    #addSetBtn {
+      min-height: 56px;
+      font-size: 1.15rem;
+      padding: 0.9rem 1rem;
+    }
     #addSetBtn .add-set-done { display: none; }
     #addSetBtn.is-success .add-set-idle { display: none; }
     #addSetBtn.is-success .add-set-done { display: inline-flex; align-items: center; justify-content: center; }
@@ -428,7 +433,22 @@
       margin: 0 0 4px;
     }
 
-    .chart-mount { min-height: 220px; }
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .date-nav .form-control { width: auto; min-width: 132px; }
+    .date-nav-btn {
+      min-width: 36px;
+      min-height: 36px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .date-nav-btn:disabled { opacity: 0.35; }
+    .chart-mount { width: 100%; min-height: 220px; }
 
     .chart-range {
       display: grid;
@@ -526,14 +546,9 @@
       }
     }
 
-    .unit-btn {
-      cursor: pointer;
-      min-width: 52px;
-    }
-
-    .unit-btn.active {
-      color: var(--accent);
-      border-color: var(--accent);
+    .form-select-unit {
+      max-width: 96px;
+      flex: 0 0 96px;
     }
 
     body.welcome-lock { overflow: hidden; }
@@ -602,8 +617,16 @@
       <div class="tab-pane fade" id="tab-today" role="tabpanel" aria-labelledby="tab-today-btn" tabindex="0">
         <div class="section-head mb-3">
           <div class="section-head-top">
-            <h1 class="h4 mb-0" data-i18n="todayTitle">今日訓練</h1>
-            <input class="form-control form-control-sm w-auto" id="todayDate" type="date" />
+            <h1 class="h4 mb-0" data-i18n="todayTitle">表現</h1>
+            <div class="date-nav">
+              <button class="btn btn-ghost btn-sm date-nav-btn" id="todayPrev" type="button" aria-label="Previous">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <input class="form-control form-control-sm" id="todayDate" type="date" />
+              <button class="btn btn-ghost btn-sm date-nav-btn" id="todayNext" type="button" aria-label="Next">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
         <div class="row g-3 mb-4">
@@ -656,6 +679,10 @@
         <section class="card-panel p-4">
           <form id="setForm" class="row g-3" novalidate>
             <div class="col-12">
+              <label class="form-label" for="sessionDate" data-i18n="sessionDate">訓練日期</label>
+              <input class="form-control" id="sessionDate" name="sessionDate" type="date" required />
+            </div>
+            <div class="col-12">
               <label class="form-label" for="exercise" data-i18n="exercise">動作</label>
               <input class="form-control" id="exercise" name="exercise" list="exerciseList" placeholder="臥推" autocomplete="off" required />
               <datalist id="exerciseList"></datalist>
@@ -664,29 +691,24 @@
               <label class="form-label" for="weight" data-i18n="weight">重量</label>
               <div class="input-group">
                 <input class="form-control" id="weight" name="weight" type="text" inputmode="decimal" placeholder="60" required />
-                <button class="input-group-text unit-btn" id="formUnitKg" type="button">kg</button>
-                <button class="input-group-text unit-btn" id="formUnitLbs" type="button">lbs</button>
+                <select class="form-select form-select-unit" id="formUnitSelect" aria-label="unit">
+                  <option value="kg">kg</option>
+                  <option value="lbs">lbs</option>
+                </select>
               </div>
             </div>
             <div class="col-12">
               <label class="form-label" for="reps" data-i18n="reps">次數</label>
               <input class="form-control" id="reps" name="reps" type="text" inputmode="numeric" placeholder="8" required />
             </div>
-            <div class="col-12">
-              <label class="form-label" for="sessionDate" data-i18n="sessionDate">訓練日期</label>
-              <input class="form-control" id="sessionDate" name="sessionDate" type="date" required />
-            </div>
-            <div class="col-12 d-grid gap-2">
-              <button class="btn btn-accent py-2" id="addSetBtn" type="submit">
+            <div class="col-12 d-grid">
+              <button class="btn btn-accent" id="addSetBtn" type="submit">
                 <span class="add-set-idle">
                   <i class="bi bi-plus-lg me-1"></i><span data-i18n="addSet">新增組數</span>
                 </span>
                 <span class="add-set-done">
                   <i class="bi bi-check-lg me-1"></i><span data-i18n="addedSet">已新增</span>
                 </span>
-              </button>
-              <button class="btn btn-ghost py-2" id="lastSetBtn" type="button">
-                <i class="bi bi-arrow-repeat me-1"></i><span data-i18n="lastSet">再加上一組</span>
               </button>
             </div>
           </form>
@@ -760,10 +782,10 @@
 
           <div class="settings-row">
             <div class="fw-semibold" data-i18n="settingsUnits">重量單位</div>
-            <div class="lang-switch" role="group" aria-label="單位">
-              <button type="button" id="unitKg" class="active">kg</button>
-              <button type="button" id="unitLbs">lbs</button>
-            </div>
+            <select class="form-select form-select-sm w-auto" id="unitSelect" aria-label="單位">
+              <option value="kg">kg</option>
+              <option value="lbs">lbs</option>
+            </select>
           </div>
 
           <div class="settings-row">
@@ -808,7 +830,7 @@
         <li class="nav-item" role="presentation">
           <button class="nav-link" id="tab-today-btn" data-bs-toggle="tab" data-bs-target="#tab-today" type="button" role="tab" aria-controls="tab-today" aria-selected="false">
             <i class="bi bi-sun" aria-hidden="true"></i>
-            <span data-i18n="tabToday">今日</span>
+            <span data-i18n="tabToday">表現</span>
           </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -971,9 +993,12 @@
           tabHistory: "日誌",
           tabCharts: "圖表",
           tabSettings: "設定",
-          tabToday: "今日",
-          todayTitle: "今日訓練",
+          tabToday: "表現",
+          todayTitle: "表現",
           todayLogTitle: "今日組數清單",
+          justNow: "剛剛",
+          minutesAgo: "{n} 分鐘前",
+          hoursAgo: "{n} 小時前",
           settingsTitle: "設定",
           settingsLanguage: "語言",
           settingsUnits: "重量單位",
@@ -1082,9 +1107,12 @@
           tabHistory: "History",
           tabCharts: "Charts",
           tabSettings: "Settings",
-          tabToday: "Today",
-          todayTitle: "Today",
+          tabToday: "Performance",
+          todayTitle: "Performance",
           todayLogTitle: "Today's sets",
+          justNow: "just now",
+          minutesAgo: "{n} min ago",
+          hoursAgo: "{n} hr ago",
           settingsTitle: "Settings",
           settingsLanguage: "Language",
           settingsUnits: "Weight unit",
@@ -1236,17 +1264,14 @@
         });
         document.getElementById("exercise").setAttribute("placeholder", t("exercisePlaceholder"));
         document.getElementById("langZh").parentNode.setAttribute("aria-label", t("language"));
-        document.getElementById("unitKg").parentNode.setAttribute("aria-label", t("units"));
+        var unitSelect = document.getElementById("unitSelect");
+        var formUnitSelect = document.getElementById("formUnitSelect");
+        if (unitSelect) unitSelect.value = unit;
+        if (formUnitSelect) formUnitSelect.value = unit;
         document.getElementById("langZh").classList.toggle("active", locale === "zh-Hant");
         document.getElementById("langEn").classList.toggle("active", locale === "en");
         document.getElementById("overlayLangZh").classList.toggle("active", locale === "zh-Hant");
         document.getElementById("overlayLangEn").classList.toggle("active", locale === "en");
-        document.getElementById("unitKg").classList.toggle("active", unit === "kg");
-        document.getElementById("unitLbs").classList.toggle("active", unit === "lbs");
-        document.getElementById("formUnitKg").classList.toggle("active", unit === "kg");
-        document.getElementById("formUnitLbs").classList.toggle("active", unit === "lbs");
-        document.getElementById("formUnitKg").textContent = t("kg");
-        document.getElementById("formUnitLbs").textContent = t("lbs");
         document.getElementById("editWeightUnit").textContent = unitLabel();
         document.getElementById("formStatusClose").setAttribute("aria-label", t("dismiss"));
       }
@@ -1271,6 +1296,35 @@
         var val = el && el.value ? String(el.value) : todayViewDate;
         if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
         return todayISO();
+      }
+
+      function availableDates(sets) {
+        var map = {};
+        sets.forEach(function (set) { if (set.date) map[set.date] = true; });
+        return Object.keys(map).sort();
+      }
+
+      function nearestRecordDate(sets, day, dir) {
+        var dates = availableDates(sets);
+        if (!dates.length) return null;
+        if (dir < 0) {
+          for (var i = dates.length - 1; i >= 0; i--) {
+            if (dates[i] < day) return dates[i];
+          }
+          return null;
+        }
+        for (var j = 0; j < dates.length; j++) {
+          if (dates[j] > day) return dates[j];
+        }
+        return null;
+      }
+
+      function shiftRecordDate(dir) {
+        var next = nearestRecordDate(loadSets(), viewDate(), dir);
+        if (!next) return;
+        document.getElementById("todayDate").value = next;
+        todayViewDate = next;
+        render();
       }
 
       function showStatus(type, message) {
@@ -1525,7 +1579,7 @@
       }
 
       function backupFilename() {
-        return "workout-tracker-" + todayISO() + ".sqlite";
+        return "workout-tracker.sqlite";
       }
 
       function makeSqliteFile(bytes, filename) {
@@ -1683,11 +1737,38 @@
         showStatus("ok", t("migrated", { count: incoming.length }));
       }
 
-      function setRowHtml(set) {
+      function pad2(value) {
+        return value < 10 ? "0" + value : String(value);
+      }
+
+      function formatStamp(ms) {
+        var date = new Date(Number(ms) || 0);
+        if (!ms || isNaN(date.getTime())) return "";
+        return date.getFullYear() + "-" + pad2(date.getMonth() + 1) + "-" + pad2(date.getDate()) +
+          " " + pad2(date.getHours()) + ":" + pad2(date.getMinutes()) + ":" + pad2(date.getSeconds());
+      }
+
+      function formatTimeAgo(ms) {
+        var diff = Date.now() - Number(ms || 0);
+        if (!ms || !isFinite(diff) || diff < 0) return formatStamp(ms);
+        var minutes = Math.floor(diff / 60000);
+        if (minutes < 1) return t("justNow");
+        if (minutes < 60) return t("minutesAgo", { n: minutes });
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) return t("hoursAgo", { n: hours });
+        return formatStamp(ms);
+      }
+
+      function setRowHtml(set, timeMode) {
+        var timeText = "";
+        if (timeMode === "ago") timeText = formatTimeAgo(set.createdAt);
+        else if (timeMode === "stamp") timeText = formatStamp(set.createdAt);
         return "<div class=\"set-row d-flex justify-content-between align-items-center gap-3 mb-2\">" +
           "<div><div class=\"fw-semibold\">" + escapeHtml(set.exercise) + "</div>" +
           "<div class=\"small text-muted-2\">" + formatWeight(set.weight) + " " + escapeHtml(unitLabel()) + " × " + set.reps + " " + escapeHtml(t("reps")) + " · " +
-          formatVolume(Number(set.weight) * Number(set.reps)) + " " + escapeHtml(t("vol")) + "</div></div>" +
+          formatVolume(Number(set.weight) * Number(set.reps)) + " " + escapeHtml(t("vol")) + "</div>" +
+          (timeText ? "<div class=\"small text-muted-2\">" + escapeHtml(timeText) + "</div>" : "") +
+          "</div>" +
           "<div class=\"btn-group\">" +
             "<button class=\"btn btn-ghost btn-sm\" data-edit=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("editSet")) + "\"><i class=\"bi bi-pencil\"></i></button>" +
             "<button class=\"btn btn-ghost btn-sm text-danger\" data-delete=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-x-lg\"></i></button>" +
@@ -1709,10 +1790,16 @@
       }
 
       function recentExercises(sets, limit) {
+        var ordered = sets.slice().sort(function (a, b) {
+          var ca = Number(a.createdAt) || 0;
+          var cb = Number(b.createdAt) || 0;
+          if (cb !== ca) return cb - ca;
+          return String(b.date || "").localeCompare(String(a.date || ""));
+        });
         var seen = {};
         var out = [];
-        for (var i = 0; i < sets.length && out.length < limit; i++) {
-          var name = String(sets[i].exercise || "").trim();
+        for (var i = 0; i < ordered.length && out.length < limit; i++) {
+          var name = String(ordered[i].exercise || "").trim();
           var key = name.toLowerCase();
           if (!name || seen[key]) continue;
           seen[key] = true;
@@ -1957,10 +2044,16 @@
       }
 
       function pieOptions(rows) {
+        var series = rows.map(function (row) {
+          var volume = Number(row.volume) || 0;
+          if (volume > 0) return Number(round1(fromKg(volume))) || volume;
+          return Number(row.sets) || 1;
+        });
         return {
           chart: {
             type: "pie",
             height: 280,
+            width: "100%",
             background: "transparent",
             toolbar: { show: false },
             fontFamily: "Noto Sans TC, PingFang TC, Microsoft JhengHei, Segoe UI, sans-serif",
@@ -1969,12 +2062,12 @@
           theme: { mode: "dark" },
           colors: ["#3dff9a", "#2bd4ff", "#ffc857", "#ff5d73", "#c084fc", "#fb923c", "#67e8f9", "#f472b6"],
           labels: rows.map(function (row) { return row.name; }),
-          series: rows.map(function (row) { return round1(fromKg(row.volume)); }),
+          series: series,
           legend: {
             position: "bottom",
             labels: { colors: "#8b9bb0" }
           },
-          stroke: { width: 0 },
+          stroke: { width: 1, colors: ["#0b0f14"] },
           dataLabels: {
             enabled: true,
             style: { fontSize: "12px", fontWeight: 700 }
@@ -2028,7 +2121,9 @@
         var mount = document.getElementById("todayPieMount");
         if (!mount) return;
         destroyCharts();
-        var rows = pieRows(todayPieSeries(sets));
+        var rows = pieRows(todayPieSeries(sets)).filter(function (row) {
+          return (Number(row.volume) || 0) > 0 || (Number(row.sets) || 0) > 0;
+        });
         if (!rows.length) {
           mount.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
           todayDirty = false;
@@ -2041,7 +2136,9 @@
         }
         mount.innerHTML = "";
         var chart = new ApexCharts(mount, pieOptions(rows));
-        chart.render();
+        chart.render().then(function () {
+          try { chart.resize(); } catch (err) {}
+        });
         chartInstances.push(chart);
         todayDirty = false;
       }
@@ -2089,6 +2186,12 @@
         var todayDateEl = document.getElementById("todayDate");
         if (todayDateEl && todayDateEl.value !== day) todayDateEl.value = day;
         todayViewDate = day;
+        var prevDate = nearestRecordDate(sets, day, -1);
+        var nextDate = nearestRecordDate(sets, day, 1);
+        var prevBtn = document.getElementById("todayPrev");
+        var nextBtn = document.getElementById("todayNext");
+        if (prevBtn) prevBtn.disabled = !prevDate;
+        if (nextBtn) nextBtn.disabled = !nextDate;
 
         var todaySets = sets.filter(function (set) { return set.date === day; });
         var volume = todaySets.reduce(function (sum, set) {
@@ -2133,7 +2236,9 @@
         var todayLog = document.getElementById("todayLog");
         if (todayLog) {
           todayLog.innerHTML = todaySets.length
-            ? todaySets.map(setRowHtml).join("")
+            ? todaySets.map(function (set) {
+                return setRowHtml(set, day === todayISO() ? "ago" : "stamp");
+              }).join("")
             : "<div class=\"empty-state\">" + escapeHtml(t("todayPieEmpty")) + "</div>";
         }
 
@@ -2145,8 +2250,6 @@
         exerciseChips.innerHTML = recent.map(function (name) {
           return "<button type=\"button\" class=\"chip\" data-exercise=\"" + escapeHtml(name) + "\">" + escapeHtml(name) + "</button>";
         }).join("") || "<span class=\"text-muted-2 small\">" + escapeHtml(t("noRecent")) + "</span>";
-        var lastBtn = document.getElementById("lastSetBtn");
-        if (lastBtn) lastBtn.disabled = !sets.length;
 
         var dateMap = {};
         sets.forEach(function (set) { if (set.date) dateMap[set.date] = true; });
@@ -2212,14 +2315,6 @@
       document.getElementById("todayDate").value = todayISO();
       todayViewDate = todayISO();
 
-      function lastAddedSet() {
-        var sets = loadSets();
-        if (!sets.length) return null;
-        return sets.slice().sort(function (a, b) {
-          return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
-        })[0];
-      }
-
       function logSetValues(exercise, enteredWeight, reps, date, clearReps) {
         var weight = toKg(enteredWeight);
         if (!exercise) {
@@ -2268,21 +2363,6 @@
           document.getElementById("sessionDate").value || todayISO(),
           true
         );
-      });
-
-      document.getElementById("lastSetBtn").addEventListener("click", function () {
-        var last = lastAddedSet();
-        if (!last) {
-          showStatus("err", t("noLastSet"));
-          return;
-        }
-        var date = document.getElementById("sessionDate").value || last.date || todayISO();
-        var shownWeight = fromKg(Number(last.weight) || 0);
-        document.getElementById("exercise").value = last.exercise;
-        document.getElementById("weight").value = String(round1(shownWeight));
-        document.getElementById("reps").value = String(last.reps);
-        document.getElementById("sessionDate").value = date;
-        logSetValues(last.exercise, shownWeight, Number(last.reps), date, false);
       });
 
       exerciseChips.addEventListener("click", function (event) {
@@ -2366,6 +2446,8 @@
         todayViewDate = viewDate();
         render();
       });
+      document.getElementById("todayPrev").addEventListener("click", function () { shiftRecordDate(-1); });
+      document.getElementById("todayNext").addEventListener("click", function () { shiftRecordDate(1); });
       document.getElementById("formStatusClose").addEventListener("click", hideStatus);
 
       document.getElementById("chartRangePreset").addEventListener("change", function () {
@@ -2466,16 +2548,14 @@
       document.getElementById("langEn").addEventListener("click", function () { setLocale("en"); });
       document.getElementById("overlayLangZh").addEventListener("click", function () { setLocale("zh-Hant"); });
       document.getElementById("overlayLangEn").addEventListener("click", function () { setLocale("en"); });
-      document.getElementById("unitKg").addEventListener("click", function () { setUnit("kg"); });
-      document.getElementById("unitLbs").addEventListener("click", function () { setUnit("lbs"); });
-      document.getElementById("formUnitKg").addEventListener("click", function () { setUnit("kg"); });
-      document.getElementById("formUnitLbs").addEventListener("click", function () { setUnit("lbs"); });
+      document.getElementById("unitSelect").addEventListener("change", function () { setUnit(this.value); });
+      document.getElementById("formUnitSelect").addEventListener("change", function () { setUnit(this.value); });
 
       document.getElementById("tab-charts-btn").addEventListener("shown.bs.tab", function () {
         if (chartsDirty) renderCharts(loadSets());
       });
       document.getElementById("tab-today-btn").addEventListener("shown.bs.tab", function () {
-        if (todayDirty) renderTodayPie(loadSets());
+        setTimeout(function () { renderTodayPie(loadSets()); }, 40);
       });
       document.getElementById("appTabs").addEventListener("click", function (event) {
         var btn = event.target.closest("[data-bs-target]");
@@ -2497,7 +2577,7 @@
           pane.classList.toggle("active", on);
         });
         if (target.id === "tab-charts" && chartsDirty) renderCharts(loadSets());
-        if (target.id === "tab-today" && todayDirty) renderTodayPie(loadSets());
+        if (target.id === "tab-today") setTimeout(function () { renderTodayPie(loadSets()); }, 40);
       });
 
       function hasMadeFirstChoice() {
