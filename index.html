@@ -686,9 +686,9 @@
 
     @media (max-width: 767.98px) {
       .stat-value { font-size: 1.15rem; }
-      .body-stage { padding: 0 56px; }
-      .body-figure { height: calc(100dvh - 100px); min-height: 640px; }
-      .body-pct { width: 58px; font-size: 0.66rem; padding: 4px 2px; }
+      .body-stage { padding: 0 44px; }
+      .body-figure { height: auto; min-height: 0; aspect-ratio: 1024 / 1536; }
+      .body-pct { width: 46px; font-size: 0.58rem; padding: 2px 1px; }
     }
 
     .file-input {
@@ -2426,10 +2426,32 @@
               y: r.top - sr.top + r.height / 2
             };
           });
+          var sides = { left: [], right: [] };
           stage.querySelectorAll(".body-pct").forEach(function (label) {
             var point = anchors[label.getAttribute("data-part")];
             if (!point) return;
-            label.style.top = point.y + "px";
+            var side = label.getAttribute("data-side") === "left" ? "left" : "right";
+            sides[side].push({ label: label, point: point, y: point.y });
+          });
+          ["left", "right"].forEach(function (side) {
+            var items = sides[side].sort(function (a, b) { return a.y - b.y; });
+            var gap = 46;
+            for (var i = 1; i < items.length; i++) {
+              if (items[i].y - items[i - 1].y < gap) items[i].y = items[i - 1].y + gap;
+            }
+            var last = items[items.length - 1];
+            if (last && last.y > sr.height - 24) {
+              var shift = last.y - (sr.height - 24);
+              for (var j = items.length - 1; j >= 0; j--) {
+                items[j].y -= shift;
+                if (j > 0 && items[j].y - items[j - 1].y < gap) items[j - 1].y = items[j].y - gap;
+              }
+            }
+            items.forEach(function (item) { item.label.style.top = item.y + "px"; });
+          });
+          stage.querySelectorAll(".body-pct").forEach(function (label) {
+            var point = anchors[label.getAttribute("data-part")];
+            if (!point) return;
             var lr = label.getBoundingClientRect();
             var onLeft = label.getAttribute("data-side") === "left";
             var lx = onLeft ? (lr.right - sr.left) : (lr.left - sr.left);
