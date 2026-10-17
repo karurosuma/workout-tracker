@@ -492,6 +492,12 @@
 
     .chart-range {
       display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+    .chart-range .chart-range-dates {
+      display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
@@ -962,24 +968,24 @@
       </div>
 <div class="tab-pane fade" id="tab-charts" role="tabpanel" aria-labelledby="tab-charts-btn" tabindex="0">
         <div class="section-head mb-2">
-          <div class="title-row">
-            <h2 class="h5 page-title" data-i18n="chartsTitle">動作進度</h2>
-            <select class="form-select form-select-sm w-auto" id="chartRangePreset">
+          <h2 class="h5 page-title" data-i18n="chartsTitle">動作進度</h2>
+          <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
+          <div class="chart-range mt-2">
+            <select class="form-select" id="chartRangePreset">
               <option value="30" selected data-i18n="range30">近 30 天</option>
               <option value="90" data-i18n="range90">近 90 天</option>
               <option value="all" data-i18n="rangeAll">全部日期</option>
               <option value="custom" data-i18n="rangeCustom">自訂範圍</option>
             </select>
-          </div>
-          <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
-          <div class="chart-range mt-2">
             <div class="chart-range-dates">
-              <label class="form-label mb-1" for="chartFrom" data-i18n="rangeFrom">從</label>
-              <input class="form-control" id="chartFrom" type="date" />
-            </div>
-            <div class="chart-range-dates">
-              <label class="form-label mb-1" for="chartTo" data-i18n="rangeTo">到</label>
-              <input class="form-control" id="chartTo" type="date" />
+              <div>
+                <label class="form-label mb-1" for="chartFrom" data-i18n="rangeFrom">從</label>
+                <input class="form-control" id="chartFrom" type="date" />
+              </div>
+              <div>
+                <label class="form-label mb-1" for="chartTo" data-i18n="rangeTo">到</label>
+                <input class="form-control" id="chartTo" type="date" />
+              </div>
             </div>
           </div>
         </div>
@@ -2512,12 +2518,13 @@
 
       function layoutBodyLines(root) {
         var scope = root || document;
+        var pending = false;
         scope.querySelectorAll(".body-stage").forEach(function (stage) {
           var svg = stage.querySelector(".body-lines");
           var art = stage.querySelector(".body-svg:not(.is-off)");
           if (!svg || !art) return;
           var sr = stage.getBoundingClientRect();
-          if (!sr.width || !sr.height) return;
+          if (!sr.width || !sr.height) { pending = true; return; }
           svg.setAttribute("viewBox", "0 0 " + sr.width + " " + sr.height);
           svg.innerHTML = "";
           var regions = {};
@@ -2586,6 +2593,7 @@
             svg.appendChild(mark);
           });
         });
+        if (pending) setTimeout(function () { layoutBodyLines(root); }, 150);
       }
 
       function todayPieSeries(sets, index) {
@@ -3154,8 +3162,8 @@
         setTimeout(function () { layoutBodyLines(document.getElementById("chartsBodyMap")); }, 60);
       });
       document.getElementById("tab-today-btn").addEventListener("shown.bs.tab", function () {
-        syncDateBars();
-        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 60);
+        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 120);
+        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 400);
       });
       document.getElementById("perfBodyTabs").addEventListener("shown.bs.tab", function () {
         setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 60);
