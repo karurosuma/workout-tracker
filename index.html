@@ -265,7 +265,33 @@
       letter-spacing: -0.03em;
     }
 
-    .chip {
+    .suggest {
+      position: relative;
+      z-index: 25;
+    }
+    .suggest-list {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 4px;
+      background: #111;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      max-height: 220px;
+      overflow-y: auto;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+    }
+    .suggest-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+    .suggest-item:hover, .suggest-item.active { background: #1b2733; }
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -914,8 +940,8 @@
             </div>
             <div class="col-12">
               <label class="form-label" for="exercise" data-i18n="exercise">動作</label>
-              <input class="form-control" id="exercise" name="exercise" list="exerciseList" placeholder="臥推" autocomplete="off" required />
-              <datalist id="exerciseList"></datalist>
+              <input class="form-control" id="exercise" name="exercise" placeholder="臥推" autocomplete="off" required />
+              <div class="suggest" id="exerciseSuggest" hidden></div>
             </div>
             <div class="col-12">
               <label class="form-label" for="weight" data-i18n="weight">重量</label>
@@ -2194,22 +2220,47 @@
       }
 
       function recentExercises(sets, limit) {
-        var ordered = sets.slice().sort(function (a, b) {
-          var ca = Number(a.createdAt) || 0;
-          var cb = Number(b.createdAt) || 0;
-          if (cb !== ca) return cb - ca;
-          return String(b.date || "").localeCompare(String(a.date || ""));
-        });
         var seen = {};
-        var out = [];
-        for (var i = 0; i < ordered.length && out.length < limit; i++) {
-          var name = String(ordered[i].exercise || "").trim();
+        var names = [];
+        sets.forEach(function (set) {
+          var name = String(set.exercise || "").trim();
           var key = name.toLowerCase();
-          if (!name || seen[key]) continue;
+          if (!name || seen[key]) return;
           seen[key] = true;
-          out.push(name);
+          names.push(name);
+          if (names.length >= limit) return;
+        });
+        return names.slice(0, limit);
+      }
+
+      function suggestionPool(sets) {
+        var seen = {};
+        var names = [];
+        function add(name) {
+          var key = String(name || "").trim();
+          if (!key || seen[key]) return;
+          seen[key] = true;
+          names.push(key);
         }
-        return out;
+        recentExercises(sets, 50).forEach(add);
+        uniqueExercises(sets).forEach(add);
+        Object.keys((MUSCLE_DATA && MUSCLE_DATA.exercises) || {}).forEach(add);
+        return names;
+      }
+
+      function renderSuggestions(query) {
+        var box = document.getElementById("exerciseSuggest");
+        if (!box) return;
+        var q = String(query || "").trim().toLowerCase();
+        if (!q) { box.hidden = true; box.innerHTML = ""; return; }
+        var matches = suggestionPool(loadSets()).filter(function (name) {
+          return name.toLowerCase().indexOf(q) !== -1;
+        }).slice(0, 8);
+        if (!matches.length) { box.hidden = true; box.innerHTML = ""; return; }
+        box.hidden = false;
+        box.innerHTML = "<div class=\"suggest-list\">" + matches.map(function (name) {
+          return "<button type=\"button\" class=\"suggest-item\" data-suggest=\"" + escapeHtml(name) + "\">" + escapeHtml(name) + "</button>";
+        }).join("") + "</div>";
       }
 
       function sessionIndex(sets) {
@@ -2969,7 +3020,29 @@
         var button = event.target.closest("[data-exercise]");
         if (!button) return;
         document.getElementById("exercise").value = button.getAttribute("data-exercise");
+        document.getElementById("exerciseSuggest").hidden = true;
         document.getElementById("weight").focus();
+      });
+
+      document.getElementById("exercise").addEventListener("input", function () {
+        renderSuggestions(this.value);
+      });
+      document.getElementById("exercise").addEventListener("focus", function () {
+        renderSuggestions(this.value);
+      });
+      document.getElementById("exerciseSuggest").addEventListener("click", function (event) {
+        var btn = event.target.closest("[data-suggest]");
+        if (!btn) return;
+        var input = document.getElementById("exercise");
+        input.value = btn.getAttribute("data-suggest");
+        document.getElementById("exerciseSuggest").hidden = true;
+        document.getElementById("weight").focus();
+      });
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest("#exercise") && !event.target.closest("#exerciseSuggest")) {
+          var box = document.getElementById("exerciseSuggest");
+          if (box) box.hidden = true;
+        }
       });
 
       function handleLogClick(event) {
