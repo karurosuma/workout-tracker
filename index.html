@@ -950,7 +950,10 @@
               <div class="suggest" id="exerciseSuggest" hidden></div>
             </div>
             <div class="col-12">
-              <label class="form-label" for="weight" data-i18n="weight">重量</label>
+              <div class="d-flex justify-content-between align-items-baseline">
+                <label class="form-label mb-1" for="weight" data-i18n="weight">重量</label>
+                <span class="small text-muted-2" id="lastWeightHint"></span>
+              </div>
               <div class="input-group">
                 <input class="form-control" id="weight" name="weight" type="text" inputmode="decimal" placeholder="60" required />
                 <button class="input-group-text unit-btn" id="formUnitKg" type="button">kg</button>
@@ -1240,6 +1243,7 @@
           addSet: "新增組數",
           addedSet: "已新增",
           lastSet: "再加上一組",
+          lastWeight: "上次 {weight}",
           noLastSet: "還沒有可重複的組數。",
           recentExercises: "常用動作",
           noRecent: "尚無常用動作。",
@@ -1380,7 +1384,7 @@
           sessionDate: "Session date",
           addSet: "Add set",
           addedSet: "Added",
-          lastSet: "Repeat last set",
+          lastWeight: "Last {weight}",
           noLastSet: "No previous set to repeat.",
           recentExercises: "Recent exercises",
           noRecent: "No saved exercises yet.",
@@ -2259,6 +2263,29 @@
         return names.slice(0, limit);
       }
 
+      function lastWeightFor(exercise, excludeDate) {
+        var name = String(exercise || "").trim().toLowerCase();
+        if (!name) return null;
+        var sets = loadSets().filter(function (set) {
+          return String(set.exercise || "").trim().toLowerCase() === name && set.date && set.date !== excludeDate;
+        });
+        if (!sets.length) return null;
+        sets.sort(function (a, b) {
+          if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+          return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
+        });
+        return sets[0].weight;
+      }
+
+      function updateLastWeightHint() {
+        var hint = document.getElementById("lastWeightHint");
+        if (!hint) return;
+        var exercise = document.getElementById("exercise").value;
+        var date = document.getElementById("sessionDate").value;
+        var weight = lastWeightFor(exercise, date);
+        hint.textContent = weight == null ? "" : t("lastWeight", { weight: formatWeight(weight) + " " + unitLabel() });
+      }
+
       function suggestionPool(sets) {
         var seen = {};
         var names = [];
@@ -2478,7 +2505,7 @@
         return (rounded > 0 ? "+" : "") + rounded + "%";
       }
 
-      var MUSCLE_DATA = {"exercises":{"直腿硬舉":["back","hamstrings","glutes"],"上胸推":["chest","shoulders"],"坐姿胸推":["chest"],"蝴蝶機夾胸":["chest"],"坐姿捲腹":["core"],"啞鈴二頭肌彎舉":["biceps"],"啞鈴跨身錘式彎舉":["biceps"],"啞鈴側飛鳥":["shoulders"],"啞鈴肩推":["shoulders"],"super high row":["back","traps"],"seated leg extension":["quads"],"側平舉夾胸機":["shoulders","chest"],"二頭肌上拉":["biceps"],"面拉":["traps","shoulders"],"坐式蹬腿機":["quads","glutes"],"腰部旋轉機":["core"],"lying leg curl machine":["hamstrings"],"肩推":["shoulders"],"isolated front lat pulldown machine":["back"],"3d multi abductor machine":["glutes"],"上斜槓鈴划船":["back"],"壺鈴擺盪":["glutes","hamstrings","core"],"seated leg curl":["hamstrings"],"坐姿划船":["back"],"三頭肌下壓":["triceps"],"滑輪下拉":["back"],"過頭三頭肌伸展":["triceps"]},"keywords":{"chest":["bench","chest press","chest","pec","pec deck","flye","push-up","pushup","push up","dip","臥推","胸推","夾胸","上胸","伏地挺身"],"back":["row","pull-up","pullup","pulldown","lat","deadlift","划船","引體","引体","下拉","硬舉","硬拉","pullover","high row"],"traps":["face pull","facepull","face-pull","shrug","trap","面拉","臉拉","聳肩","斜方"],"shoulders":["shoulder","ohp","overhead press","lateral","側飛","側平舉","front raise","rear delt","reverse fly","military","upright","肩推","推舉","前平舉","後束","面拉","臉拉"],"biceps":["bicep","biceps","hammer curl","preacher","彎舉","二頭"],"triceps":["tricep","triceps","skull","pushdown","overhead extension","三頭","臂屈伸","下壓","過頭"],"core":["plank","crunch","abs","core","sit-up","situp","腹","核心","仰臥","平板","捲腹","卷腹","twist","旋轉","擺盪","swing"],"quads":["squat","lunge","leg press","leg extension","hack","bulgarian","深蹲","弓步","腿推","股四","腿伸","蹬腿"],"hamstrings":["leg curl","hamstring","rdl","romanian","good morning","腿彎","腿後","腿后","硬舉","硬拉"],"glutes":["hip thrust","glute","kickback","abductor","臀","橋式","深蹲","硬舉","硬拉","蹬腿","擺盪","swing"],"calves":["calf","calves","小腿","提踵"]}};
+      var MUSCLE_DATA = {"exercises":{"直腿硬舉":["back","hamstrings","glutes"],"上胸推":["chest","shoulders"],"坐姿胸推":["chest"],"蝴蝶機夾胸":["chest"],"坐姿捲腹":["core"],"啞鈴二頭肌彎舉":["biceps"],"啞鈴跨身錘式彎舉":["biceps"],"啞鈴側飛鳥":["shoulders"],"啞鈴肩推":["shoulders"],"super high row":["back","traps"],"seated leg extension":["quads"],"側平舉夾胸機":["shoulders","chest"],"二頭肌上拉":["biceps"],"面拉":["traps","shoulders"],"坐式蹬腿機":["quads","glutes"],"腰部旋轉機":["core"],"lying leg curl machine":["hamstrings"],"肩推":["shoulders"],"isolated front lat pulldown machine":["back"],"3d multi abductor machine":["glutes"],"上斜槓鈴划船":["back"],"壺鈴擺盪":["glutes","hamstrings","core"],"seated leg curl":["hamstrings"],"坐姿划船":["back"],"三頭肌下壓":["triceps"],"滑輪下拉":["back"],"過頭三頭肌伸展":["triceps"],"bench press":["chest","shoulders","triceps"],"barbell bench press":["chest","shoulders","triceps"],"dumbbell bench press":["chest","shoulders","triceps"],"incline bench press":["chest","shoulders"],"decline bench press":["chest"],"chest press":["chest","shoulders","triceps"],"incline chest press":["chest","shoulders"],"pec deck":["chest"],"cable fly":["chest"],"dumbbell fly":["chest"],"push up":["chest","shoulders","triceps"],"dip":["chest","triceps"],"chest dip":["chest","triceps"],"pull up":["back","biceps"],"chin up":["back","biceps"],"lat pulldown":["back","biceps"],"wide grip lat pulldown":["back"],"close grip lat pulldown":["back","biceps"],"seated row":["back","biceps"],"cable row":["back"],"barbell row":["back","biceps"],"bent over row":["back","biceps"],"dumbbell row":["back","biceps"],"one arm row":["back","biceps"],"t bar row":["back"],"deadlift":["back","glutes","hamstrings"],"romanian deadlift":["back","hamstrings","glutes"],"straight leg deadlift":["back","hamstrings","glutes"],"good morning":["back","hamstrings","glutes"],"shrug":["traps"],"face pull":["traps","shoulders"],"pullover":["back","chest"],"overhead press":["shoulders","triceps"],"military press":["shoulders","triceps"],"shoulder press":["shoulders","triceps"],"dumbbell shoulder press":["shoulders","triceps"],"arnold press":["shoulders"],"lateral raise":["shoulders"],"front raise":["shoulders"],"rear delt fly":["shoulders","traps"],"reverse fly":["shoulders","traps"],"upright row":["shoulders","traps"],"bicep curl":["biceps"],"barbell curl":["biceps"],"dumbbell curl":["biceps"],"hammer curl":["biceps"],"preacher curl":["biceps"],"concentration curl":["biceps"],"cable curl":["biceps"],"incline curl":["biceps"],"tricep pushdown":["triceps"],"tricep extension":["triceps"],"overhead tricep extension":["triceps"],"skull crusher":["triceps"],"close grip bench press":["triceps","chest"],"tricep dip":["triceps","chest"],"kickback":["triceps"],"squat":["quads","glutes"],"back squat":["quads","glutes"],"front squat":["quads","glutes","core"],"goblet squat":["quads","glutes"],"hack squat":["quads","glutes"],"leg press":["quads","glutes"],"leg extension":["quads"],"lunge":["quads","glutes"],"walking lunge":["quads","glutes"],"bulgarian split squat":["quads","glutes"],"step up":["quads","glutes"],"leg curl":["hamstrings"],"lying leg curl":["hamstrings"],"hip thrust":["glutes","hamstrings"],"glute bridge":["glutes"],"cable kickback":["glutes"],"hip abduction":["glutes"],"hip adduction":["glutes"],"calf raise":["calves"],"seated calf raise":["calves"],"standing calf raise":["calves"],"plank":["core"],"crunch":["core"],"sit up":["core"],"leg raise":["core"],"hanging leg raise":["core"],"russian twist":["core"],"ab wheel":["core"],"cable crunch":["core"],"woodchop":["core"],"kettlebell swing":["glutes","hamstrings","core"],"臥推":["chest","shoulders","triceps"],"槓鈴臥推":["chest","shoulders","triceps"],"啞鈴臥推":["chest","shoulders","triceps"],"上斜臥推":["chest","shoulders"],"下斜臥推":["chest"],"胸推":["chest","shoulders","triceps"],"上斜胸推":["chest","shoulders"],"夾胸":["chest"],"滑輪夾胸":["chest"],"啞鈴飛鳥":["chest"],"伏地挺身":["chest","shoulders","triceps"],"雙槓":["chest","triceps"],"引體向上":["back","biceps"],"反手引體":["back","biceps"],"寬握下拉":["back"],"窄握下拉":["back","biceps"],"滑輪划船":["back"],"槓鈴划船":["back","biceps"],"俯身划船":["back","biceps"],"啞鈴划船":["back","biceps"],"單臂划船":["back","biceps"],"硬舉":["back","glutes","hamstrings"],"羅馬尼亞硬舉":["back","hamstrings","glutes"],"早安式":["back","hamstrings","glutes"],"聳肩":["traps"],"上拉":["back","chest"],"軍事推舉":["shoulders","triceps"],"阿諾肩推":["shoulders"],"側平舉":["shoulders"],"前平舉":["shoulders"],"後束飛鳥":["shoulders","traps"],"反向飛鳥":["shoulders","traps"],"直立划船":["shoulders","traps"],"二頭彎舉":["biceps"],"槓鈴彎舉":["biceps"],"啞鈴彎舉":["biceps"],"錘式彎舉":["biceps"],"牧師椅彎舉":["biceps"],"集中彎舉":["biceps"],"滑輪彎舉":["biceps"],"上斜彎舉":["biceps"],"三頭下壓":["triceps"],"三頭伸展":["triceps"],"過頭三頭伸展":["triceps"],"窄握臥推":["triceps","chest"],"三頭屈伸":["triceps"],"深蹲":["quads","glutes"],"背蹲":["quads","glutes"],"前蹲":["quads","glutes","core"],"高腳杯深蹲":["quads","glutes"],"哈克深蹲":["quads","glutes"],"腿推":["quads","glutes"],"蹬腿":["quads","glutes"],"腿伸展":["quads"],"弓步":["quads","glutes"],"行走弓步":["quads","glutes"],"保加利亞分腿蹲":["quads","glutes"],"登階":["quads","glutes"],"腿彎舉":["hamstrings"],"俯臥腿彎舉":["hamstrings"],"臀推":["glutes","hamstrings"],"臀橋":["glutes"],"滑輪後踢":["glutes"],"髖外展":["glutes"],"髖內收":["glutes"],"提踵":["calves"],"坐姿提踵":["calves"],"站姿提踵":["calves"],"平板支撐":["core"],"捲腹":["core"],"仰臥起坐":["core"],"抬腿":["core"],"懸垂抬腿":["core"],"俄羅斯轉體":["core"],"健腹輪":["core"],"滑輪捲腹":["core"],"伐木":["core"]},"keywords":{"chest":["bench","chest press","chest","pec","pec deck","flye","fly","push-up","pushup","push up","dip","臥推","胸推","夾胸","上胸","伏地挺身","飛鳥"],"back":["row","pull-up","pullup","pull up","pulldown","lat","deadlift","划船","引體","引体","下拉","硬舉","硬拉","pullover","high row","上拉"],"traps":["face pull","facepull","face-pull","shrug","trap","面拉","臉拉","聳肩","斜方"],"shoulders":["shoulder","ohp","overhead press","lateral","側飛","側平舉","front raise","rear delt","reverse fly","military","upright","肩推","推舉","前平舉","後束","面拉","臉拉"],"biceps":["bicep","biceps","hammer curl","preacher","curl","彎舉","二頭"],"triceps":["tricep","triceps","skull","pushdown","overhead extension","三頭","臂屈伸","下壓","過頭","伸展"],"core":["plank","crunch","abs","core","sit-up","situp","腹","核心","仰臥","平板","捲腹","卷腹","twist","旋轉","擺盪","swing","健腹"],"quads":["squat","lunge","leg press","leg extension","hack","bulgarian","深蹲","弓步","腿推","股四","腿伸","蹬腿","登階"],"hamstrings":["leg curl","hamstring","rdl","romanian","good morning","腿彎","腿後","腿后","硬舉","硬拉"],"glutes":["hip thrust","glute","kickback","abductor","臀","橋式","深蹲","硬舉","硬拉","蹬腿","擺盪","swing","髖"],"calves":["calf","calves","小腿","提踵"]}};
       var BODY_PARTS = [
         { id: "chest", label: "partChest" },
         { id: "back", label: "partBack" },
@@ -2922,6 +2949,7 @@
         exerciseChips.innerHTML = recent.map(function (name) {
           return "<button type=\"button\" class=\"chip\" data-exercise=\"" + escapeHtml(name) + "\">" + escapeHtml(name) + "</button>";
         }).join("") || "<span class=\"text-muted-2 small\">" + escapeHtml(t("noRecent")) + "</span>";
+        updateLastWeightHint();
 
         var dateMap = {};
         sets.forEach(function (set) { if (set.date) dateMap[set.date] = true; });
@@ -3044,12 +3072,15 @@
         if (!button) return;
         document.getElementById("exercise").value = button.getAttribute("data-exercise");
         document.getElementById("exerciseSuggest").hidden = true;
+        updateLastWeightHint();
         document.getElementById("weight").focus();
       });
 
       document.getElementById("exercise").addEventListener("input", function () {
         renderSuggestions(this.value);
+        updateLastWeightHint();
       });
+      document.getElementById("sessionDate").addEventListener("change", updateLastWeightHint);
       document.getElementById("exercise").addEventListener("focus", function () {
         renderSuggestions(this.value);
       });
@@ -3059,6 +3090,7 @@
         var input = document.getElementById("exercise");
         input.value = btn.getAttribute("data-suggest");
         document.getElementById("exerciseSuggest").hidden = true;
+        updateLastWeightHint();
         document.getElementById("weight").focus();
       });
       document.addEventListener("click", function (event) {
