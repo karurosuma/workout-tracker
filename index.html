@@ -3010,7 +3010,7 @@
         var tab = document.querySelector("#appTabs .nav-link.active");
         var target = tab ? tab.getAttribute("data-bs-target") : "#tab-log";
         if (target === "#tab-charts") renderCharts(sets);
-        else if (target === "#tab-today") renderBodyMap(sets, document.getElementById("perfBodyMap"));
+        else if (target === "#tab-today") renderBodyMap(todaySets, document.getElementById("perfBodyMap"));
               }
 
       document.getElementById("sessionDate").value = todayISO();
