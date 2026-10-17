@@ -292,16 +292,20 @@
       font-size: 0.95rem;
     }
     .suggest-item:hover, .suggest-item.active { background: #1b2733; }
+    .chip {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      border: 1px solid var(--line);
-      background: #101820;
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 6px 10px;
+      border: 1px solid var(--line) !important;
+      background: #101820 !important;
+      color: var(--muted) !important;
+      border-radius: 999px !important;
+      padding: 6px 12px !important;
       font-size: 0.82rem;
+      line-height: 1.2;
       cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
     }
 
     .chip:hover, .chip.active {
@@ -419,7 +423,9 @@
     }
 
     .confirm-overlay {
-      z-index: 6000;
+      z-index: 9000;
+      position: fixed;
+      inset: 0;
     }
 
     .welcome-overlay.hidden {
@@ -1113,7 +1119,7 @@
               <button class="btn btn-ghost" id="clearAllBtn" type="button">
                 <i class="bi bi-trash3 me-1"></i><span data-i18n="clear">清除</span>
               </button>
-              <input class="file-input" id="loadFile" type="file" accept="*/*" />
+              <input class="file-input" id="loadFile" type="file" accept=".sqlite,.db,.sqlite3,application/x-sqlite3,application/octet-stream,*/*" />
               <input class="file-input" id="migrateFile" type="file" accept="*/*" />
             </div>
           </div>
@@ -1511,7 +1517,6 @@
       var editForm = document.getElementById("editForm");
       var logList = document.getElementById("logList");
       var filterDate = document.getElementById("filterDate");
-      var exerciseList = document.getElementById("exerciseList");
       var exerciseChips = document.getElementById("exerciseChips");
       var statusEl = document.getElementById("formStatus");
       var loadFile = document.getElementById("loadFile");
@@ -2149,13 +2154,34 @@
         if (!SQL_LIB) throw new Error("badSqlite");
         var bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
         if (!isSqliteBytes(bytes)) throw new Error("badSqlite");
-        var incomingDb = new SQL_LIB.Database(bytes);
-        var rows;
+        var incomingDb;
         try {
-          rows = rowsFromDatabase(incomingDb);
-        } finally {
-          try { incomingDb.close(); } catch (err) {}
+          incomingDb = new SQL_LIB.Database(bytes);
+        } catch (err) {
+          throw new Error("badSqlite");
         }
+        var rows = [];
+        try {
+          var stmt = incomingDb.prepare("SELECT id, exercise, weight, reps, date, created_at FROM sets");
+          while (stmt.step()) {
+            var row = stmt.getAsObject();
+            var set = normalizeSet({
+              id: row.id,
+              exercise: row.exercise,
+              weight: row.weight,
+              reps: row.reps,
+              date: row.date,
+              createdAt: row.created_at
+            });
+            if (set) rows.push(set);
+          }
+          stmt.free();
+        } catch (err) {
+          try { if (incomingDb) incomingDb.close(); } catch (e) {}
+          throw new Error("readFail");
+        }
+        try { if (incomingDb) incomingDb.close(); } catch (err) {}
+        if (!rows.length) throw new Error("noValidSets");
         applyImportedSets(rows);
       }
 
@@ -2892,9 +2918,6 @@
         renderBodyMap(todaySets, document.getElementById("perfBodyMap"));
 
         var names = uniqueExercises(sets);
-        exerciseList.innerHTML = names.map(function (name) {
-          return "<option value=\"" + escapeHtml(name) + "\"></option>";
-        }).join("");
         var recent = recentExercises(sets, 20);
         exerciseChips.innerHTML = recent.map(function (name) {
           return "<button type=\"button\" class=\"chip\" data-exercise=\"" + escapeHtml(name) + "\">" + escapeHtml(name) + "</button>";
@@ -3152,17 +3175,22 @@
         if (!file) return;
         var reader = new FileReader();
         reader.onload = function () {
-          try {
-            importSqliteBytes(reader.result);
-          } catch (err) {
-            var code = err && err.message;
-            showStatus("err", t(code) !== code ? t(code) : t("readFail"));
-          }
+          initDb().then(function () {
+            try {
+              importSqliteBytes(reader.result);
+            } catch (err) {
+              var code = err && err.message;
+              showStatus("err", (code && t(code) !== code) ? t(code) : (code || t("readFail")));
+            }
+          }).catch(function (err) {
+            showStatus("err", t("readFail"));
+          });
         };
         reader.onerror = function () {
           showStatus("err", t("openFail"));
         };
         reader.readAsArrayBuffer(file);
+        event.target.value = "";
       });
 
       var migrateFile = document.getElementById("migrateFile");
@@ -3197,10 +3225,33 @@
       }
 
       function doClearAll() {
-        saveSets([]);
-        render();
-        showStatus("ok", t("cleared"));
         hideClearPrompt();
+        memoryStore.sets = [];
+        logLimit = 80;
+        todayViewDate = "";
+        chartsDirty = true;
+        todayDirty = true;
+        try {
+          if (sqlDb) {
+            sqlDb.run("DELETE FROM sets");
+            persistSql();
+          }
+        } catch (err) {}
+        var today = todayISO();
+        ["sessionDate", "todayDate", "chartFrom", "chartTo"].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.value = today;
+        });
+        var preset = document.getElementById("chartRangePreset");
+        if (preset) preset.value = "30";
+        ["exercise", "weight", "reps"].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+        var suggest = document.getElementById("exerciseSuggest");
+        if (suggest) { suggest.hidden = true; suggest.innerHTML = ""; }
+        try { render(); } catch (err) {}
+        showStatus("ok", t("cleared"));
       }
 
       document.getElementById("clearAllBtn").addEventListener("click", function () {
