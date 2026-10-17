@@ -1,8 +1,9 @@
-const CACHE = "workout-tracker-web-app-v92";
+const CACHE = "workout-tracker-web-app-v116";
 const PRECACHE = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./muscles.json",
   "./bodies/male-front.jpg",
   "./bodies/male-back.jpg",
   "./bodies/female-front.jpg",
@@ -41,7 +42,9 @@ const PRECACHE = [
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
-      return cache.addAll(PRECACHE);
+      return Promise.all(PRECACHE.map(function (url) {
+        return cache.add(url).catch(function () {});
+      }));
     }).then(function () {
       return self.skipWaiting();
     })
@@ -65,6 +68,7 @@ self.addEventListener("activate", function (event) {
 self.addEventListener("fetch", function (event) {
   var req = event.request;
   if (req.method !== "GET") return;
+  if (req.url.indexOf("muscles.json") !== -1) return;
   event.respondWith(
     caches.match(req).then(function (cached) {
       if (cached) return cached;
