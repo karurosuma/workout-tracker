@@ -3388,6 +3388,16 @@
         if (!hasMadeFirstChoice()) showWelcome();
       });
 
+      var launchedAt = Date.now();
+      var STALE_AFTER = 8 * 60 * 60 * 1000;
+      function maybeRefreshStale() {
+        if (Date.now() - launchedAt < STALE_AFTER) return;
+        if (document.visibilityState === "hidden") return;
+        location.reload();
+      }
+      setInterval(maybeRefreshStale, 60 * 1000);
+      document.addEventListener("visibilitychange", maybeRefreshStale);
+
       function isTextField(el) {
         if (!el || el === document.body || el === document.documentElement) return false;
         var tag = (el.tagName || "").toLowerCase();
