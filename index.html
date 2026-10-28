@@ -1178,6 +1178,10 @@
           <div class="modal-body">
             <input type="hidden" id="editId" />
             <div class="mb-3">
+              <label class="form-label" for="editDate" data-i18n="sessionDate">訓練日期</label>
+              <input class="form-control" id="editDate" type="date" required />
+            </div>
+            <div class="mb-3">
               <label class="form-label" for="editExercise" data-i18n="exercise">動作</label>
               <input class="form-control" id="editExercise" required />
             </div>
@@ -2267,14 +2271,20 @@
         var name = String(exercise || "").trim().toLowerCase();
         if (!name) return null;
         var sets = loadSets().filter(function (set) {
-          return String(set.exercise || "").trim().toLowerCase() === name && set.date && set.date !== excludeDate;
+          return String(set.exercise || "").trim().toLowerCase() === name && set.date && (!excludeDate || set.date < excludeDate);
         });
         if (!sets.length) return null;
         sets.sort(function (a, b) {
           if (a.date !== b.date) return a.date < b.date ? 1 : -1;
           return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
         });
-        return sets[0].weight;
+        var lastDate = sets[0].date;
+        var sameDay = sets.filter(function (set) { return set.date === lastDate; });
+        var best = sameDay[0];
+        sameDay.forEach(function (set) {
+          if (Number(set.weight) > Number(best.weight)) best = set;
+        });
+        return best.weight;
       }
 
       function updateLastWeightHint() {
@@ -3125,6 +3135,7 @@
           })[0];
           if (!set) return;
           document.getElementById("editId").value = set.id;
+          document.getElementById("editDate").value = set.date || todayISO();
           document.getElementById("editExercise").value = set.exercise;
           document.getElementById("editWeight").value = formatWeight(set.weight);
           document.getElementById("editReps").value = set.reps;
@@ -3151,13 +3162,14 @@
         var weight = toKg(enteredWeight);
         var reps = parseNumber(document.getElementById("editReps").value);
         var exercise = document.getElementById("editExercise").value.trim();
-        if (!exercise || !isFinite(enteredWeight) || enteredWeight < 0 || !isFinite(reps) || reps < 1) {
+        var date = document.getElementById("editDate").value;
+        if (!exercise || !isFinite(enteredWeight) || enteredWeight < 0 || !isFinite(reps) || reps < 1 || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
           alert(t("invalidEdit"));
           return;
         }
         var sets = loadSets().map(function (set) {
           if (set.id !== id) return set;
-          return { id: set.id, exercise: exercise, weight: weight, reps: reps, date: set.date, createdAt: set.createdAt };
+          return { id: set.id, exercise: exercise, weight: weight, reps: reps, date: date, createdAt: set.createdAt };
         });
         saveSets(sets);
         var editModal = getModal("editModal");
