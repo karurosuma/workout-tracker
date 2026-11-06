@@ -121,9 +121,58 @@
 
     .form-label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--muted); font-weight: 500; }
     .form-control-sm, .form-select-sm { min-height: 36px; padding: 6px 10px; font-size: 0.9rem; }
-    .input-group { display: flex; align-items: stretch; }
-    .input-group .form-control { flex: 1; border-radius: 10px 0 0 10px; }
-    .input-group-text { display: flex; align-items: center; padding: 0 12px; border-radius: 0 10px 10px 0; }
+    .input-group { 
+      display: flex; 
+      align-items: stretch; 
+      width: 100%;
+      background: #2c2c2e;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .input-group .form-control { 
+      flex: 1; 
+      border-radius: 0; 
+      background: transparent;
+      min-width: 0;
+    }
+    .input-group-text { 
+      display: flex; 
+      align-items: center; 
+      padding: 0; 
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+    }
+
+    .unit-switch {
+      display: flex;
+      align-items: stretch;
+      background: #1c1c1e;
+      border-radius: 8px;
+      margin: 4px;
+      padding: 2px;
+      min-width: 100px;
+    }
+
+    .unit-btn {
+      cursor: pointer;
+      min-width: 48px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      padding: 0 10px;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .unit-btn.active {
+      background: var(--accent);
+      color: #000;
+    }
+    .unit-btn:active {
+      transform: scale(0.96);
+    }
 
     .row { display: flex; flex-wrap: wrap; margin: 0 -6px; }
     .row > * { padding: 0 6px; }
@@ -282,6 +331,19 @@
       font-size: 17px;
       min-height: 44px;
       padding: 10px 14px;
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="date"].form-control {
+      color-scheme: dark;
+    }
+
+    input[type="date"].form-control::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(0.8);
+      opacity: 0.7;
+      cursor: pointer;
     }
 
     .form-control:focus, .form-select:focus {
@@ -289,6 +351,7 @@
       color: var(--text);
       border-color: transparent;
       box-shadow: 0 0 0 2px rgba(48, 209, 88, 0.45);
+      outline: none;
     }
 
     .form-control::placeholder { color: #636366; }
@@ -770,14 +833,6 @@
       }
     }
 
-    .unit-btn {
-      cursor: pointer;
-      min-width: 52px;
-    }
-    .unit-btn.active {
-      color: var(--accent);
-      border-color: var(--accent);
-    }
     .set-name-row {
       display: flex;
       align-items: baseline;
@@ -1109,8 +1164,10 @@
               </div>
               <div class="input-group">
                 <input class="form-control" id="weight" name="weight" type="text" inputmode="decimal" placeholder="60" required />
-                <button class="input-group-text unit-btn" id="formUnitKg" type="button">kg</button>
-                <button class="input-group-text unit-btn" id="formUnitLbs" type="button">lbs</button>
+                <div class="unit-switch">
+                  <button class="unit-btn active" id="formUnitKg" type="button">kg</button>
+                  <button class="unit-btn" id="formUnitLbs" type="button">lbs</button>
+                </div>
               </div>
             </div>
             <div class="col-12">
