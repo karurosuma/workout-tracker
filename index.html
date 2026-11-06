@@ -101,6 +101,11 @@
       line-height: 1.2;
       cursor: pointer;
       text-decoration: none;
+      transition: transform 0.1s ease, background-color 0.15s ease, opacity 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active {
+      transform: scale(0.97);
     }
     .btn-sm { min-height: 36px; padding: 6px 12px; font-size: 0.85rem; border-radius: 10px; }
     .btn-danger-app { background: var(--danger); color: #fff; }
@@ -283,7 +288,7 @@
       background: #2c2c2e;
       color: var(--text);
       border-color: transparent;
-      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.45);
+      box-shadow: 0 0 0 2px rgba(48, 209, 88, 0.45);
     }
 
     .form-control::placeholder { color: #636366; }
@@ -300,9 +305,9 @@
       color: #fff;
       font-weight: 600;
       border-radius: 12px;
-      transition: opacity 0.15s ease;
+      transition: transform 0.1s ease, opacity 0.15s ease, background-color 0.15s ease;
     }
-    .btn-accent:active { opacity: 0.7; }
+    .btn-accent:active { opacity: 0.85; transform: scale(0.97); }
 
     #addSetBtn {
       min-height: 56px;
@@ -351,6 +356,7 @@
       color: var(--accent);
       border-radius: 10px;
       font-weight: 500;
+      transition: transform 0.1s ease, background-color 0.15s ease;
     }
 
     .btn-ghost:hover {
@@ -358,16 +364,16 @@
       color: var(--accent);
     }
 
-    .btn-ghost:hover {
-      background: #1b2733;
-      color: var(--text);
+    .btn-ghost:active {
+      transform: scale(0.97);
+      background: #3a3a3c;
     }
 
     .lang-switch {
       display: inline-flex;
       background: #2c2c2e;
       border: 0;
-      border-radius: 9px;
+      border-radius: 10px;
       padding: 2px;
       overflow: hidden;
     }
@@ -376,15 +382,20 @@
       border: 0;
       background: transparent;
       color: var(--text);
-      min-height: 30px;
-      padding: 0 14px;
-      font-weight: 500;
-      border-radius: 7px;
+      min-height: 32px;
+      padding: 0 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
     }
 
     .lang-switch button.active {
-      background: #636366;
-      color: #fff;
+      background: var(--accent);
+      color: #000;
+    }
+
+    .lang-switch button:active {
+      transform: scale(0.96);
     }
 
     .stat {
@@ -444,7 +455,7 @@
     }
 
     .chip:hover, .chip.active {
-      background: rgba(10, 132, 255, 0.18) !important;
+      background: rgba(48, 209, 88, 0.18) !important;
       color: var(--accent) !important;
     }
 
