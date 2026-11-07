@@ -539,10 +539,23 @@
       min-width: 36px;
       min-height: 36px;
       border-radius: 10px;
+      border: 1px solid #48484a;
     }
     .set-row .btn-ghost:hover,
     .set-row .btn-ghost:active {
       background: #48484a;
+    }
+    .set-row .btn-ghost.text-danger,
+    .set-row button[data-delete] {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    .set-row .btn-ghost.text-danger:hover,
+    .set-row button[data-delete]:hover,
+    .set-row .btn-ghost.text-danger:active,
+    .set-row button[data-delete]:active {
+      background: rgba(255, 69, 58, 0.18);
+      color: var(--danger);
     }
 
     .summary-row + .summary-row { margin-top: 8px; }
