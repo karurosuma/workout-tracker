@@ -222,14 +222,15 @@
       max-width: 100%;
       background: #2c2c2e;
       border-radius: 10px;
-      overflow: visible;
+      overflow: hidden;
+      box-sizing: border-box;
     }
     .input-group .form-control { 
-      flex: 1 1 auto; 
+      flex: 1 1 0;
       border-radius: 0; 
       background: transparent;
       min-width: 0;
-      width: 1%;
+      width: auto;
     }
 
     .unit-switch {
@@ -275,18 +276,32 @@
       transform: scale(0.96);
     }
 
-    .row { display: flex; flex-wrap: wrap; margin: 0 -6px; }
-    .row > * { padding: 0 6px; }
-    .g-3 { row-gap: 12px; }
+    .row { display: flex; flex-wrap: wrap; margin: 0; }
+    .row > * { padding: 0; min-width: 0; }
+    .g-3 { row-gap: 14px; }
     .col-12 { flex: 0 0 100%; max-width: 100%; width: 100%; }
-    .card-panel { width: 100%; }
-    #setForm, #setForm .col-12 { width: 100%; }
-    .col-6 { flex: 0 0 50%; max-width: 50%; }
-    .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
-    .container { width: 100%; max-width: 800px; margin: 0 auto; padding: 0 16px; }
-    @media (min-width: 768px) {
-      .container { padding: 0 24px; }
+    .col-6 { flex: 0 0 100%; max-width: 100%; }
+    .col-4 { flex: 0 0 100%; max-width: 100%; }
+    @media (min-width: 640px) {
+      .col-6 { flex: 0 0 50%; max-width: 50%; }
+      .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
     }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    @media (min-width: 768px) {
+      .container { max-width: 720px; padding: 0 24px; }
+    }
+    @media (min-width: 1024px) {
+      .container { max-width: 800px; }
+    }
+
+    .card-panel { width: 100%; box-sizing: border-box; }
+    #setForm, #setForm .col-12 { width: 100%; }
 
     .d-flex { display: flex; }
     .d-grid { display: grid; }
@@ -440,14 +455,14 @@
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
+      display: block;
       -webkit-appearance: none;
       appearance: none;
     }
 
     input[type="date"].form-control {
       color-scheme: dark;
-      position: relative;
-      padding-right: 36px;
+      padding-right: 40px;
     }
 
     input[type="date"].form-control::-webkit-calendar-picker-indicator {
@@ -455,8 +470,6 @@
       opacity: 0.7;
       cursor: pointer;
       margin-left: auto;
-      position: absolute;
-      right: 10px;
     }
 
     .form-control:focus, .form-select:focus {
@@ -1003,9 +1016,10 @@
     .body-figure {
       position: relative;
       width: 100%;
+      max-width: 420px;
       height: auto;
-      min-height: 280px;
-      max-height: 65vh;
+      min-height: 240px;
+      max-height: 60vh;
       aspect-ratio: 2 / 3;
       margin: 0 auto;
     }
