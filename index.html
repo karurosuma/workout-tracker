@@ -48,9 +48,6 @@
     }
 
     html { color-scheme: dark; }
-      filter: none;
-      opacity: 0.6;
-    }
     button, .nav-link, .chip { -webkit-touch-callout: none; user-select: none; }
     input, textarea { user-select: text; }
 
@@ -284,7 +281,11 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding-top: calc(52px + env(safe-area-inset-top, 0px));
-      padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    }
+
+    main.container {
+      padding-bottom: 24px;
     }
 
     .app-top-bar {
