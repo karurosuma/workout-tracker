@@ -6,9 +6,9 @@
   <title>workout-tracker-web-app — 訓練紀錄</title>
   <meta name="color-scheme" content="dark" />
   <meta name="format-detection" content="telephone=no" />
-  <meta name="theme-color" content="#000" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#000" />
+  <meta name="theme-color" content="#06110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#06110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -33,10 +33,10 @@
   <style>
     :root,
     html[data-theme="dark"] {
-      --bg: #000;
-      --panel: #1c1c1e;
-      --panel-2: #2c2c2e;
-      --line: #38383a;
+      --bg: #06110b;
+      --panel: #0c1a12;
+      --panel-2: #12261a;
+      --line: #1e3a2a;
       --text: #ffffff;
       --muted: #8e8e93;
       --accent: #30d158;
@@ -115,8 +115,9 @@
     input, textarea { user-select: text; }
 
     html {
-      background-color: #000;
-      background-image: none;
+      background-color: var(--bg);
+      background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(48, 209, 88, 0.12), transparent 60%),
+                        radial-gradient(ellipse 60% 40% at 50% 110%, rgba(48, 209, 88, 0.06), transparent 50%);
       height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
       min-height: -webkit-fill-available;
       min-height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
@@ -244,6 +245,12 @@
     .col-6 { flex: 0 0 50%; max-width: 50%; }
     .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
     .container { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 16px; }
+    @media (min-width: 900px) {
+      .container { max-width: 960px; }
+    }
+    @media (min-width: 1200px) {
+      .container { max-width: 1080px; }
+    }
 
     .d-flex { display: flex; }
     .d-grid { display: grid; }
@@ -325,7 +332,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(6, 17, 11, 0.55);
       backdrop-filter: saturate(180%) blur(24px);
       -webkit-backdrop-filter: saturate(180%) blur(24px);
       border-bottom: 0.5px solid rgba(255, 255, 255, 0.12);
@@ -792,7 +799,7 @@
     .title-row .form-select { margin-left: auto; }
     .section-head:has(.page-title),
     .section-head:has(.page-title) .page-title {
-      background: #000 !important;
+      background: var(--bg) !important;
       background-image: none !important;
       border: 0 !important;
       box-shadow: none !important;
@@ -1928,7 +1935,7 @@
         var meta = document.querySelector('meta[name="color-scheme"]');
         if (meta) meta.setAttribute("content", theme);
         var themeMeta = document.querySelector('meta[name="theme-color"]');
-        if (themeMeta) themeMeta.setAttribute("content", theme === "light" ? "#f2f2f7" : "#000");
+        if (themeMeta) themeMeta.setAttribute("content", theme === "light" ? "#f2f2f7" : "#06110b");
       }
 
       function setTheme(next) {
