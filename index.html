@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
@@ -31,7 +31,8 @@
   <link rel="stylesheet" href="vendor/noto-sans-tc.css" />
   <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
   <style>
-    :root {
+    :root,
+    html[data-theme="dark"] {
       --bg: #000;
       --panel: #1c1c1e;
       --panel-2: #2c2c2e;
@@ -44,10 +45,72 @@
       --warn: #ffd60a;
       --nav-h: 72px;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      color-scheme: dark;
     }
 
-    * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-    html { color-scheme: dark; }
+    html[data-theme="light"] {
+      --bg: #f2f2f7;
+      --panel: #ffffff;
+      --panel-2: #e5e5ea;
+      --line: #d1d1d6;
+      --text: #000000;
+      --muted: #6e6e73;
+      --accent: #28a745;
+      --accent-2: #34c759;
+      --danger: #ff3b30;
+      --warn: #ff9500;
+      color-scheme: light;
+    }
+
+    html[data-theme="light"] body,
+    html[data-theme="light"] {
+      background-color: var(--bg);
+    }
+
+    html[data-theme="light"] .card-panel,
+    html[data-theme="light"] .set-row,
+    html[data-theme="light"] .stat,
+    html[data-theme="light"] .btn,
+    html[data-theme="light"] .btn-ghost,
+    html[data-theme="light"] .form-control,
+    html[data-theme="light"] .form-select,
+    html[data-theme="light"] .input-group,
+    html[data-theme="light"] .lang-switch,
+    html[data-theme="light"] .nav-pills .nav-link {
+      background: var(--panel-2);
+      color: var(--text);
+    }
+
+    html[data-theme="light"] .app-top-bar {
+      background: rgba(242, 242, 247, 0.72);
+      border-bottom-color: rgba(0, 0, 0, 0.1);
+    }
+
+    html[data-theme="light"] .app-nav-bar {
+      background: rgba(255, 255, 255, 0.72);
+      border-top-color: rgba(0, 0, 0, 0.1);
+    }
+
+    html[data-theme="light"] .app-tabs .nav-link {
+      color: #8e8e93;
+    }
+
+    html[data-theme="light"] .app-tabs .nav-link.active {
+      color: var(--accent);
+    }
+
+    html[data-theme="light"] .set-row .btn-ghost,
+    html[data-theme="light"] .set-row .btn {
+      background: #e5e5ea;
+      border-color: #c7c7cc;
+      color: var(--text);
+    }
+
+    html[data-theme="light"] .set-row button[data-delete],
+    html[data-theme="light"] .set-row .text-danger {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
     button, .nav-link, .chip { -webkit-touch-callout: none; user-select: none; }
     input, textarea { user-select: text; }
 
@@ -1329,10 +1392,10 @@
           </div>
 
           <div class="settings-row">
-            <div class="fw-semibold" data-i18n="settingsGender">性別</div>
-            <div class="lang-switch" role="group" aria-label="性別">
-              <button type="button" id="genderMale" class="active" data-i18n="genderMale">男</button>
-              <button type="button" id="genderFemale" data-i18n="genderFemale">女</button>
+            <div class="fw-semibold" data-i18n="settingsTheme">外觀</div>
+            <div class="lang-switch" role="group" aria-label="外觀">
+              <button type="button" id="themeDark" class="active" data-i18n="themeDark">深色</button>
+              <button type="button" id="themeLight" data-i18n="themeLight">淺色</button>
             </div>
           </div>
 
@@ -1457,6 +1520,7 @@
       var LOCALE_KEY = "workout-tracker-web-app.locale";
       var UNIT_KEY = "workout-tracker-web-app.unit";
       var GENDER_KEY = "workout-tracker-web-app.gender";
+      var THEME_KEY = "workout-tracker-web-app.theme";
       var FIRST_OPEN_KEY = "workout-tracker-web-app.firstChoice.v1";
       var LEGACY_STORAGE_KEY = "pulse.workout.sets.v1";
       var LEGACY_LOCALE_KEY = "pulse.locale";
@@ -1578,6 +1642,9 @@
           settingsUnits: "重量單位",
           settingsGender: "性別",
           genderMale: "男",
+          settingsTheme: "外觀",
+          themeDark: "深色",
+          themeLight: "淺色",
           genderFemale: "女",
           settingsData: "資料",
           storageSqlite: "資料存在本機 SQLite。匯出檔為 .sqlite。",
@@ -1720,6 +1787,9 @@
           settingsGender: "Gender",
           genderMale: "Male",
           genderFemale: "Female",
+          settingsTheme: "Appearance",
+          themeDark: "Dark",
+          themeLight: "Light",
           settingsData: "Data",
           storageSqlite: "Stored locally in SQLite. Exports are .sqlite files.",
           installTitle: "Add to Home Screen",
@@ -1847,6 +1917,27 @@
         setTimeout(layoutBodyLines, 80);
       }
 
+      function detectTheme() {
+        var saved = storageRead(THEME_KEY, "");
+        if (saved === "light" || saved === "dark") return saved;
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        var meta = document.querySelector('meta[name="color-scheme"]');
+        if (meta) meta.setAttribute("content", theme);
+        var themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.setAttribute("content", theme === "light" ? "#f2f2f7" : "#000");
+      }
+
+      function setTheme(next) {
+        var theme = next === "light" ? "light" : "dark";
+        try { localStorage.setItem(THEME_KEY, theme); } catch (err) {}
+        applyTheme(theme);
+        applyStaticI18n();
+      }
+
       function convertOpenInputs(from, to) {
         if (from === to) return;
         ["weight", "editWeight"].forEach(function (id) {
@@ -1903,6 +1994,9 @@
         document.getElementById("unitLbs").classList.toggle("active", unit === "lbs");
         document.getElementById("genderMale").classList.toggle("active", gender === "male");
         document.getElementById("genderFemale").classList.toggle("active", gender === "female");
+        var currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+        document.getElementById("themeDark").classList.toggle("active", currentTheme === "dark");
+        document.getElementById("themeLight").classList.toggle("active", currentTheme === "light");
         document.getElementById("formUnitKg").classList.toggle("active", unit === "kg");
         document.getElementById("formUnitLbs").classList.toggle("active", unit === "lbs");
         document.getElementById("formUnitKg").textContent = t("kg");
@@ -3474,6 +3568,8 @@
       });
       document.getElementById("genderMale").addEventListener("click", function () { setGender("male"); });
       document.getElementById("genderFemale").addEventListener("click", function () { setGender("female"); });
+      document.getElementById("themeDark").addEventListener("click", function () { setTheme("dark"); });
+      document.getElementById("themeLight").addEventListener("click", function () { setTheme("light"); });
 
       loadFile.addEventListener("change", function (event) {
         var file = event.target.files && event.target.files[0];
@@ -3646,6 +3742,7 @@
         unit = detectUnit();
         gender = detectGender();
         applyGenderArt();
+        applyTheme(detectTheme());
         setLocale(detectLocale());
         updateInstallUi();
         if (!hasMadeFirstChoice()) showWelcome();
