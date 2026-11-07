@@ -36,6 +36,7 @@
       --bg: #06110b;
       --panel: #0c1a12;
       --panel-2: #12261a;
+      --field: #1a3324;
       --line: #1e3a2a;
       --text: #ffffff;
       --muted: #8e8e93;
@@ -49,14 +50,15 @@
     }
 
     html[data-theme="light"] {
-      --bg: #f2f2f7;
+      --bg: #f5f5f7;
       --panel: #ffffff;
-      --panel-2: #e5e5ea;
+      --panel-2: #f0f0f2;
+      --field: #e8e8ed;
       --line: #d1d1d6;
-      --text: #000000;
-      --muted: #6e6e73;
-      --accent: #28a745;
-      --accent-2: #34c759;
+      --text: #1c1c1e;
+      --muted: #636366;
+      --accent: #30d158;
+      --accent-2: #64e2a0;
       --danger: #ff3b30;
       --warn: #ff9500;
       color-scheme: light;
@@ -65,34 +67,49 @@
     html[data-theme="light"] body,
     html[data-theme="light"] {
       background-color: var(--bg);
+      background-image: none;
     }
 
     html[data-theme="light"] .card-panel,
     html[data-theme="light"] .set-row,
-    html[data-theme="light"] .stat,
-    html[data-theme="light"] .btn,
-    html[data-theme="light"] .btn-ghost,
+    html[data-theme="light"] .stat {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
     html[data-theme="light"] .form-control,
     html[data-theme="light"] .form-select,
     html[data-theme="light"] .input-group,
-    html[data-theme="light"] .lang-switch,
+    html[data-theme="light"] .lang-switch {
+      background: var(--field);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    html[data-theme="light"] .btn-ghost,
     html[data-theme="light"] .nav-pills .nav-link {
-      background: var(--panel-2);
+      background: var(--field);
       color: var(--text);
     }
 
+    html[data-theme="light"] .btn-accent {
+      background: var(--accent);
+      color: #000;
+    }
+
     html[data-theme="light"] .app-top-bar {
-      background: rgba(242, 242, 247, 0.72);
-      border-bottom-color: rgba(0, 0, 0, 0.1);
+      background: rgba(245, 245, 247, 0.8);
+      border-bottom-color: rgba(0, 0, 0, 0.08);
     }
 
     html[data-theme="light"] .app-nav-bar {
-      background: rgba(255, 255, 255, 0.72);
-      border-top-color: rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.85);
+      border-top-color: rgba(0, 0, 0, 0.08);
     }
 
     html[data-theme="light"] .app-tabs .nav-link {
-      color: #8e8e93;
+      color: #636366;
     }
 
     html[data-theme="light"] .app-tabs .nav-link.active {
@@ -101,7 +118,7 @@
 
     html[data-theme="light"] .set-row .btn-ghost,
     html[data-theme="light"] .set-row .btn {
-      background: #e5e5ea;
+      background: #e8e8ed;
       border-color: #c7c7cc;
       color: var(--text);
     }
@@ -110,6 +127,19 @@
     html[data-theme="light"] .set-row .text-danger {
       color: var(--danger);
       border-color: var(--danger);
+    }
+
+    html[data-theme="light"] .unit-switch {
+      background: #d1d1d6;
+    }
+
+    html[data-theme="light"] .unit-btn {
+      color: #3a3a3c;
+    }
+
+    html[data-theme="light"] input[type="date"].form-control::-webkit-calendar-picker-indicator {
+      filter: none;
+      opacity: 0.6;
     }
     button, .nav-link, .chip { -webkit-touch-callout: none; user-select: none; }
     input, textarea { user-select: text; }
@@ -210,17 +240,18 @@
 
     .unit-switch {
       display: flex;
-      align-items: stretch;
+      align-items: center;
       background: #1c1c1e;
       border-radius: 8px;
       margin: 4px;
       padding: 2px;
-      min-width: 100px;
+      flex-shrink: 0;
     }
 
     .unit-btn {
       cursor: pointer;
-      min-width: 48px;
+      min-width: 44px;
+      min-height: 32px;
       border: 0;
       background: transparent;
       color: var(--muted);
