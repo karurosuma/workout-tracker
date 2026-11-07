@@ -533,6 +533,17 @@
       border-radius: 12px;
       padding: 12px 14px;
     }
+    .set-row .btn-ghost,
+    .set-row .btn {
+      background: #3a3a3c;
+      min-width: 36px;
+      min-height: 36px;
+      border-radius: 10px;
+    }
+    .set-row .btn-ghost:hover,
+    .set-row .btn-ghost:active {
+      background: #48484a;
+    }
 
     .summary-row + .summary-row { margin-top: 8px; }
 
@@ -866,8 +877,10 @@
     .body-figure {
       position: relative;
       width: 100%;
-      height: calc(100dvh - 120px);
-      min-height: 720px;
+      height: auto;
+      max-height: 65vh;
+      aspect-ratio: 2 / 3;
+      margin: 0 auto;
     }
     .body-svg {
       width: 100%;
