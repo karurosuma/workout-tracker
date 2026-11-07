@@ -52,34 +52,24 @@
     input, textarea { user-select: text; }
 
     html {
-      background-color: var(--bg);
       background-color: #000;
-      background-image: none;
-      height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
-      min-height: -webkit-fill-available;
-      min-height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
+      height: 100dvh;
+      max-height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
-      touch-action: manipulation;
     }
 
     body {
-      background-color: transparent;
+      background-color: #000;
       color: var(--text);
-      height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
-      min-height: -webkit-fill-available;
-      min-height: var(--app-h, calc(100dvh + env(safe-area-inset-bottom, 0px)));
-      max-height: none;
+      height: 100dvh;
+      max-height: 100dvh;
+      margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
-      touch-action: manipulation;
       display: flex;
       flex-direction: column;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", system-ui, sans-serif;
-      padding-top: 0;
-      padding-right: env(safe-area-inset-right, 0px);
-      padding-bottom: 0;
-      padding-left: env(safe-area-inset-left, 0px);
     }
 
     .form-control, .form-select {
@@ -268,24 +258,22 @@
     .modal-title { margin: 0; }
     .modal-footer { justify-content: flex-end; gap: 8px; }
 
-    .status-spacer {
-      flex: 0 0 auto;
-      height: env(safe-area-inset-top, 0px);
-      background: transparent;
-    }
+    .status-spacer { display: none; }
 
     .app-scroll {
-      flex: 1 1 auto;
+      flex: 1 1 0;
       min-height: 0;
+      width: 100%;
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding-top: calc(52px + env(safe-area-inset-top, 0px));
-      padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
     }
 
     main.container {
-      padding-bottom: 24px;
+      padding-bottom: 32px;
+      min-height: 0;
     }
 
     .app-top-bar {
@@ -1044,29 +1032,7 @@
     }
 
     @media (orientation: landscape) and (max-height: 560px) {
-      .status-spacer { height: 0; }
-      main.container {
-        padding-top: 8px !important;
-        padding-bottom: 8px !important;
-      }
-      .app-scroll { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
-      .app-nav-bar { padding-bottom: env(safe-area-inset-bottom, 0px); }
-      .app-tabs .nav-link {
-        min-height: 40px;
-        padding: 2px 2px 1px;
-        font-size: 0.64rem;
-      }
-      .app-tabs .nav-link i { font-size: 1.05rem; }
-      .chart-mount { min-height: 150px; }
-      .card-panel { box-shadow: none; }
-      #setForm {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px 12px;
-      }
-      #setForm > .col-12:first-child,
-      #setForm > .col-12:last-child,
-      #setForm > .mt-4 { grid-column: 1 / -1; }
+      .app-scroll { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
     }
   </style>
 </head>
