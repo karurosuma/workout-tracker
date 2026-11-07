@@ -232,9 +232,28 @@
 
     .nav { display: flex; list-style: none; padding: 0; margin: 0; }
     .nav-item { list-style: none; }
-    .nav-pills { gap: 6px; }
-    .nav-pills .nav-link { border-radius: 999px; padding: 6px 14px; background: rgba(44, 44, 46, 0.55); color: var(--text); }
-    .nav-pills .nav-link.active { background: var(--accent); color: #fff; }
+    .body-tabs,
+    .nav-pills.body-tabs {
+      display: inline-flex;
+      background: rgba(44, 44, 46, 0.7);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 0;
+    }
+    .body-tabs .nav-item { list-style: none; }
+    .body-tabs .nav-link {
+      border-radius: 999px;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 6px 16px;
+      background: transparent;
+      border: 0;
+      min-height: 32px;
+    }
+    .body-tabs .nav-link.active {
+      background: var(--accent);
+      color: #000;
+    }
     .tab-content > .tab-pane,
     .app-scroll > .tab-pane { display: none; }
     .tab-content > .tab-pane.active,
@@ -908,15 +927,9 @@
       justify-content: space-between;
       gap: 12px;
     }
-    .body-tabs .nav-link {
-      border-radius: 999px;
-      color: var(--muted);
-      font-weight: 700;
-      padding: 6px 16px;
-    }
     .body-tabs .nav-link.active {
       background: var(--accent);
-      color: #06110b;
+      color: #000;
     }
     .body-col { width: 100%; }
     .body-view-label {
