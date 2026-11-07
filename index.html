@@ -157,10 +157,13 @@
     .input-group-text { 
       display: flex; 
       align-items: center; 
-      padding: 0; 
+      padding: 0 14px; 
       background: transparent;
       border: 0;
       color: var(--muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+      flex-shrink: 0;
     }
 
     .unit-btn.active {
@@ -573,10 +576,17 @@
       min-height: 36px;
       border-radius: 10px;
       border: 1px solid #48484a;
+      color: var(--text);
     }
     .set-row .btn-ghost:hover,
     .set-row .btn-ghost:active {
       background: #48484a;
+      color: var(--text);
+    }
+    .set-row .btn-ghost.text-danger,
+    .set-row button[data-delete] {
+      color: var(--danger);
+      border-color: var(--danger);
     }
     .set-row .btn-ghost.text-danger,
     .set-row button[data-delete] {
