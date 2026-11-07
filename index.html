@@ -383,14 +383,15 @@
 
     input[type="date"].form-control {
       color-scheme: dark;
-      padding-right: 40px;
+      padding-right: 12px;
+      width: auto;
     }
 
     input[type="date"].form-control::-webkit-calendar-picker-indicator {
       filter: invert(1) brightness(0.8);
       opacity: 0.7;
       cursor: pointer;
-      margin-left: auto;
+      margin-left: 4px;
     }
 
     .form-control:focus, .form-select:focus {
@@ -813,8 +814,8 @@
       width: 100%;
     }
     .date-nav .form-control {
-      flex: 1 1 auto;
-      width: 100%;
+      flex: 0 1 auto;
+      width: auto;
       min-width: 0;
     }
     .date-nav-btn {
