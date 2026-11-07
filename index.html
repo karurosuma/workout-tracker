@@ -171,16 +171,12 @@
       transform: scale(0.96);
     }
 
-    .row { display: flex; flex-wrap: wrap; margin: 0; }
+    .row { display: flex; flex-wrap: wrap; margin: 0; gap: 8px; }
     .row > * { padding: 0; min-width: 0; }
-    .g-3 { row-gap: 14px; }
+    .g-3 { row-gap: 8px; }
     .col-12 { flex: 0 0 100%; max-width: 100%; width: 100%; }
     .col-6 { flex: 0 0 100%; max-width: 100%; }
-    .col-4 { flex: 0 0 100%; max-width: 100%; }
-    @media (min-width: 640px) {
-      .col-6 { flex: 0 0 50%; max-width: 50%; }
-      .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
-    }
+    .col-4 { flex: 1 1 0; max-width: none; min-width: 0; }
 
     .container {
       width: 100%;
@@ -492,14 +488,24 @@
       background: #2c2c2e;
       border: 0;
       border-radius: 12px;
-      padding: 14px 16px;
+      padding: 12px 10px;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: visible;
     }
 
     .stat-value {
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       font-weight: 800;
       letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--text);
+      margin-top: 2px;
     }
+
+    .row.g-3 { gap: 8px; }
 
     .suggest {
       position: relative;
