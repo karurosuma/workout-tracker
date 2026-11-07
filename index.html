@@ -32,9 +32,9 @@
   <style>
     :root {
       --bg: #000000;
-      --panel: #1c1c1e;
-      --panel-2: #2c2c2e;
-      --field: #2c2c2e;
+      --panel: rgba(28, 28, 30, 0.72);
+      --panel-2: rgba(44, 44, 46, 0.65);
+      --field: rgba(44, 44, 46, 0.55);
       --line: #38383a;
       --text: #ffffff;
       --muted: #8e8e93;
@@ -81,7 +81,7 @@
       padding: 10px 16px;
       border: 0;
       border-radius: 12px;
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       color: var(--text);
       font: inherit;
       font-weight: 600;
@@ -98,7 +98,7 @@
     .btn-danger-app { background: var(--danger); color: #fff; }
     .btn-close {
       width: 30px; height: 30px; border: 0; border-radius: 50%;
-      background: #3a3a3c; color: transparent; position: relative; cursor: pointer;
+      background: rgba(58, 58, 60, 0.7); color: transparent; position: relative; cursor: pointer;
     }
     .btn-close::before, .btn-close::after {
       content: ""; position: absolute; left: 7px; right: 7px; top: 14px; height: 2px; background: #fff; border-radius: 1px;
@@ -113,7 +113,7 @@
       align-items: center; 
       width: 100%;
       max-width: 100%;
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border-radius: 10px;
       overflow: hidden;
       box-sizing: border-box;
@@ -131,7 +131,7 @@
     .unit-switch {
       display: flex;
       align-items: center;
-      background: #1c1c1e;
+      background: rgba(28, 28, 30, 0.72);
       border-radius: 8px;
       margin: 4px;
       padding: 2px;
@@ -233,7 +233,7 @@
     .nav { display: flex; list-style: none; padding: 0; margin: 0; }
     .nav-item { list-style: none; }
     .nav-pills { gap: 6px; }
-    .nav-pills .nav-link { border-radius: 999px; padding: 6px 14px; background: #2c2c2e; color: var(--text); }
+    .nav-pills .nav-link { border-radius: 999px; padding: 6px 14px; background: rgba(44, 44, 46, 0.55); color: var(--text); }
     .nav-pills .nav-link.active { background: var(--accent); color: #fff; }
     .tab-content > .tab-pane,
     .app-scroll > .tab-pane { display: none; }
@@ -326,6 +326,8 @@
       border: 0;
       border-radius: 12px;
       box-shadow: none;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
     .section-head {
@@ -345,7 +347,7 @@
     }
 
     .form-control, .form-select {
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border: 0;
       color: var(--text);
       border-radius: 10px;
@@ -373,7 +375,7 @@
     }
 
     .form-control:focus, .form-select:focus {
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       color: var(--text);
       border-color: transparent;
       box-shadow: 0 0 0 2px rgba(255, 214, 10, 0.45);
@@ -383,7 +385,7 @@
     .form-control::placeholder { color: #636366; }
 
     .input-group-text {
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border: 0;
       color: var(--muted);
     }
@@ -440,7 +442,7 @@
     .btn-danger-app:hover { filter: brightness(1.05); color: #fff; }
 
     .btn-ghost {
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border: 0;
       color: var(--accent);
       border-radius: 10px;
@@ -449,18 +451,18 @@
     }
 
     .btn-ghost:hover {
-      background: #3a3a3c;
+      background: rgba(58, 58, 60, 0.7);
       color: var(--accent);
     }
 
     .btn-ghost:active {
       transform: scale(0.97);
-      background: #3a3a3c;
+      background: rgba(58, 58, 60, 0.7);
     }
 
     .lang-switch {
       display: inline-flex;
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border: 0;
       border-radius: 10px;
       padding: 2px;
@@ -488,7 +490,7 @@
     }
 
     .stat {
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border: 0;
       border-radius: 12px;
       padding: 12px 10px;
@@ -542,7 +544,7 @@
       align-items: center;
       gap: 6px;
       border: 0 !important;
-      background: #2c2c2e !important;
+      background: rgba(44, 44, 46, 0.55) !important;
       color: var(--text) !important;
       border-radius: 999px !important;
       padding: 6px 12px !important;
@@ -564,7 +566,7 @@
     }
 
     .set-row {
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border: 0;
       border-radius: 12px;
       padding: 12px 14px;
@@ -572,7 +574,7 @@
     .btn-group {
       display: inline-flex;
       align-items: stretch;
-      background: #2c2c2e;
+      background: rgba(44, 44, 46, 0.55);
       border-radius: 10px;
       overflow: hidden;
       border: 1px solid #48484a;
@@ -590,7 +592,7 @@
       border-left: 1px solid #48484a;
     }
     .btn-group .btn:active {
-      background: #3a3a3c;
+      background: rgba(58, 58, 60, 0.7);
     }
     .btn-group .text-danger,
     .btn-group button[data-delete] {
@@ -653,7 +655,7 @@
     }
 
     .modal-content {
-      background: #1c1c1e;
+      background: rgba(28, 28, 30, 0.72);
       border: 0;
       border-radius: 14px;
       color: var(--text);
@@ -720,7 +722,7 @@
 
     .welcome-card {
       width: min(420px, 100%);
-      background: #1c1c1e;
+      background: rgba(28, 28, 30, 0.72);
       border: 0;
       border-radius: 14px;
       padding: 28px 24px;
@@ -3188,11 +3190,17 @@
         progress.forEach(function (item, index) {
           var w = new ApexCharts(document.getElementById("chart-weight-" + index), chartOptions(item, "weight"));
           var v = new ApexCharts(document.getElementById("chart-volume-" + index), chartOptions(item, "volume"));
+          chartInstances.push(w, v);
           w.render();
           v.render();
-          chartInstances.push(w, v);
         });
         chartsDirty = false;
+        setTimeout(function () {
+          chartInstances.forEach(function (c) { try { c.resize(); } catch (e) {} });
+        }, 80);
+        setTimeout(function () {
+          chartInstances.forEach(function (c) { try { c.resize(); } catch (e) {} });
+        }, 300);
       }
       function render() {
         var sets = loadSets().sort(function (a, b) {
@@ -3634,9 +3642,12 @@
         var back = document.getElementById("body-back");
         if (front) { front.classList.add("active", "show"); }
         if (back) { back.classList.remove("active", "show"); }
-        if (chartsDirty) renderCharts(loadSets());
+        renderCharts(loadSets());
         setTimeout(function () { layoutBodyLines(document.getElementById("chartsBodyMap")); }, 60);
         setTimeout(function () { layoutBodyLines(document.getElementById("chartsBodyMap")); }, 200);
+        setTimeout(function () {
+          chartInstances.forEach(function (c) { try { c.resize(); } catch (e) {} });
+        }, 150);
       });
       document.getElementById("tab-today-btn").addEventListener("shown.bs.tab", function () {
         var front = document.getElementById("perf-body-front");
