@@ -51,24 +51,16 @@
     button, .nav-link, .chip { -webkit-touch-callout: none; user-select: none; }
     input, textarea { user-select: text; }
 
-    html {
+    html, body {
       background-color: #000;
-      height: 100dvh;
-      max-height: 100dvh;
+      height: 100%;
+      margin: 0;
       overflow: hidden;
       overscroll-behavior: none;
     }
 
     body {
-      background-color: #000;
       color: var(--text);
-      height: 100dvh;
-      max-height: 100dvh;
-      margin: 0;
-      overflow: hidden;
-      overscroll-behavior: none;
-      display: flex;
-      flex-direction: column;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Helvetica Neue", system-ui, sans-serif;
     }
 
@@ -261,19 +253,17 @@
     .status-spacer { display: none; }
 
     .app-scroll {
-      flex: 1 1 0;
-      min-height: 0;
-      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding-top: calc(52px + env(safe-area-inset-top, 0px));
-      padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
-    }
-
-    main.container {
-      padding-bottom: 32px;
-      min-height: 0;
+      padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+      z-index: 1;
     }
 
     .app-top-bar {
@@ -1032,7 +1022,7 @@
     }
 
     @media (orientation: landscape) and (max-height: 560px) {
-      .app-scroll { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
+      .app-scroll { padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
     }
   </style>
 </head>
