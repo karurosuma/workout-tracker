@@ -87,6 +87,26 @@
       border: 1px solid var(--line);
     }
 
+    html[data-theme="light"] .input-group .form-control {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    html[data-theme="light"] .unit-switch {
+      background: #d1d1d6;
+    }
+
+    html[data-theme="light"] .unit-btn {
+      color: #3a3a3c;
+    }
+
+    html[data-theme="light"] .unit-btn.active {
+      background: var(--accent);
+      color: #000;
+    }
+
     html[data-theme="light"] .btn-ghost,
     html[data-theme="light"] .nav-pills .nav-link {
       background: var(--field);
@@ -227,8 +247,10 @@
     }
     .input-group .form-control { 
       flex: 1 1 0;
-      border-radius: 0; 
-      background: transparent;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
       min-width: 0;
       width: auto;
     }
@@ -1349,7 +1371,7 @@
         <div class="section-head mb-2 mt-4">
           <div class="section-head-top">
             <h2 class="h5 mb-0" data-i18n="workoutLog">訓練日誌</h2>
-            <select class="form-select form-select-sm w-auto" id="filterDate">
+            <select class="form-select form-select-sm w-100" id="filterDate">
               <option value="today" selected data-i18n="today">今天</option>
               <option value="all" data-i18n="allSessions">全部訓練</option>
             </select>
