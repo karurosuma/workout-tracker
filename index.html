@@ -1399,6 +1399,14 @@
           </div>
 
           <div class="settings-row">
+            <div class="fw-semibold" data-i18n="settingsGender">性別</div>
+            <div class="lang-switch" role="group" aria-label="性別">
+              <button type="button" id="genderMale" class="active" data-i18n="genderMale">男</button>
+              <button type="button" id="genderFemale" data-i18n="genderFemale">女</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
             <div class="fw-semibold" data-i18n="settingsTheme">外觀</div>
             <div class="lang-switch" role="group" aria-label="外觀">
               <button type="button" id="themeDark" class="active" data-i18n="themeDark">深色</button>
@@ -1999,11 +2007,15 @@
         document.getElementById("overlayLangEn").classList.toggle("active", locale === "en");
         document.getElementById("unitKg").classList.toggle("active", unit === "kg");
         document.getElementById("unitLbs").classList.toggle("active", unit === "lbs");
-        document.getElementById("genderMale").classList.toggle("active", gender === "male");
-        document.getElementById("genderFemale").classList.toggle("active", gender === "female");
+        var gm = document.getElementById("genderMale");
+        if (gm) gm.classList.toggle("active", gender === "male");
+        var gf = document.getElementById("genderFemale");
+        if (gf) gf.classList.toggle("active", gender === "female");
         var currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
-        document.getElementById("themeDark").classList.toggle("active", currentTheme === "dark");
-        document.getElementById("themeLight").classList.toggle("active", currentTheme === "light");
+        var td = document.getElementById("themeDark");
+        if (td) td.classList.toggle("active", currentTheme === "dark");
+        var tl = document.getElementById("themeLight");
+        if (tl) tl.classList.toggle("active", currentTheme === "light");
         document.getElementById("formUnitKg").classList.toggle("active", unit === "kg");
         document.getElementById("formUnitLbs").classList.toggle("active", unit === "lbs");
         document.getElementById("formUnitKg").textContent = t("kg");
@@ -3573,10 +3585,14 @@
       document.getElementById("exportJsonBtn").addEventListener("click", function () {
         exportJson();
       });
-      document.getElementById("genderMale").addEventListener("click", function () { setGender("male"); });
-      document.getElementById("genderFemale").addEventListener("click", function () { setGender("female"); });
-      document.getElementById("themeDark").addEventListener("click", function () { setTheme("dark"); });
-      document.getElementById("themeLight").addEventListener("click", function () { setTheme("light"); });
+      var genderMaleBtn = document.getElementById("genderMale");
+      if (genderMaleBtn) genderMaleBtn.addEventListener("click", function () { setGender("male"); });
+      var genderFemaleBtn = document.getElementById("genderFemale");
+      if (genderFemaleBtn) genderFemaleBtn.addEventListener("click", function () { setGender("female"); });
+      var themeDarkBtn = document.getElementById("themeDark");
+      if (themeDarkBtn) themeDarkBtn.addEventListener("click", function () { setTheme("dark"); });
+      var themeLightBtn = document.getElementById("themeLight");
+      if (themeLightBtn) themeLightBtn.addEventListener("click", function () { setTheme("light"); });
 
       loadFile.addEventListener("change", function (event) {
         var file = event.target.files && event.target.files[0];
