@@ -217,27 +217,19 @@
     .form-control-sm, .form-select-sm { min-height: 36px; padding: 6px 10px; font-size: 0.9rem; }
     .input-group { 
       display: flex; 
-      align-items: stretch; 
+      align-items: center; 
       width: 100%;
       max-width: 100%;
       background: #2c2c2e;
       border-radius: 10px;
-      overflow: hidden;
+      overflow: visible;
     }
     .input-group .form-control { 
       flex: 1 1 auto; 
       border-radius: 0; 
       background: transparent;
       min-width: 0;
-      width: auto;
-    }
-    .input-group-text { 
-      display: flex; 
-      align-items: center; 
-      padding: 0; 
-      background: transparent;
-      border: 0;
-      color: var(--muted);
+      width: 1%;
     }
 
     .unit-switch {
@@ -248,6 +240,8 @@
       margin: 4px;
       padding: 2px;
       flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
 
     .unit-btn {
@@ -261,8 +255,18 @@
       font-size: 0.85rem;
       border-radius: 6px;
       padding: 0 10px;
+      white-space: nowrap;
       transition: background-color 0.15s ease, color 0.15s ease;
     }
+    .input-group-text { 
+      display: flex; 
+      align-items: center; 
+      padding: 0; 
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+    }
+
     .unit-btn.active {
       background: var(--accent);
       color: #000;
@@ -279,12 +283,9 @@
     #setForm, #setForm .col-12 { width: 100%; }
     .col-6 { flex: 0 0 50%; max-width: 50%; }
     .col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
-    .container { width: 100%; max-width: none; margin: 0 auto; padding: 0 16px; }
+    .container { width: 100%; max-width: 800px; margin: 0 auto; padding: 0 16px; }
     @media (min-width: 768px) {
       .container { padding: 0 24px; }
-    }
-    @media (min-width: 1200px) {
-      .container { padding: 0 32px; }
     }
 
     .d-flex { display: flex; }
@@ -446,6 +447,7 @@
     input[type="date"].form-control {
       color-scheme: dark;
       position: relative;
+      padding-right: 36px;
     }
 
     input[type="date"].form-control::-webkit-calendar-picker-indicator {
@@ -453,6 +455,8 @@
       opacity: 0.7;
       cursor: pointer;
       margin-left: auto;
+      position: absolute;
+      right: 10px;
     }
 
     .form-control:focus, .form-select:focus {
