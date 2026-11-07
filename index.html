@@ -1004,6 +1004,7 @@
       position: relative;
       width: 100%;
       height: auto;
+      min-height: 280px;
       max-height: 65vh;
       aspect-ratio: 2 / 3;
       margin: 0 auto;
@@ -3745,12 +3746,22 @@
       document.getElementById("formUnitLbs").addEventListener("click", function () { setUnit("lbs"); });
 
       document.getElementById("tab-charts-btn").addEventListener("shown.bs.tab", function () {
+        var front = document.getElementById("body-front");
+        var back = document.getElementById("body-back");
+        if (front) { front.classList.add("active", "show"); }
+        if (back) { back.classList.remove("active", "show"); }
         if (chartsDirty) renderCharts(loadSets());
         setTimeout(function () { layoutBodyLines(document.getElementById("chartsBodyMap")); }, 60);
+        setTimeout(function () { layoutBodyLines(document.getElementById("chartsBodyMap")); }, 200);
       });
       document.getElementById("tab-today-btn").addEventListener("shown.bs.tab", function () {
-        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 120);
-        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 400);
+        var front = document.getElementById("perf-body-front");
+        var back = document.getElementById("perf-body-back");
+        if (front) { front.classList.add("active", "show"); }
+        if (back) { back.classList.remove("active", "show"); }
+        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 60);
+        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 200);
+        setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 500);
       });
       document.getElementById("perfBodyTabs").addEventListener("shown.bs.tab", function () {
         setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 60);
