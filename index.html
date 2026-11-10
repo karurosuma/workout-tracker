@@ -284,7 +284,7 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-top: calc(52px + env(safe-area-inset-top, 0px));
+      padding-top: calc(64px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px));
       z-index: 1;
     }
@@ -299,14 +299,14 @@
       left: 0;
       right: 0;
       z-index: 1040;
-      height: calc(44px + env(safe-area-inset-top, 0px));
-      padding-top: env(safe-area-inset-top, 0px);
+      height: calc(56px + env(safe-area-inset-top, 0px));
+      padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: saturate(180%) blur(28px);
-      -webkit-backdrop-filter: saturate(180%) blur(28px);
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: saturate(160%) blur(16px);
+      -webkit-backdrop-filter: saturate(160%) blur(16px);
       border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
     }
     .app-top-bar h1 {
