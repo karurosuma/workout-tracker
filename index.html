@@ -284,7 +284,7 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-top: calc(64px + env(safe-area-inset-top, 0px));
+      padding-top: calc(80px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px));
       z-index: 1;
     }
@@ -299,14 +299,14 @@
       left: 0;
       right: 0;
       z-index: 1040;
-      height: calc(56px + env(safe-area-inset-top, 0px));
-      padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+      height: calc(72px + env(safe-area-inset-top, 0px));
+      padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: saturate(160%) blur(16px);
-      -webkit-backdrop-filter: saturate(160%) blur(16px);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: saturate(150%) blur(12px);
+      -webkit-backdrop-filter: saturate(150%) blur(12px);
       border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
     }
     .app-top-bar h1 {
@@ -329,7 +329,7 @@
       border-top: 0.5px solid rgba(255, 255, 255, 0.12);
       z-index: 1030;
       padding-top: 4px;
-      padding-bottom: max(6px, calc(env(safe-area-inset-bottom, 0px) - 16px));
+      padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
     }
 
     .app-nav-bar .container {
@@ -1977,25 +1977,34 @@
         var target = btn.getAttribute("data-bs-target");
         if (!target) return;
         var list = btn.closest("[role='tablist']");
-        var content = list ? list.parentElement.querySelector(".tab-content") : null;
-        var panes = content ? content.querySelectorAll(":scope > .tab-pane") : document.querySelectorAll(".app-scroll > .tab-pane");
-        list.querySelectorAll("[data-bs-toggle]").forEach(function (el) {
-          el.classList.toggle("active", el === btn);
-          el.setAttribute("aria-selected", el === btn ? "true" : "false");
-        });
+        var isMain = btn.closest("#appTabs");
+        var panes;
+        if (isMain) {
+          panes = document.querySelectorAll("#tab-log, #tab-today, #tab-charts, #tab-settings");
+        } else {
+          var content = list ? list.parentElement.querySelector(".tab-content") : null;
+          panes = content ? content.querySelectorAll(":scope > .tab-pane") : [];
+        }
+        if (list) {
+          list.querySelectorAll("[data-bs-toggle]").forEach(function (el) {
+            el.classList.toggle("active", el === btn);
+            el.setAttribute("aria-selected", el === btn ? "true" : "false");
+          });
+        }
         panes.forEach(function (pane) {
           var on = "#" + pane.id === target;
           pane.classList.toggle("active", on);
           pane.classList.toggle("show", on);
-          pane.style.display = on ? "block" : "none";
+          pane.style.display = "";
         });
-        if (btn.closest("#appTabs")) {
+        if (isMain) {
           var title = document.getElementById("topTitle");
           var label = btn.querySelector("span");
           if (title && label) title.textContent = label.textContent;
         }
         btn.dispatchEvent(new Event("shown.bs.tab"));
       }
+      window.__tabsReady = true;
       document.addEventListener("click", function (event) {
         var tab = event.target.closest("[data-bs-toggle='tab'], [data-bs-toggle='pill']");
         if (tab) { event.preventDefault(); activateTab(tab); return; }
