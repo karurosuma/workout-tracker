@@ -866,22 +866,22 @@
       background: transparent;
       border: 0;
       border-radius: 0;
-      min-height: 32px;
+      min-height: 36px;
       width: 100%;
-      padding: 2px 2px 0;
+      padding: 4px 2px 2px;
       font-weight: 500;
-      font-size: 0.58rem;
-      line-height: 1;
+      font-size: 0.62rem;
+      line-height: 1.1;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1px;
+      gap: 2px;
     }
 
     .app-tabs .nav-link i {
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       line-height: 1;
     }
 
@@ -1978,7 +1978,7 @@
         if (!target) return;
         var list = btn.closest("[role='tablist']");
         var content = list ? list.parentElement.querySelector(".tab-content") : null;
-        var panes = content ? content.querySelectorAll(".tab-pane") : document.querySelectorAll(".app-scroll > .tab-pane");
+        var panes = content ? content.querySelectorAll(":scope > .tab-pane") : document.querySelectorAll(".app-scroll > .tab-pane");
         list.querySelectorAll("[data-bs-toggle]").forEach(function (el) {
           el.classList.toggle("active", el === btn);
           el.setAttribute("aria-selected", el === btn ? "true" : "false");
@@ -1987,6 +1987,7 @@
           var on = "#" + pane.id === target;
           pane.classList.toggle("active", on);
           pane.classList.toggle("show", on);
+          pane.style.display = on ? "block" : "none";
         });
         if (btn.closest("#appTabs")) {
           var title = document.getElementById("topTitle");
@@ -2555,7 +2556,7 @@
           "<div class=\"fw-semibold\">" + escapeHtml(set.exercise) + "</div>" +
           "<div class=\"small text-muted-2\">" + formatWeight(set.weight) + " " + escapeHtml(unitLabel()) + " × " + set.reps + " " + escapeHtml(t("reps")) + " · " +
           formatVolume(Number(set.weight) * Number(set.reps)) + " " + escapeHtml(t("vol")) + "</div>" +
-          (timeText ? "<div class=\"small text-muted-2 set-time\">" + escapeHtml(timeText) + "</div>" : "") +
+          (timeText ? "<div class=\"small text-muted-2 set-time\" data-created=\"" + (Number(set.createdAt) || 0) + "\">" + escapeHtml(timeText) + "</div>" : "") +
           "</div>" +
           "<div class=\"btn-group\">" +
             "<button class=\"btn btn-ghost btn-sm\" data-edit=\"" + set.id + "\" type=\"button\" aria-label=\"" + escapeHtml(t("editSet")) + "\"><i class=\"bi bi-pencil\"></i></button>" +
@@ -3735,7 +3736,14 @@
 
       var launchedAt = Date.now();
       var STALE_AFTER = 8 * 60 * 60 * 1000;
-      function maybeRefreshStale() {
+      function updateTimeAgo() {
+        document.querySelectorAll(".set-time[data-created]").forEach(function (el) {
+          var ms = Number(el.getAttribute("data-created"));
+          if (!ms) return;
+          el.textContent = formatTimeAgo(ms);
+        });
+      }
+      setInterval(updateTimeAgo, 30000);
         if (Date.now() - launchedAt < STALE_AFTER) return;
         if (document.visibilityState === "hidden") return;
         location.reload();
