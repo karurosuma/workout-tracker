@@ -3753,6 +3753,8 @@
         });
       }
       setInterval(updateTimeAgo, 30000);
+
+      function maybeRefreshStale() {
         if (Date.now() - launchedAt < STALE_AFTER) return;
         if (document.visibilityState === "hidden") return;
         location.reload();
