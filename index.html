@@ -1995,7 +1995,7 @@
           var on = "#" + pane.id === target;
           pane.classList.toggle("active", on);
           pane.classList.toggle("show", on);
-          pane.style.display = "";
+          pane.style.display = on ? "block" : "none";
         });
         if (isMain) {
           var title = document.getElementById("topTitle");
@@ -3682,11 +3682,23 @@
         setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 200);
         setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 500);
       });
-      document.getElementById("perfBodyTabs").addEventListener("shown.bs.tab", function () {
+      document.getElementById("perfBodyTabs").addEventListener("shown.bs.tab", function (event) {
+        var btn = event.target;
+        var targetId = btn.getAttribute("data-bs-target");
+        var front = document.getElementById("perf-body-front");
+        var back = document.getElementById("perf-body-back");
+        if (front) { front.style.display = targetId === "#perf-body-front" ? "block" : "none"; }
+        if (back) { back.style.display = targetId === "#perf-body-back" ? "block" : "none"; }
         setTimeout(function () { layoutBodyLines(document.getElementById("perfBodyMap")); }, 60);
       });
-      document.getElementById("bodyTabs").addEventListener("shown.bs.tab", function () {
-        setTimeout(layoutBodyLines, 40);
+      document.getElementById("bodyTabs").addEventListener("shown.bs.tab", function (event) {
+        var btn = event.target;
+        var targetId = btn.getAttribute("data-bs-target");
+        var front = document.getElementById("body-front");
+        var back = document.getElementById("body-back");
+        if (front) { front.style.display = targetId === "#body-front" ? "block" : "none"; }
+        if (back) { back.style.display = targetId === "#body-back" ? "block" : "none"; }
+        setTimeout(function () { layoutBodyLines(document.getElementById("chartsBodyMap")); }, 40);
       });
       document.getElementById("appTabs").addEventListener("click", function (event) {
         var btn = event.target.closest("[data-bs-target]");
