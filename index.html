@@ -310,8 +310,8 @@
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-top: calc(80px + env(safe-area-inset-top, 0px));
-      padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px));
+      padding-top: calc(76px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
       z-index: 1;
     }
 
@@ -321,23 +321,24 @@
 
     .app-top-bar {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: calc(env(safe-area-inset-top, 0px) + 8px);
+      left: 12px;
+      right: 12px;
       z-index: 1040;
-      height: calc(72px + env(safe-area-inset-top, 0px));
-      padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(20, 16, 4, 0.45);
-      backdrop-filter: saturate(180%) blur(28px);
-      -webkit-backdrop-filter: saturate(180%) blur(28px);
-      border-bottom: 0.5px solid rgba(255, 214, 10, 0.15);
+      background: rgba(40, 34, 12, 0.55);
+      backdrop-filter: saturate(180%) blur(32px);
+      -webkit-backdrop-filter: saturate(180%) blur(32px);
+      border: 0.5px solid rgba(255, 214, 10, 0.28);
+      border-radius: 26px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
     }
     .app-top-bar h1 {
       margin: 0;
-      font-size: 1.08rem;
+      font-size: 1.05rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       text-align: center;
@@ -345,22 +346,22 @@
 
     .app-nav-bar {
       position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      background: rgba(20, 16, 4, 0.5);
-      backdrop-filter: saturate(180%) blur(28px);
-      -webkit-backdrop-filter: saturate(180%) blur(28px);
-      border-top: 0.5px solid rgba(255, 214, 10, 0.18);
+      left: 12px;
+      right: 12px;
+      bottom: max(8px, env(safe-area-inset-bottom, 0px));
+      width: auto;
+      background: rgba(40, 34, 12, 0.55);
+      backdrop-filter: saturate(180%) blur(32px);
+      -webkit-backdrop-filter: saturate(180%) blur(32px);
+      border: 0.5px solid rgba(255, 214, 10, 0.28);
+      border-radius: 28px;
+      box-shadow: 0 10px 36px rgba(0, 0, 0, 0.4), inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
       z-index: 1030;
-      padding-top: 4px;
-      padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+      padding: 6px 6px;
     }
 
     .app-nav-bar .container {
-      padding-top: 0;
-      padding-bottom: 0;
+      padding: 0;
     }
 
     body.keyboard-open .app-nav-bar {
@@ -890,31 +891,31 @@
     }
 
     .app-tabs .nav-link {
-      color: #8e8e93;
+      color: #aeaeb2;
       background: transparent;
       border: 0;
-      border-radius: 0;
-      min-height: 36px;
+      border-radius: 22px;
+      min-height: 44px;
       width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2px;
-      padding: 4px 0 2px;
+      gap: 1px;
+      padding: 4px 0;
       font-weight: 500;
-      font-size: 0.7rem;
+      font-size: 0.62rem;
       line-height: 1.1;
       text-align: center;
     }
-
-    .app-tabs .nav-link i {
-      font-size: 1.45rem;
-      line-height: 1;
+    .app-tabs .nav-link.active {
+      color: #000;
+      background: var(--accent);
     }
 
-    .app-tabs .nav-link.active {
-      color: var(--accent);
+    .app-tabs .nav-link i {
+      font-size: 1.35rem;
+      line-height: 1;
     }
 
     .app-tabs .nav-link:hover { color: var(--text); }
