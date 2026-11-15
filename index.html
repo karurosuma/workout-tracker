@@ -33,12 +33,26 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", system-ui, sans-serif;
       overflow: hidden;
     }
-    body::before {
-      content: "";
+    .top {
       position: fixed;
-      inset: -100px;
-      background: #000;
-      z-index: -1;
+      top: 0; left: 0; right: 0;
+      height: calc(52px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: 8px;
+      background: rgba(28, 28, 30, 0.72);
+      backdrop-filter: saturate(180%) blur(24px);
+      -webkit-backdrop-filter: saturate(180%) blur(24px);
+      border-bottom: 0.5px solid var(--line);
+      z-index: 20;
+    }
+    .top h1 { margin: 0; font-size: 17px; font-weight: 600; }
+    .pages {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: calc(64px + env(safe-area-inset-top)) 16px calc(80px + env(safe-area-inset-bottom));
     }
     .top {
       position: fixed;
@@ -99,23 +113,16 @@
     .chip { background: var(--field); color: var(--text); border: 0; border-radius: 999px; padding: 6px 12px; font-size: 14px; }
     .tabs {
       position: fixed;
-      left: 0; right: 0; bottom: 0;
+      left: 12px; right: 12px;
+      bottom: max(4px, calc(env(safe-area-inset-bottom, 0px) - 22px));
       display: flex;
-      background: #000;
-      border-top: 0.5px solid var(--line);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      z-index: 20;
-    }
-    .tabs::after {
-      content: "";
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      height: env(safe-area-inset-bottom, 34px);
-      background: #000;
-      z-index: 19;
-      pointer-events: none;
-    }
-      padding-bottom: env(safe-area-inset-bottom);
+      gap: 4px;
+      padding: 6px;
+      background: rgba(28, 28, 30, 0.72);
+      backdrop-filter: saturate(180%) blur(24px);
+      -webkit-backdrop-filter: saturate(180%) blur(24px);
+      border: 0.5px solid rgba(255, 214, 10, 0.28);
+      border-radius: 28px;
       z-index: 20;
     }
     .tabs button {
