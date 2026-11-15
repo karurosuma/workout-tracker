@@ -73,8 +73,13 @@
       top: 0; left: 0; right: 0; bottom: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(64px + env(safe-area-inset-top)) 16px calc(64px + env(safe-area-inset-bottom));
+      padding: calc(60px + env(safe-area-inset-top)) 16px calc(88px + env(safe-area-inset-bottom));
     }
+    .card { overflow: visible; }
+    input, select { max-width: 100%; min-width: 0; box-sizing: border-box; }
+    .row { display: flex; gap: 8px; align-items: center; width: 100%; }
+    .row > input { flex: 1; min-width: 0; margin: 0; }
+    .row .seg { flex: 0 0 120px; margin: 0; }
     .page { display: none; }
     .page.active { display: block; }
     .card {
@@ -316,6 +321,7 @@
         <button class="active" data-range="90">90天</button>
         <button data-range="all">全部</button>
       </div>
+      <div class="seg" id="chartMode">
         <button class="active" data-mode="weight">最高重量</button>
         <button data-mode="volume">容量</button>
       </div>
@@ -332,6 +338,7 @@
         <label>匯入 SQLite</label>
         <input id="importFile" type="file" accept=".sqlite,.db,.sqlite3,.json" />
         <button class="btn btn-ghost" id="exportSqlBtn" style="margin-bottom:8px">匯出 SQLite</button>
+        <label>語言</label>
         <div class="seg" id="langSeg">
           <button class="active" data-lang="zh">繁中</button>
           <button data-lang="en">EN</button>
