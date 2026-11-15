@@ -71,12 +71,15 @@
       overscroll-behavior: none;
     }
 
-    body::before {
+    body::after {
       content: "";
       position: fixed;
-      inset: 0;
-      background: inherit;
-      z-index: -1;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: env(safe-area-inset-bottom, 34px);
+      background: #2a2208;
+      z-index: 1025;
       pointer-events: none;
     }
 
