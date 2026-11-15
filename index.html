@@ -1342,6 +1342,7 @@
           <div class="body-unmatched" id="bodyUnmatched"></div>
         </section>
         <div id="chartsList"></div>
+        <div id="weekSets" class="mb-4"></div>
         <div class="section-head mb-2">
           <ul class="nav nav-pills body-tabs" id="chartModeTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -1603,6 +1604,8 @@
           chartsHint: "每個動作的最高重量與訓練容量",
           chartWeight: "最高重量",
           chartVolume: "容量",
+          weekSets: "本週組數",
+          weekSetsHint: "本週各動作總組數",
           chartsEmpty: "記錄至少一組後即可看到各動作圖表。",
           chartsEmptyRange: "這個日期範圍沒有紀錄。",
           chartsFail: "無法載入圖表，請確認已連上網路。",
@@ -1769,7 +1772,8 @@
           chartsTitle: "Exercise progress",
           chartsHint: "Best weight and volume for each exercise",
           chartWeight: "Best weight",
-          chartVolume: "Volume",
+          weekSets: "Sets this week",
+          weekSetsHint: "Total sets per exercise this week",
           chartsEmpty: "Log at least one set to see per-exercise charts.",
           chartsEmptyRange: "No sets in this date range.",
           chartsFail: "Charts could not load. Check your network connection.",
@@ -3336,6 +3340,7 @@
         }
         var ranged = chartRangeSets(sets);
         renderBodyMap(ranged, document.getElementById("chartsBodyMap"));
+        renderWeekSets(sets);
         var progress = exerciseProgress(ranged);
         if (!progress.length) {
           list.innerHTML = "<section class=\"card-panel p-4\"><div class=\"empty-state\">" + escapeHtml(sets.length ? t("chartsEmptyRange") : t("chartsEmpty")) + "</div></section>";
@@ -3364,6 +3369,49 @@
         setTimeout(function () {
           chartInstances.forEach(function (c) { try { c.resize(); } catch (e) {} });
         }, 300);
+        renderWeekSets(sets);
+      }
+
+      function weekBounds() {
+        var now = new Date();
+        var day = now.getDay();
+        var mondayOffset = day === 0 ? -6 : 1 - day;
+        var start = new Date(now);
+        start.setDate(now.getDate() + mondayOffset);
+        var end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        function iso(d) {
+          return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        }
+        return { from: iso(start), to: iso(end) };
+      }
+
+      function renderWeekSets(sets) {
+        var box = document.getElementById("weekSets");
+        if (!box) return;
+        var bounds = weekBounds();
+        var counts = {};
+        (sets || []).forEach(function (set) {
+          if (!set.date || set.date < bounds.from || set.date > bounds.to) return;
+          var name = String(set.exercise || "").trim();
+          if (!name) return;
+          counts[name] = (counts[name] || 0) + 1;
+        });
+        var names = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+        if (!names.length) {
+          box.innerHTML = "";
+          return;
+        }
+        box.innerHTML = "<div class=\"section-head mb-2\"><h3 class=\"h6 mb-0\">" + escapeHtml(t("weekSets")) + "</h3>" +
+          "<span class=\"small text-muted-2\">" + escapeHtml(t("weekSetsHint")) + "</span></div>" +
+          "<section class=\"card-panel p-3\">" +
+          names.map(function (name) {
+            return "<div class=\"d-flex justify-content-between align-items-center py-1\">" +
+              "<span>" + escapeHtml(name) + "</span>" +
+              "<span class=\"fw-semibold\">" + counts[name] + "</span>" +
+              "</div>";
+          }).join("") +
+          "</section>";
       }
       function render() {
         var sets = loadSets().sort(function (a, b) {
@@ -3827,18 +3875,27 @@
           return "<option value=\"" + i + "\"" + (i === selected ? " selected" : "") + ">" + escapeHtml(item.name) + "</option>";
         }).join("");
         var exercises = lists[selected].exercises || [];
+        var date = document.getElementById("sessionDate") ? document.getElementById("sessionDate").value : todayISO();
+        var unitOn = unit === "kg";
         var rows = exercises.length
           ? exercises.map(function (name, i) {
+              var last = lastWeightFor(name, date);
+              var lastText = last == null ? "" : formatWeight(last);
               return "<div class=\"mb-3\">" +
-                "<div class=\"fw-semibold mb-1\">" + escapeHtml(name) + "</div>" +
-                "<div class=\"d-flex gap-2\">" +
-                "<input class=\"form-control\" data-list-w=\"" + i + "\" type=\"text\" inputmode=\"decimal\" placeholder=\"" + escapeHtml(t("weight")) + "\" />" +
+                "<div class=\"fw-semibold mb-1\">" + escapeHtml(name) + (last != null ? " <span class=\"small text-muted-2\">" + escapeHtml(t("lastWeight", { weight: lastText + " " + unitLabel() })) + "</span>" : "") + "</div>" +
+                "<div class=\"d-flex gap-2 align-items-center\">" +
+                "<input class=\"form-control\" data-list-w=\"" + i + "\" type=\"text\" inputmode=\"decimal\" placeholder=\"" + escapeHtml(t("weight")) + "\" value=\"" + escapeHtml(lastText) + "\" />" +
                 "<input class=\"form-control\" data-list-r=\"" + i + "\" type=\"text\" inputmode=\"numeric\" placeholder=\"" + escapeHtml(t("reps")) + "\" />" +
                 "<button class=\"btn btn-accent\" type=\"button\" data-list-log=\"" + i + "\" data-list-name=\"" + escapeHtml(name) + "\">" + escapeHtml(t("addSet")) + "</button>" +
                 "</div></div>";
             }).join("")
           : "<div class=\"small text-muted-2\">" + escapeHtml(t("scheduleNoExercises")) + "</div>";
-        box.innerHTML = "<label class=\"form-label\" for=\"logListSelect\">" + escapeHtml(t("logPickList")) + "</label>" +
+        box.innerHTML = "<div class=\"d-flex justify-content-between align-items-center mb-2\">" +
+          "<label class=\"form-label mb-0\" for=\"logListSelect\">" + escapeHtml(t("logPickList")) + "</label>" +
+          "<div class=\"unit-switch\">" +
+          "<button class=\"unit-btn" + (unitOn ? " active" : "") + "\" type=\"button\" data-list-unit=\"kg\">kg</button>" +
+          "<button class=\"unit-btn" + (!unitOn ? " active" : "") + "\" type=\"button\" data-list-unit=\"lbs\">lbs</button>" +
+          "</div></div>" +
           "<select class=\"form-select mb-3\" id=\"logListSelect\">" + options + "</select>" + rows;
       }
 
@@ -3859,6 +3916,12 @@
         renderLogFromList();
       });
       document.getElementById("logFromList").addEventListener("click", function (event) {
+        var unitBtn = event.target.closest("[data-list-unit]");
+        if (unitBtn) {
+          setUnit(unitBtn.getAttribute("data-list-unit") === "lbs" ? "lbs" : "kg");
+          renderLogFromList();
+          return;
+        }
         var btn = event.target.closest("[data-list-log]");
         if (!btn) return;
         var idx = btn.getAttribute("data-list-log");
