@@ -1195,6 +1195,15 @@
       </div>
 
       <div class="tab-pane fade show active" id="tab-log" role="tabpanel" aria-labelledby="tab-log-btn" tabindex="0">
+        <ul class="nav nav-pills body-tabs mb-3" id="logModeTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="logModeAdd" type="button" data-log-mode="add" data-i18n="logModeAdd">新增</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="logModeList" type="button" data-log-mode="list" data-i18n="logModeList">從清單</button>
+          </li>
+        </ul>
+        <div id="logPaneAdd">
         <div class="section-head mb-2">
           <p class="mb-0 text-muted-2" data-i18n="logSubtitle">追蹤動作、重量與次數。</p>
         </div>
@@ -1243,6 +1252,13 @@
             <div id="exerciseChips" class="d-flex flex-wrap gap-2"></div>
           </div>
         </section>
+        </div>
+        <div id="logPaneList" hidden>
+          <div class="section-head mb-2">
+            <p class="mb-0 text-muted-2" data-i18n="logFromListHint">選擇課表清單後記錄組數</p>
+          </div>
+          <section class="card-panel p-4" id="logFromList"></section>
+        </div>
 
         <div class="section-head mb-2 mt-4">
           <div class="section-head-top">
@@ -1603,7 +1619,12 @@
           tabSettings: "設定",
           tabSchedule: "課表",
           scheduleTitle: "課表",
-          scheduleHint: "先建立清單並命名，再加入動作",
+          logModeAdd: "新增",
+          logModeList: "從清單",
+          logFromListHint: "選擇課表清單後記錄組數",
+          logListEmpty: "尚無課表清單",
+          logPickList: "選擇清單",
+          renameList: "重新命名",
           scheduleNewList: "新清單",
           scheduleListName: "清單名稱",
           scheduleAddList: "建立",
@@ -1765,7 +1786,12 @@
           tabSettings: "Settings",
           tabSchedule: "Schedule",
           scheduleTitle: "Schedule",
-          scheduleHint: "Create a named list, then add exercises",
+          logModeAdd: "Add",
+          logModeList: "From list",
+          logFromListHint: "Pick a schedule list and log sets",
+          logListEmpty: "No schedule lists",
+          logPickList: "Choose list",
+          renameList: "Rename",
           scheduleNewList: "New list",
           scheduleListName: "List name",
           scheduleAddList: "Create",
@@ -2254,8 +2280,10 @@
               return "<div class=\"mb-4\">" +
                 "<div class=\"d-flex justify-content-between align-items-center gap-2 mb-2\">" +
                 "<div class=\"fw-semibold\">" + escapeHtml(item.name) + "</div>" +
+                "<div class=\"d-flex gap-1\">" +
+                "<button class=\"btn btn-ghost btn-sm\" type=\"button\" data-sched-rename=\"" + i + "\" aria-label=\"" + escapeHtml(t("renameList")) + "\"><i class=\"bi bi-pencil\"></i></button>" +
                 "<button class=\"btn btn-ghost btn-sm text-danger\" type=\"button\" data-sched-del-list=\"" + i + "\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-trash\"></i></button>" +
-                "</div>" +
+                "</div></div>" +
                 rows +
                 "<div class=\"d-flex gap-2 position-relative\">" +
                 "<input class=\"form-control\" data-sched-ex=\"" + i + "\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" autocomplete=\"off\" />" +
@@ -3784,16 +3812,91 @@
           return "<button type=\"button\" class=\"suggest-item\" data-sched-pick=\"" + escapeHtml(name) + "\" data-sched-pick-idx=\"" + idx + "\">" + escapeHtml(name) + "</button>";
         }).join("") + "</div>";
       });
-      document.getElementById("scheduleList").addEventListener("click", function (event) {
-        var pick = event.target.closest("[data-sched-pick]");
-        if (pick) {
-          var idx = pick.getAttribute("data-sched-pick-idx");
-          var input = document.querySelector("[data-sched-ex=\"" + idx + "\"]");
-          if (input) input.value = pick.getAttribute("data-sched-pick");
-          var box = document.querySelector("[data-sched-suggest=\"" + idx + "\"]");
-          if (box) { box.hidden = true; box.innerHTML = ""; }
+      function renderLogFromList() {
+        var box = document.getElementById("logFromList");
+        if (!box) return;
+        var lists = loadSchedule();
+        if (!lists.length) {
+          box.innerHTML = "<div class=\"empty-state\">" + escapeHtml(t("logListEmpty")) + "</div>";
           return;
         }
+        var selected = window.__logListIndex;
+        if (selected == null || !lists[selected]) selected = 0;
+        window.__logListIndex = selected;
+        var options = lists.map(function (item, i) {
+          return "<option value=\"" + i + "\"" + (i === selected ? " selected" : "") + ">" + escapeHtml(item.name) + "</option>";
+        }).join("");
+        var exercises = lists[selected].exercises || [];
+        var rows = exercises.length
+          ? exercises.map(function (name, i) {
+              return "<div class=\"mb-3\">" +
+                "<div class=\"fw-semibold mb-1\">" + escapeHtml(name) + "</div>" +
+                "<div class=\"d-flex gap-2\">" +
+                "<input class=\"form-control\" data-list-w=\"" + i + "\" type=\"text\" inputmode=\"decimal\" placeholder=\"" + escapeHtml(t("weight")) + "\" />" +
+                "<input class=\"form-control\" data-list-r=\"" + i + "\" type=\"text\" inputmode=\"numeric\" placeholder=\"" + escapeHtml(t("reps")) + "\" />" +
+                "<button class=\"btn btn-accent\" type=\"button\" data-list-log=\"" + i + "\" data-list-name=\"" + escapeHtml(name) + "\">" + escapeHtml(t("addSet")) + "</button>" +
+                "</div></div>";
+            }).join("")
+          : "<div class=\"small text-muted-2\">" + escapeHtml(t("scheduleNoExercises")) + "</div>";
+        box.innerHTML = "<label class=\"form-label\" for=\"logListSelect\">" + escapeHtml(t("logPickList")) + "</label>" +
+          "<select class=\"form-select mb-3\" id=\"logListSelect\">" + options + "</select>" + rows;
+      }
+
+      document.getElementById("logModeTabs").addEventListener("click", function (event) {
+        var btn = event.target.closest("[data-log-mode]");
+        if (!btn) return;
+        var mode = btn.getAttribute("data-log-mode");
+        document.querySelectorAll("#logModeTabs .nav-link").forEach(function (el) {
+          el.classList.toggle("active", el === btn);
+        });
+        document.getElementById("logPaneAdd").hidden = mode !== "add";
+        document.getElementById("logPaneList").hidden = mode !== "list";
+        if (mode === "list") renderLogFromList();
+      });
+      document.getElementById("logFromList").addEventListener("change", function (event) {
+        if (event.target.id !== "logListSelect") return;
+        window.__logListIndex = Number(event.target.value) || 0;
+        renderLogFromList();
+      });
+      document.getElementById("logFromList").addEventListener("click", function (event) {
+        var btn = event.target.closest("[data-list-log]");
+        if (!btn) return;
+        var idx = btn.getAttribute("data-list-log");
+        var name = btn.getAttribute("data-list-name");
+        var wEl = document.querySelector("[data-list-w=\"" + idx + "\"]");
+        var rEl = document.querySelector("[data-list-r=\"" + idx + "\"]");
+        var weight = wEl ? String(wEl.value || "").trim() : "";
+        var reps = rEl ? String(rEl.value || "").trim() : "";
+        if (!name || !weight || !reps) return;
+        var sets = loadSets();
+        var date = document.getElementById("sessionDate") ? document.getElementById("sessionDate").value : todayISO();
+        sets.push({
+          id: "s" + Date.now() + Math.random().toString(16).slice(2),
+          exercise: name,
+          weight: toKg(Number(weight)),
+          reps: Number(reps),
+          date: date || todayISO(),
+          createdAt: Date.now()
+        });
+        if (saveSets(sets)) {
+          render();
+          if (wEl) wEl.value = "";
+          if (rEl) rEl.value = "";
+        }
+      });
+      document.getElementById("scheduleList").addEventListener("mousedown", function (event) {
+        var pick = event.target.closest("[data-sched-pick]");
+        if (!pick) return;
+        event.preventDefault();
+        var idx = pick.getAttribute("data-sched-pick-idx");
+        var input = document.querySelector("[data-sched-ex=\"" + idx + "\"]");
+        if (input) input.value = pick.getAttribute("data-sched-pick");
+        var box = document.querySelector("[data-sched-suggest=\"" + idx + "\"]");
+        if (box) { box.hidden = true; box.innerHTML = ""; }
+      });
+      document.getElementById("scheduleList").addEventListener("click", function (event) {
+        var pick = event.target.closest("[data-sched-pick]");
+        if (pick) return;
         var addList = event.target.closest("#scheduleAddListBtn");
         var addEx = event.target.closest("[data-sched-add-ex]");
         var delList = event.target.closest("[data-sched-del-list]");
@@ -3814,6 +3917,19 @@
           var ex = input ? String(input.value || "").trim() : "";
           if (!ex || !lists[idx]) return;
           lists[idx].exercises.push(ex);
+          saveSchedule(lists);
+          renderSchedule();
+          return;
+        }
+        var rename = event.target.closest("[data-sched-rename]");
+        if (rename) {
+          var ri = Number(rename.getAttribute("data-sched-rename"));
+          if (!lists[ri]) return;
+          var next = window.prompt(t("renameList"), lists[ri].name);
+          if (next == null) return;
+          next = String(next).trim();
+          if (!next) return;
+          lists[ri].name = next;
           saveSchedule(lists);
           renderSchedule();
           return;
