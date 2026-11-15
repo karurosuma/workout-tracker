@@ -1326,6 +1326,17 @@
           <div class="body-unmatched" id="bodyUnmatched"></div>
         </section>
         <div id="chartsList"></div>
+        <div class="section-head mb-2">
+          <ul class="nav nav-pills body-tabs" id="chartModeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="chartModeWeight" type="button" data-chart-mode="weight" data-i18n="chartWeight">最高重量</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="chartModeVolume" type="button" data-chart-mode="volume" data-i18n="chartVolume">容量</button>
+            </li>
+          </ul>
+        </div>
+        <div id="chartsMount"></div>
       </div>
 
       <div class="tab-pane fade" id="tab-schedule" role="tabpanel" aria-labelledby="tab-schedule-btn" tabindex="0">
@@ -3276,7 +3287,7 @@
       }
 
       function renderCharts(sets) {
-        var list = document.getElementById("chartsList");
+        var list = document.getElementById("chartsMount") || document.getElementById("chartsList");
         destroyCharts();
         var preset = document.getElementById("chartRangePreset").value || "90";
         if (!document.getElementById("chartFrom").value || !document.getElementById("chartTo").value) {
@@ -3297,24 +3308,15 @@
           chartsDirty = false;
           return;
         }
+        var mode = window.__chartMode === "volume" ? "volume" : "weight";
         list.innerHTML = progress.map(function (item, index) {
           return "<div class=\"mb-4\"><div class=\"section-head mb-2\"><h3 class=\"h6 mb-0\">" + escapeHtml(item.name) + "</h3></div>" +
-            "<section class=\"card-panel p-4\">" +
-            "<ul class=\"nav nav-pills body-tabs mb-3\" role=\"tablist\">" +
-            "<li class=\"nav-item\"><button class=\"nav-link active\" data-bs-toggle=\"pill\" data-bs-target=\"#chart-w-" + index + "\" type=\"button\">" + escapeHtml(t("chartWeight")) + "</button></li>" +
-            "<li class=\"nav-item\"><button class=\"nav-link\" data-bs-toggle=\"pill\" data-bs-target=\"#chart-v-" + index + "\" type=\"button\">" + escapeHtml(t("chartVolume")) + "</button></li>" +
-            "</ul>" +
-            "<div class=\"tab-content\">" +
-            "<div class=\"tab-pane fade show active\" id=\"chart-w-" + index + "\"><div class=\"chart-mount\" id=\"chart-weight-" + index + "\"></div></div>" +
-            "<div class=\"tab-pane fade\" id=\"chart-v-" + index + "\"><div class=\"chart-mount\" id=\"chart-volume-" + index + "\"></div></div>" +
-            "</div></section></div>";
+            "<section class=\"card-panel p-4\"><div class=\"chart-mount\" id=\"chart-" + mode + "-" + index + "\"></div></section></div>";
         }).join("");
         progress.forEach(function (item, index) {
-          var w = new ApexCharts(document.getElementById("chart-weight-" + index), chartOptions(item, "weight"));
-          var v = new ApexCharts(document.getElementById("chart-volume-" + index), chartOptions(item, "volume"));
-          chartInstances.push(w, v);
-          w.render();
-          v.render();
+          var chart = new ApexCharts(document.getElementById("chart-" + mode + "-" + index), chartOptions(item, mode));
+          chartInstances.push(chart);
+          chart.render();
         });
         chartsDirty = false;
         setTimeout(function () {
@@ -3640,6 +3642,18 @@
         document.getElementById("chartRangePreset").value = "custom";
         renderCharts(loadSets());
       });
+      var chartModeTabs = document.getElementById("chartModeTabs");
+      if (chartModeTabs) {
+        chartModeTabs.addEventListener("click", function (event) {
+          var btn = event.target.closest("[data-chart-mode]");
+          if (!btn) return;
+          window.__chartMode = btn.getAttribute("data-chart-mode") === "volume" ? "volume" : "weight";
+          chartModeTabs.querySelectorAll(".nav-link").forEach(function (el) {
+            el.classList.toggle("active", el === btn);
+          });
+          renderCharts(loadSets());
+        });
+      }
 
       document.getElementById("saveBtn").addEventListener("click", function () {
         exportBackup();
