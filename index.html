@@ -1262,8 +1262,8 @@
           <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
           <div class="chart-range mt-2">
             <select class="form-select" id="chartRangePreset">
-              <option value="30" selected data-i18n="range30">近 30 天</option>
-              <option value="90" data-i18n="range90">近 90 天</option>
+              <option value="30" data-i18n="range30">近 30 天</option>
+              <option value="90" selected data-i18n="range90">近 90 天</option>
               <option value="all" data-i18n="rangeAll">全部日期</option>
               <option value="custom" data-i18n="rangeCustom">自訂範圍</option>
             </select>
@@ -1328,6 +1328,13 @@
         <div id="chartsList"></div>
       </div>
 
+      <div class="tab-pane fade" id="tab-schedule" role="tabpanel" aria-labelledby="tab-schedule-btn" tabindex="0">
+        <div class="section-head mb-2">
+          <h2 class="h5 mb-0" data-i18n="scheduleTitle">課表</h2>
+          <span class="small text-muted-2" data-i18n="scheduleHint">預先設定每週訓練動作</span>
+        </div>
+        <section class="card-panel p-3 mb-4" id="scheduleList"></section>
+      </div>
       <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" tabindex="0">
         <section class="card-panel p-4">
           <div class="settings-row" id="installRow">
@@ -1416,6 +1423,12 @@
           </button>
         </li>
         <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-schedule-btn" data-bs-toggle="tab" data-bs-target="#tab-schedule" type="button" role="tab" aria-controls="tab-schedule" aria-selected="false">
+            <i class="bi bi-calendar-week" aria-hidden="true"></i>
+            <span data-i18n="tabSchedule">課表</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
           <button class="nav-link" id="tab-settings-btn" data-bs-toggle="tab" data-bs-target="#tab-settings" type="button" role="tab" aria-controls="tab-settings" aria-selected="false">
             <i class="bi bi-gear" aria-hidden="true"></i>
             <span data-i18n="tabSettings">設定</span>
@@ -1480,6 +1493,7 @@
   <script>
     (function () {
       var STORAGE_KEY = "workout-tracker-web-app.sets.v1";
+      var SCHEDULE_KEY = "workout-tracker-web-app.schedule.v1";
       var LOCALE_KEY = "workout-tracker-web-app.locale";
       var UNIT_KEY = "workout-tracker-web-app.unit";
       var GENDER_KEY = "workout-tracker-web-app.gender";
@@ -1576,6 +1590,19 @@
           tabHistory: "日誌",
           tabCharts: "圖表",
           tabSettings: "設定",
+          tabSchedule: "課表",
+          scheduleTitle: "課表",
+          scheduleHint: "預先設定每週訓練動作",
+          scheduleAdd: "新增",
+          scheduleEmpty: "尚無動作",
+          schedulePlaceholder: "動作名稱",
+          dayMon: "週一",
+          dayTue: "週二",
+          dayWed: "週三",
+          dayThu: "週四",
+          dayFri: "週五",
+          daySat: "週六",
+          daySun: "週日",
           tabToday: "表現",
           tabBody: "部位",
           todayTitle: "表現",
@@ -1720,6 +1747,19 @@
           tabHistory: "History",
           tabCharts: "Charts",
           tabSettings: "Settings",
+          tabSchedule: "Schedule",
+          scheduleTitle: "Schedule",
+          scheduleHint: "Predefine weekly exercises",
+          scheduleAdd: "Add",
+          scheduleEmpty: "No exercises",
+          schedulePlaceholder: "Exercise name",
+          dayMon: "Mon",
+          dayTue: "Tue",
+          dayWed: "Wed",
+          dayThu: "Thu",
+          dayFri: "Fri",
+          daySat: "Sat",
+          daySun: "Sun",
           tabToday: "Performance",
           tabBody: "Body",
           todayTitle: "Performance",
@@ -1936,6 +1976,7 @@
         try { localStorage.setItem(LOCALE_KEY, locale); } catch (err) {}
         applyStaticI18n();
         render();
+        try { renderSchedule(); } catch (err) {}
       }
 
       function applyStaticI18n() {
@@ -1980,7 +2021,7 @@
         var isMain = btn.closest("#appTabs");
         var panes;
         if (isMain) {
-          panes = document.querySelectorAll("#tab-log, #tab-today, #tab-charts, #tab-settings");
+          panes = document.querySelectorAll("#tab-log, #tab-today, #tab-charts, #tab-schedule, #tab-settings");
         } else {
           var content = list ? list.parentElement.querySelector(".tab-content") : null;
           panes = content ? content.querySelectorAll(":scope > .tab-pane") : [];
@@ -2149,6 +2190,63 @@
           showStatus("warn", t("tabOnly"));
           return false;
         }
+      }
+
+      var SCHEDULE_DAYS = [
+        { id: "mon", key: "dayMon" },
+        { id: "tue", key: "dayTue" },
+        { id: "wed", key: "dayWed" },
+        { id: "thu", key: "dayThu" },
+        { id: "fri", key: "dayFri" },
+        { id: "sat", key: "daySat" },
+        { id: "sun", key: "daySun" }
+      ];
+
+      function emptySchedule() {
+        var s = {};
+        SCHEDULE_DAYS.forEach(function (d) { s[d.id] = []; });
+        return s;
+      }
+
+      function loadSchedule() {
+        try {
+          var raw = localStorage.getItem(SCHEDULE_KEY);
+          if (!raw) return emptySchedule();
+          var parsed = JSON.parse(raw);
+          var s = emptySchedule();
+          SCHEDULE_DAYS.forEach(function (d) {
+            if (Array.isArray(parsed[d.id])) s[d.id] = parsed[d.id].filter(function (x) { return String(x || "").trim(); });
+          });
+          return s;
+        } catch (err) { return emptySchedule(); }
+      }
+
+      function saveSchedule(schedule) {
+        try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(schedule)); } catch (err) {}
+      }
+
+      function renderSchedule() {
+        var list = document.getElementById("scheduleList");
+        if (!list) return;
+        var schedule = loadSchedule();
+        list.innerHTML = SCHEDULE_DAYS.map(function (d) {
+          var items = schedule[d.id] || [];
+          var rows = items.length
+            ? items.map(function (name, i) {
+                return "<div class=\"d-flex justify-content-between align-items-center gap-2 mb-2\">" +
+                  "<span class=\"fw-semibold\">" + escapeHtml(name) + "</span>" +
+                  "<button class=\"btn btn-ghost btn-sm text-danger\" type=\"button\" data-sched-del=\"" + d.id + "\" data-sched-idx=\"" + i + "\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-x-lg\"></i></button>" +
+                  "</div>";
+              }).join("")
+            : "<div class=\"small text-muted-2 mb-2\">" + escapeHtml(t("scheduleEmpty")) + "</div>";
+          return "<div class=\"mb-4\">" +
+            "<div class=\"fw-semibold mb-2\">" + escapeHtml(t(d.key)) + "</div>" +
+            rows +
+            "<div class=\"d-flex gap-2\">" +
+            "<input class=\"form-control\" data-sched-input=\"" + d.id + "\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" />" +
+            "<button class=\"btn btn-accent\" type=\"button\" data-sched-add=\"" + d.id + "\">" + escapeHtml(t("scheduleAdd")) + "</button>" +
+            "</div></div>";
+        }).join("");
       }
 
       var SQL_READY = null;
@@ -3180,7 +3278,7 @@
       function renderCharts(sets) {
         var list = document.getElementById("chartsList");
         destroyCharts();
-        var preset = document.getElementById("chartRangePreset").value || "30";
+        var preset = document.getElementById("chartRangePreset").value || "90";
         if (!document.getElementById("chartFrom").value || !document.getElementById("chartTo").value) {
           applyChartPreset(preset, sets);
         } else {
@@ -3629,7 +3727,7 @@
           if (el) el.value = today;
         });
         var preset = document.getElementById("chartRangePreset");
-        if (preset) preset.value = "30";
+        if (preset) preset.value = "90";
         ["exercise", "weight", "reps"].forEach(function (id) {
           var el = document.getElementById(id);
           if (el) el.value = "";
@@ -3643,6 +3741,47 @@
       document.getElementById("clearAllBtn").addEventListener("click", function () {
         showClearPrompt();
       });
+
+      document.getElementById("scheduleList").addEventListener("click", function (event) {
+        var addBtn = event.target.closest("[data-sched-add]");
+        var delBtn = event.target.closest("[data-sched-del]");
+        var schedule = loadSchedule();
+        if (addBtn) {
+          var day = addBtn.getAttribute("data-sched-add");
+          var input = document.querySelector("[data-sched-input=\"" + day + "\"]");
+          var name = input ? String(input.value || "").trim() : "";
+          if (!name) return;
+          schedule[day] = schedule[day] || [];
+          schedule[day].push(name);
+          saveSchedule(schedule);
+          renderSchedule();
+          return;
+        }
+        if (delBtn) {
+          var day2 = delBtn.getAttribute("data-sched-del");
+          var idx = Number(delBtn.getAttribute("data-sched-idx"));
+          if (schedule[day2] && isFinite(idx)) {
+            schedule[day2].splice(idx, 1);
+            saveSchedule(schedule);
+            renderSchedule();
+          }
+        }
+      });
+      document.getElementById("scheduleList").addEventListener("keydown", function (event) {
+        if (event.key !== "Enter") return;
+        var input = event.target.closest("[data-sched-input]");
+        if (!input) return;
+        event.preventDefault();
+        var day = input.getAttribute("data-sched-input");
+        var name = String(input.value || "").trim();
+        if (!name) return;
+        var schedule = loadSchedule();
+        schedule[day] = schedule[day] || [];
+        schedule[day].push(name);
+        saveSchedule(schedule);
+        renderSchedule();
+      });
+      renderSchedule();
 
       document.getElementById("clearConfirmBtn").addEventListener("click", function () {
         doClearAll();
