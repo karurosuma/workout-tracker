@@ -3,32 +3,508 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
-  <title>workout-tracker-web-app — 訓練紀錄</title>
+  <title>workout-tracker</title>
   <meta name="color-scheme" content="dark" />
-  <meta name="format-detection" content="telephone=no" />
-  <meta name="theme-color" content="#2a2208" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#2a2208" />
-  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Workout" />
-  <meta name="application-name" content="workout-tracker-web-app" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="favicon.ico" sizes="any" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-  <link rel="apple-touch-startup-image" href="splash/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
+  <style>
+    :root {
+      --bg: #000;
+      --card: #1c1c1e;
+      --field: #2c2c2e;
+      --text: #fff;
+      --muted: #8e8e93;
+      --accent: #ffd60a;
+      --line: rgba(255,255,255,0.1);
+      --danger: #ff453a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", system-ui, sans-serif;
+      overflow: hidden;
+    }
+    .top {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: calc(52px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: 8px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 0.5px solid var(--line);
+      z-index: 20;
+    }
+    .top h1 { margin: 0; font-size: 17px; font-weight: 600; }
+    .pages {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: calc(64px + env(safe-area-inset-top)) 16px calc(72px + env(safe-area-inset-bottom));
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 0.5px solid var(--line);
+    }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    input, select, button { font-family: inherit; font-size: 16px; }
+    input, select {
+      width: 100%;
+      background: var(--field);
+      color: var(--text);
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--accent); color: #000;
+      border: 0; border-radius: 12px;
+      padding: 14px 16px; font-weight: 600;
+      width: 100%;
+    }
+    .btn-ghost { background: var(--field); color: var(--text); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .seg { display: flex; background: var(--field); border-radius: 10px; padding: 2px; margin-bottom: 12px; }
+    .seg button { flex: 1; background: transparent; color: var(--muted); border: 0; border-radius: 8px; padding: 8px; }
+    .seg button.active { background: var(--accent); color: #000; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { background: var(--field); color: var(--text); border: 0; border-radius: 999px; padding: 6px 12px; font-size: 14px; }
+    .tabs {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-top: 0.5px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom);
+      z-index: 20;
+    }
+    .tabs button {
+      flex: 1; background: transparent; color: var(--muted);
+      border: 0; padding: 8px 4px 6px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 10px;
+    }
+    .tabs button i { font-size: 22px; }
+    .tabs button.active { color: var(--accent); }
+    .set { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
+    .set:last-child { border-bottom: 0; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
+  <header class="top"><h1 id="title">記錄</h1></header>
+  <main class="pages">
+    <section class="page active" id="page-log">
+      <div class="seg" id="logMode">
+        <button class="active" data-mode="add">新增</button>
+        <button data-mode="list">從清單</button>
+      </div>
+      <div id="pane-add">
+        <div class="card">
+          <label>訓練日期</label>
+          <input id="sessionDate" type="date" />
+          <label>動作</label>
+          <input id="exercise" placeholder="臥推" autocomplete="off" />
+          <label>重量</label>
+          <div class="row">
+            <input id="weight" inputmode="decimal" placeholder="60" />
+            <div class="seg" id="unitSeg" style="margin:0">
+              <button class="active" data-unit="kg">kg</button>
+              <button data-unit="lbs">lbs</button>
+            </div>
+          </div>
+          <label>次數</label>
+          <input id="reps" inputmode="numeric" placeholder="8" />
+          <button class="btn" id="addBtn">新增組數</button>
+        </div>
+        <div class="muted" style="margin-bottom:8px">常用動作</div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div id="pane-list" class="hidden">
+        <div class="card" id="fromList"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="muted" style="margin-bottom:8px">訓練日誌</div>
+        <div id="logList"></div>
+      </div>
+    </section>
+    <section class="page" id="page-perf">
+      <div class="card">
+        <label>日期</label>
+        <input id="perfDate" type="date" />
+        <div id="perfList"></div>
+      </div>
+    </section>
+    <section class="page" id="page-charts">
+      <div class="seg" id="chartMode">
+        <button class="active" data-mode="weight">最高重量</button>
+        <button data-mode="volume">容量</button>
+      </div>
+      <div class="card" id="charts"></div>
+    </section>
+    <section class="page" id="page-sched">
+      <div class="card" id="sched"></div>
+    </section>
+    <section class="page" id="page-set">
+      <div class="card">
+        <label>語言</label>
+        <div class="seg" id="langSeg">
+          <button class="active" data-lang="zh">繁中</button>
+          <button data-lang="en">EN</button>
+        </div>
+        <label>單位</label>
+        <div class="seg" id="setUnit">
+          <button class="active" data-unit="kg">kg</button>
+          <button data-unit="lbs">lbs</button>
+        </div>
+        <button class="btn btn-ghost" id="exportBtn" style="margin-bottom:8px">匯出 JSON</button>
+        <button class="btn btn-danger" id="clearBtn">清除全部</button>
+      </div>
+    </section>
+  </main>
+  <nav class="tabs">
+    <button class="active" data-page="log"><i class="bi bi-plus-circle"></i>記錄</button>
+    <button data-page="perf"><i class="bi bi-speedometer2"></i>表現</button>
+    <button data-page="charts"><i class="bi bi-bar-chart"></i>圖表</button>
+    <button data-page="sched"><i class="bi bi-list-check"></i>課表</button>
+    <button data-page="set"><i class="bi bi-gear"></i>設定</button>
+  </nav>
+  <script src="vendor/sql-wasm.js"></script>
+  <script src="vendor/apexcharts.min.js"></script>
+  <script>
+  (function () {
+    var KEY = "workout-tracker-web-app.sets.v1";
+    var SCHED = "workout-tracker-web-app.schedule.v1";
+    var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
+    var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
+    var chartMode = "weight";
+    var logMode = "add";
+
+    function loadSets() {
+      try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
+    }
+    function saveSets(sets) {
+      localStorage.setItem(KEY, JSON.stringify(sets));
+    }
+    function loadSched() {
+      try {
+        var raw = JSON.parse(localStorage.getItem(SCHED) || "[]");
+        if (Array.isArray(raw) && raw.length && typeof raw[0] === "string") {
+          return [{ name: "List", exercises: raw }];
+        }
+        return Array.isArray(raw) ? raw : [];
+      } catch (e) { return []; }
+    }
+    function saveSched(lists) { localStorage.setItem(SCHED, JSON.stringify(lists)); }
+    function today() { return new Date().toISOString().slice(0, 10); }
+    function toKg(v) { return unit === "lbs" ? Number(v) / 2.20462 : Number(v); }
+    function fromKg(v) { return unit === "lbs" ? Number(v) * 2.20462 : Number(v); }
+    function fmt(v) { return (Math.round(fromKg(v) * 10) / 10) + " " + unit; }
+
+    function unique(sets) {
+      var seen = {}, out = [];
+      sets.forEach(function (s) {
+        var n = String(s.exercise || "").trim();
+        if (n && !seen[n.toLowerCase()]) { seen[n.toLowerCase()] = 1; out.push(n); }
+      });
+      return out;
+    }
+
+    function render() {
+      var sets = loadSets();
+      var date = document.getElementById("sessionDate").value || today();
+      var day = sets.filter(function (s) { return s.date === date; });
+      document.getElementById("logList").innerHTML = day.length
+        ? day.slice().reverse().map(function (s) {
+            return "<div class=\"set\"><div><b>" + s.exercise + "</b><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>" +
+              "<button class=\"btn-ghost\" data-del=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">刪</button></div>";
+          }).join("")
+        : "<div class=\"muted\">尚無紀錄</div>";
+      var names = unique(sets).slice(0, 12);
+      document.getElementById("chips").innerHTML = names.map(function (n) {
+        return "<button class=\"chip\" data-chip=\"" + n + "\">" + n + "</button>";
+      }).join("");
+      renderPerf();
+      renderSched();
+      renderFromList();
+      renderCharts();
+    }
+
+    function renderPerf() {
+      var date = document.getElementById("perfDate").value || today();
+      var sets = loadSets().filter(function (s) { return s.date === date; });
+      var by = {};
+      sets.forEach(function (s) {
+        by[s.exercise] = by[s.exercise] || { sets: 0, vol: 0 };
+        by[s.exercise].sets++;
+        by[s.exercise].vol += (Number(s.weight) || 0) * (Number(s.reps) || 0);
+      });
+      document.getElementById("perfList").innerHTML = Object.keys(by).length
+        ? Object.keys(by).map(function (k) {
+            return "<div class=\"set\"><div><b>" + k + "</b><div class=\"muted\">" + by[k].sets + " 組 · " + fmt(by[k].vol) + "</div></div></div>";
+          }).join("")
+        : "<div class=\"muted\">這天沒有紀錄</div>";
+    }
+
+    function renderSched() {
+      var lists = loadSched();
+      var html = lists.map(function (item, i) {
+        var rows = (item.exercises || []).map(function (n, j) {
+          return "<div class=\"set\"><span>" + n + "</span><button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
+        }).join("") || "<div class=\"muted\">尚無動作</div>";
+        return "<div style=\"margin-bottom:16px\"><div class=\"row\" style=\"align-items:center\"><b>" + item.name + "</b>" +
+          "<button class=\"btn-ghost\" data-sl=\"" + i + "\" style=\"width:auto;padding:6px 10px\">刪清單</button></div>" + rows +
+          "<div class=\"row\"><input data-se=\"" + i + "\" placeholder=\"動作\" /><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">加</button></div></div>";
+      }).join("");
+      document.getElementById("sched").innerHTML = html +
+        "<div class=\"row\"><input id=\"newList\" placeholder=\"清單名稱\" /><button class=\"btn\" id=\"addList\" style=\"width:auto\">建立</button></div>";
+    }
+
+    function renderFromList() {
+      var lists = loadSched();
+      if (!lists.length) {
+        document.getElementById("fromList").innerHTML = "<div class=\"muted\">尚無課表</div>";
+        return;
+      }
+      var idx = window.__li || 0;
+      if (!lists[idx]) idx = 0;
+      window.__li = idx;
+      var opts = lists.map(function (l, i) {
+        return "<option value=\"" + i + "\"" + (i === idx ? " selected" : "") + ">" + l.name + "</option>";
+      }).join("");
+      var rows = (lists[idx].exercises || []).map(function (n, i) {
+        return "<div style=\"margin-bottom:12px\"><b>" + n + "</b><div class=\"row\">" +
+          "<input data-lw=\"" + i + "\" placeholder=\"重量\" inputmode=\"decimal\" />" +
+          "<input data-lr=\"" + i + "\" placeholder=\"次數\" inputmode=\"numeric\" />" +
+          "<button class=\"btn\" data-ll=\"" + i + "\" data-ln=\"" + n + "\" style=\"width:auto\">記</button></div></div>";
+      }).join("") || "<div class=\"muted\">尚無動作</div>";
+      document.getElementById("fromList").innerHTML = "<select id=\"listPick\">" + opts + "</select>" + rows;
+    }
+
+    var chart;
+    function renderCharts() {
+      var sets = loadSets();
+      var by = {};
+      sets.forEach(function (s) {
+        var k = s.exercise;
+        by[k] = by[k] || [];
+        by[k].push(s);
+      });
+      var names = Object.keys(by).slice(0, 8);
+      var series = names.map(function (n) {
+        var pts = by[n].slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+        if (chartMode === "weight") {
+          var best = {};
+          pts.forEach(function (s) { best[s.date] = Math.max(best[s.date] || 0, Number(s.weight) || 0); });
+          return { name: n, data: Object.keys(best).sort().map(function (d) { return [d, Math.round(fromKg(best[d]) * 10) / 10]; }) };
+        }
+        var vol = {};
+        pts.forEach(function (s) { vol[s.date] = (vol[s.date] || 0) + (Number(s.weight) || 0) * (Number(s.reps) || 0); });
+        return { name: n, data: Object.keys(vol).sort().map(function (d) { return [d, Math.round(fromKg(vol[d]) * 10) / 10]; }) };
+      });
+      var el = document.getElementById("charts");
+      if (chart) { chart.destroy(); chart = null; }
+      if (!series.length) { el.innerHTML = "<div class=\"muted\">尚無資料</div>"; return; }
+      el.innerHTML = "";
+      chart = new ApexCharts(el, {
+        chart: { type: "line", height: 280, background: "transparent", toolbar: { show: false } },
+        theme: { mode: "dark" },
+        series: series,
+        xaxis: { type: "datetime" },
+        colors: ["#ffd60a", "#ffe566", "#fff", "#8e8e93", "#ff453a", "#64d2ff", "#30d158", "#bf5af2"],
+        stroke: { width: 2 },
+        grid: { borderColor: "rgba(255,255,255,0.08)" }
+      });
+      chart.render();
+    }
+
+    document.getElementById("sessionDate").value = today();
+    document.getElementById("perfDate").value = today();
+
+    document.querySelectorAll(".tabs button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.toggle("active", b === btn); });
+        var page = btn.getAttribute("data-page");
+        document.querySelectorAll(".page").forEach(function (p) { p.classList.toggle("active", p.id === "page-" + page); });
+        var titles = { log: "記錄", perf: "表現", charts: "圖表", sched: "課表", set: "設定" };
+        document.getElementById("title").textContent = titles[page] || "";
+        if (page === "charts") renderCharts();
+      });
+    });
+
+    document.getElementById("logMode").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-mode]");
+      if (!btn) return;
+      logMode = btn.getAttribute("data-mode");
+      document.querySelectorAll("#logMode button").forEach(function (b) { b.classList.toggle("active", b === btn); });
+      document.getElementById("pane-add").classList.toggle("hidden", logMode !== "add");
+      document.getElementById("pane-list").classList.toggle("hidden", logMode !== "list");
+      if (logMode === "list") renderFromList();
+    });
+
+    document.getElementById("addBtn").addEventListener("click", function () {
+      var name = document.getElementById("exercise").value.trim();
+      var w = document.getElementById("weight").value.trim();
+      var r = document.getElementById("reps").value.trim();
+      if (!name || !w || !r) return;
+      var sets = loadSets();
+      sets.push({
+        id: "s" + Date.now(),
+        exercise: name,
+        weight: toKg(w),
+        reps: Number(r),
+        date: document.getElementById("sessionDate").value || today(),
+        createdAt: Date.now()
+      });
+      saveSets(sets);
+      document.getElementById("reps").value = "";
+      render();
+    });
+
+    document.getElementById("logList").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-del]");
+      if (!btn) return;
+      var id = btn.getAttribute("data-del");
+      saveSets(loadSets().filter(function (s) { return s.id !== id; }));
+      render();
+    });
+
+    document.getElementById("chips").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-chip]");
+      if (!btn) return;
+      document.getElementById("exercise").value = btn.getAttribute("data-chip");
+    });
+
+    document.getElementById("perfDate").addEventListener("change", renderPerf);
+
+    document.getElementById("chartMode").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-mode]");
+      if (!btn) return;
+      chartMode = btn.getAttribute("data-mode");
+      document.querySelectorAll("#chartMode button").forEach(function (b) { b.classList.toggle("active", b === btn); });
+      renderCharts();
+    });
+
+    document.getElementById("sched").addEventListener("click", function (e) {
+      var lists = loadSched();
+      if (e.target.id === "addList") {
+        var name = document.getElementById("newList").value.trim();
+        if (!name) return;
+        lists.push({ name: name, exercises: [] });
+        saveSched(lists); render(); return;
+      }
+      var add = e.target.closest("[data-sa]");
+      if (add) {
+        var i = Number(add.getAttribute("data-sa"));
+        var input = document.querySelector("[data-se=\"" + i + "\"]");
+        var n = input ? input.value.trim() : "";
+        if (!n || !lists[i]) return;
+        lists[i].exercises.push(n);
+        saveSched(lists); render(); return;
+      }
+      var del = e.target.closest("[data-sx]");
+      if (del) {
+        var p = del.getAttribute("data-sx").split(":");
+        lists[Number(p[0])].exercises.splice(Number(p[1]), 1);
+        saveSched(lists); render(); return;
+      }
+      var dl = e.target.closest("[data-sl]");
+      if (dl) {
+        lists.splice(Number(dl.getAttribute("data-sl")), 1);
+        saveSched(lists); render();
+      }
+    });
+
+    document.getElementById("fromList").addEventListener("change", function (e) {
+      if (e.target.id !== "listPick") return;
+      window.__li = Number(e.target.value) || 0;
+      renderFromList();
+    });
+    document.getElementById("fromList").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-ll]");
+      if (!btn) return;
+      var i = btn.getAttribute("data-ll");
+      var name = btn.getAttribute("data-ln");
+      var w = document.querySelector("[data-lw=\"" + i + "\"]");
+      var r = document.querySelector("[data-lr=\"" + i + "\"]");
+      if (!name || !w.value || !r.value) return;
+      var sets = loadSets();
+      sets.push({
+        id: "s" + Date.now(),
+        exercise: name,
+        weight: toKg(w.value),
+        reps: Number(r.value),
+        date: document.getElementById("sessionDate").value || today(),
+        createdAt: Date.now()
+      });
+      saveSets(sets);
+      w.value = ""; r.value = "";
+      render();
+    });
+
+    function setUnit(next) {
+      unit = next;
+      localStorage.setItem("workout-tracker-web-app.unit", unit);
+      document.querySelectorAll("[data-unit]").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-unit") === unit);
+      });
+      render();
+    }
+    document.getElementById("unitSeg").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-unit]"); if (b) setUnit(b.getAttribute("data-unit"));
+    });
+    document.getElementById("setUnit").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-unit]"); if (b) setUnit(b.getAttribute("data-unit"));
+    });
+
+    document.getElementById("langSeg").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-lang]");
+      if (!b) return;
+      locale = b.getAttribute("data-lang");
+      localStorage.setItem("workout-tracker-web-app.locale", locale);
+      document.querySelectorAll("#langSeg button").forEach(function (x) { x.classList.toggle("active", x === b); });
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", function () {
+      var blob = new Blob([JSON.stringify(loadSets(), null, 2)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "workout.json";
+      a.click();
+    });
+    document.getElementById("clearBtn").addEventListener("click", function () {
+      if (!confirm("清除全部紀錄？")) return;
+      saveSets([]);
+      render();
+    });
+
+    setUnit(unit);
+    render();
+  })();
+  </script>
 </body>
 </html>
-
