@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
   <style>
     :root {
-      --bg: #000000;
+      --bg: #1a1400;
       --panel: rgba(28, 28, 30, 0.72);
       --panel-2: rgba(44, 44, 46, 0.65);
       --field: rgba(44, 44, 46, 0.55);
@@ -54,9 +54,9 @@
     * { box-sizing: border-box; }
 
     html, body {
-      background-color: #000;
-      background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 214, 10, 0.08), transparent 60%),
-                        linear-gradient(180deg, #0a0a0a 0%, #000 40%, #050505 100%);
+      background-color: #120e00;
+      background-image: radial-gradient(ellipse 90% 60% at 50% -5%, rgba(255, 214, 10, 0.28), transparent 55%),
+                        linear-gradient(180deg, #3a2e00 0%, #1a1400 45%, #000 100%);
       width: 100%;
       max-width: 100%;
       height: 100%;
@@ -236,21 +236,27 @@
     .nav-item { list-style: none; }
     .body-tabs,
     .nav-pills.body-tabs {
-      display: inline-flex;
+      display: flex;
+      width: 100%;
       background: rgba(44, 44, 46, 0.7);
       border-radius: 999px;
       padding: 3px;
       gap: 0;
     }
-    .body-tabs .nav-item { list-style: none; }
+    .body-tabs .nav-item {
+      list-style: none;
+      flex: 1 1 0;
+    }
     .body-tabs .nav-link {
       border-radius: 999px;
       color: var(--muted);
       font-weight: 600;
-      padding: 6px 16px;
+      padding: 8px 8px;
       background: transparent;
       border: 0;
-      min-height: 32px;
+      min-height: 34px;
+      width: 100%;
+      text-align: center;
     }
     .body-tabs .nav-link.active {
       background: var(--accent);
@@ -1344,8 +1350,8 @@
         </section>
         <div id="chartsList"></div>
         <div class="section-head mb-2">
-          <h3 class="h6 mb-0" data-i18n="rangeSets">範圍內組數</h3>
-          <span class="small text-muted-2" data-i18n="rangeSetsHint">所選日期範圍的各動作總組數</span>
+          <h3 class="h6 mb-0" data-i18n="rangeSets">範圍內部位組數</h3>
+          <span class="small text-muted-2" data-i18n="rangeSetsHint">所選日期範圍的各部位總組數</span>
         </div>
         <section class="card-panel p-3 mb-4" id="weekSets"></section>
         <div class="section-head mb-2">
@@ -1615,9 +1621,10 @@
           chartsHint: "每個動作的最高重量與訓練容量",
           chartWeight: "最高重量",
           chartVolume: "容量",
-          rangeSets: "範圍內組數",
-          rangeSetsHint: "所選日期範圍的各動作總組數",
+          rangeSets: "範圍內部位組數",
+          rangeSetsHint: "所選日期範圍的各部位總組數",
           rangeSetsEmpty: "這個範圍沒有組數",
+          rangeSetsOther: "未分類",
           chartsEmpty: "記錄至少一組後即可看到各動作圖表。",
           chartsEmptyRange: "這個日期範圍沒有紀錄。",
           chartsFail: "無法載入圖表，請確認已連上網路。",
@@ -1786,9 +1793,10 @@
           chartsHint: "Best weight and volume for each exercise",
           chartWeight: "Best weight",
           chartVolume: "Volume",
-          rangeSets: "Sets in range",
-          rangeSetsHint: "Total sets per exercise in the selected range",
+          rangeSets: "Sets by muscle",
+          rangeSetsHint: "Total sets per muscle in the selected range",
           rangeSetsEmpty: "No sets in this range",
+          rangeSetsOther: "Unmatched",
           chartsEmpty: "Log at least one set to see per-exercise charts.",
           chartsEmptyRange: "No sets in this date range.",
           chartsFail: "Charts could not load. Check your network connection.",
@@ -3413,19 +3421,22 @@
           if (!set.date) return;
           if (from && set.date < from) return;
           if (to && set.date > to) return;
-          var name = String(set.exercise || "").trim();
-          if (!name) return;
-          counts[name] = (counts[name] || 0) + 1;
+          var parts = classifyBodyParts(set.exercise);
+          if (!parts.length) parts = ["other"];
+          parts.forEach(function (id) {
+            counts[id] = (counts[id] || 0) + 1;
+          });
         });
         var names = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
         if (!names.length) {
           box.innerHTML = "<div class=\"small text-muted-2\">" + escapeHtml(t("rangeSetsEmpty")) + "</div>";
           return;
         }
-        box.innerHTML = names.map(function (name) {
+        box.innerHTML = names.map(function (id) {
+          var label = id === "other" ? t("rangeSetsOther") : t("part" + id.charAt(0).toUpperCase() + id.slice(1));
           return "<div class=\"d-flex justify-content-between align-items-center py-2 border-bottom\">" +
-            "<span>" + escapeHtml(name) + "</span>" +
-            "<span class=\"fw-semibold\">" + counts[name] + "</span>" +
+            "<span>" + escapeHtml(label) + "</span>" +
+            "<span class=\"fw-semibold\">" + counts[id] + "</span>" +
             "</div>";
         }).join("");
       }
