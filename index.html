@@ -533,14 +533,13 @@
     .row.g-3 { gap: 8px; }
 
     .suggest {
-      position: relative;
-      z-index: 25;
-    }
-    .suggest-list {
       position: absolute;
       left: 0;
       right: 0;
-      top: 4px;
+      top: 100%;
+      z-index: 40;
+    }
+    .suggest-list {
       background: #111;
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -557,6 +556,7 @@
       color: var(--text);
       padding: 10px 12px;
       font-size: 0.95rem;
+      cursor: pointer;
     }
     .suggest-item:hover, .suggest-item.active { background: #1b2733; }
     .chip {
@@ -1213,9 +1213,9 @@
               <label class="form-label" for="sessionDate" data-i18n="sessionDate">訓練日期</label>
               <input class="form-control" id="sessionDate" name="sessionDate" type="date" required />
             </div>
-            <div class="col-12">
+            <div class="col-12" style="position:relative">
               <label class="form-label" for="exercise" data-i18n="exercise">動作</label>
-              <input class="form-control" id="exercise" name="exercise" placeholder="臥推" autocomplete="off" required />
+              <input class="form-control" id="exercise" name="exercise" placeholder="臥推" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required />
               <div class="suggest" id="exerciseSuggest" hidden></div>
             </div>
             <div class="col-12">
@@ -2289,9 +2289,9 @@
                 "<button class=\"btn btn-ghost btn-sm text-danger\" type=\"button\" data-sched-del-list=\"" + i + "\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-trash\"></i></button>" +
                 "</div></div>" +
                 rows +
-                "<div class=\"d-flex gap-2 position-relative\">" +
-                "<input class=\"form-control\" data-sched-ex=\"" + i + "\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" autocomplete=\"off\" />" +
-                "<div class=\"suggest\" data-sched-suggest=\"" + i + "\" hidden></div>" +
+                "<div class=\"d-flex gap-2\" style=\"position:relative\">" +
+                "<input class=\"form-control\" data-sched-ex=\"" + i + "\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" autocomplete=\"off\" autocorrect=\"off\" spellcheck=\"false\" />" +
+                "<div class=\"suggest\" data-sched-suggest=\"" + i + "\" hidden style=\"right:88px\"></div>" +
                 "<button class=\"btn btn-accent\" type=\"button\" data-sched-add-ex=\"" + i + "\">" + escapeHtml(t("scheduleAdd")) + "</button>" +
                 "</div></div>";
             }).join("")
@@ -3621,9 +3621,10 @@
       document.getElementById("exercise").addEventListener("focus", function () {
         renderSuggestions(this.value);
       });
-      document.getElementById("exerciseSuggest").addEventListener("click", function (event) {
+      document.getElementById("exerciseSuggest").addEventListener("mousedown", function (event) {
         var btn = event.target.closest("[data-suggest]");
         if (!btn) return;
+        event.preventDefault();
         var input = document.getElementById("exercise");
         input.value = btn.getAttribute("data-suggest");
         document.getElementById("exerciseSuggest").hidden = true;
