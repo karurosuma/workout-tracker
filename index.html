@@ -1344,8 +1344,8 @@
         </section>
         <div id="chartsList"></div>
         <div class="section-head mb-2">
-          <h3 class="h6 mb-0" data-i18n="weekSets">本週組數</h3>
-          <span class="small text-muted-2" data-i18n="weekSetsHint">本週各動作總組數</span>
+          <h3 class="h6 mb-0" data-i18n="rangeSets">範圍內組數</h3>
+          <span class="small text-muted-2" data-i18n="rangeSetsHint">所選日期範圍的各動作總組數</span>
         </div>
         <section class="card-panel p-3 mb-4" id="weekSets"></section>
         <div class="section-head mb-2">
@@ -1615,9 +1615,9 @@
           chartsHint: "每個動作的最高重量與訓練容量",
           chartWeight: "最高重量",
           chartVolume: "容量",
-          weekSets: "本週組數",
-          weekSetsHint: "本週各動作總組數",
-          weekSetsEmpty: "本週尚無組數",
+          rangeSets: "範圍內組數",
+          rangeSetsHint: "所選日期範圍的各動作總組數",
+          rangeSetsEmpty: "這個範圍沒有組數",
           chartsEmpty: "記錄至少一組後即可看到各動作圖表。",
           chartsEmptyRange: "這個日期範圍沒有紀錄。",
           chartsFail: "無法載入圖表，請確認已連上網路。",
@@ -1784,8 +1784,10 @@
           chartsTitle: "Exercise progress",
           chartsHint: "Best weight and volume for each exercise",
           chartWeight: "Best weight",
-          weekSets: "Sets this week",
-          weekSetsEmpty: "No sets this week",
+          chartVolume: "Volume",
+          rangeSets: "Sets in range",
+          rangeSetsHint: "Total sets per exercise in the selected range",
+          rangeSetsEmpty: "No sets in this range",
           chartsEmpty: "Log at least one set to see per-exercise charts.",
           chartsEmptyRange: "No sets in this date range.",
           chartsFail: "Charts could not load. Check your network connection.",
@@ -3401,17 +3403,20 @@
       function renderWeekSets(sets) {
         var box = document.getElementById("weekSets");
         if (!box) return;
-        var bounds = weekBounds();
+        var from = document.getElementById("chartFrom") ? document.getElementById("chartFrom").value : "";
+        var to = document.getElementById("chartTo") ? document.getElementById("chartTo").value : "";
         var counts = {};
         (sets || []).forEach(function (set) {
-          if (!set.date || set.date < bounds.from || set.date > bounds.to) return;
+          if (!set.date) return;
+          if (from && set.date < from) return;
+          if (to && set.date > to) return;
           var name = String(set.exercise || "").trim();
           if (!name) return;
           counts[name] = (counts[name] || 0) + 1;
         });
         var names = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
         if (!names.length) {
-          box.innerHTML = "<div class=\"small text-muted-2\">" + escapeHtml(t("weekSetsEmpty")) + "</div>";
+          box.innerHTML = "<div class=\"small text-muted-2\">" + escapeHtml(t("rangeSetsEmpty")) + "</div>";
           return;
         }
         box.innerHTML = names.map(function (name) {
