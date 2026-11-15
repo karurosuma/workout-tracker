@@ -328,8 +328,8 @@
       -webkit-backdrop-filter: saturate(180%) blur(24px);
       border-top: 0.5px solid rgba(255, 255, 255, 0.12);
       z-index: 1030;
-      padding-top: 2px;
-      padding-bottom: max(2px, calc(env(safe-area-inset-bottom, 0px) - 30px));
+      padding-top: 0;
+      padding-bottom: 0;
     }
 
     .app-nav-bar .container {
@@ -866,7 +866,7 @@
       background: transparent;
       border: 0;
       border-radius: 0;
-      min-height: 36px;
+      min-height: 32px;
       width: 100%;
       padding: 2px 2px 0;
       font-weight: 500;
@@ -2257,8 +2257,9 @@
                 "<button class=\"btn btn-ghost btn-sm text-danger\" type=\"button\" data-sched-del-list=\"" + i + "\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-trash\"></i></button>" +
                 "</div>" +
                 rows +
-                "<div class=\"d-flex gap-2\">" +
-                "<input class=\"form-control\" data-sched-ex=\"" + i + "\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" />" +
+                "<div class=\"d-flex gap-2 position-relative\">" +
+                "<input class=\"form-control\" data-sched-ex=\"" + i + "\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" autocomplete=\"off\" />" +
+                "<div class=\"suggest\" data-sched-suggest=\"" + i + "\" hidden></div>" +
                 "<button class=\"btn btn-accent\" type=\"button\" data-sched-add-ex=\"" + i + "\">" + escapeHtml(t("scheduleAdd")) + "</button>" +
                 "</div></div>";
             }).join("")
@@ -3766,7 +3767,33 @@
         showClearPrompt();
       });
 
+      document.getElementById("scheduleList").addEventListener("input", function (event) {
+        var input = event.target.closest("[data-sched-ex]");
+        if (!input) return;
+        var idx = input.getAttribute("data-sched-ex");
+        var box = document.querySelector("[data-sched-suggest=\"" + idx + "\"]");
+        if (!box) return;
+        var q = String(input.value || "").trim().toLowerCase();
+        if (!q) { box.hidden = true; box.innerHTML = ""; return; }
+        var matches = suggestionPool(loadSets()).filter(function (name) {
+          return name.toLowerCase().indexOf(q) !== -1;
+        }).slice(0, 8);
+        if (!matches.length) { box.hidden = true; box.innerHTML = ""; return; }
+        box.hidden = false;
+        box.innerHTML = "<div class=\"suggest-list\">" + matches.map(function (name) {
+          return "<button type=\"button\" class=\"suggest-item\" data-sched-pick=\"" + escapeHtml(name) + "\" data-sched-pick-idx=\"" + idx + "\">" + escapeHtml(name) + "</button>";
+        }).join("") + "</div>";
+      });
       document.getElementById("scheduleList").addEventListener("click", function (event) {
+        var pick = event.target.closest("[data-sched-pick]");
+        if (pick) {
+          var idx = pick.getAttribute("data-sched-pick-idx");
+          var input = document.querySelector("[data-sched-ex=\"" + idx + "\"]");
+          if (input) input.value = pick.getAttribute("data-sched-pick");
+          var box = document.querySelector("[data-sched-suggest=\"" + idx + "\"]");
+          if (box) { box.hidden = true; box.innerHTML = ""; }
+          return;
+        }
         var addList = event.target.closest("#scheduleAddListBtn");
         var addEx = event.target.closest("[data-sched-add-ex]");
         var delList = event.target.closest("[data-sched-del-list]");
