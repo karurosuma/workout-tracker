@@ -185,7 +185,7 @@
           <input id="sessionDate" type="date" />
           <label>動作</label>
           <input id="exercise" placeholder="臥推" autocomplete="off" />
-          <label>重量</label>
+          <label>重量 <span class="muted" id="lastWeightHint"></span></label>
           <div class="row">
             <input id="weight" inputmode="decimal" placeholder="60" />
             <div class="seg" id="unitSeg" style="margin:0">
@@ -311,7 +311,11 @@
         </div>
         </div>
 
-      <div class="seg" id="chartMode">
+      <div class="seg" id="chartRange">
+        <button data-range="30">30天</button>
+        <button class="active" data-range="90">90天</button>
+        <button data-range="all">全部</button>
+      </div>
         <button class="active" data-mode="weight">最高重量</button>
         <button data-mode="volume">容量</button>
       </div>
@@ -320,7 +324,14 @@
         <section class="page" id="page-set">
       <div class="card" id="sched"></div>
       <div class="card">
-        <label>語言</label>
+        <label>性別</label>
+        <div class="seg" id="genderSeg">
+          <button class="active" data-gender="male">男</button>
+          <button data-gender="female">女</button>
+        </div>
+        <label>匯入 SQLite</label>
+        <input id="importFile" type="file" accept=".sqlite,.db,.sqlite3,.json" />
+        <button class="btn btn-ghost" id="exportSqlBtn" style="margin-bottom:8px">匯出 SQLite</button>
         <div class="seg" id="langSeg">
           <button class="active" data-lang="zh">繁中</button>
           <button data-lang="en">EN</button>
@@ -345,7 +356,14 @@
   <script src="vendor/apexcharts.min.js"></script>
   <script>
   (function () {
-    var KEY = "workout-tracker-web-app.sets.v1";
+    var gender = localStorage.getItem("workout-tracker-web-app.gender") || "male";
+    var chartRange = "90";
+    var sqlDb = null;
+    var SQL_LIB = null;
+    var memoryStore = { sets: [] };
+    var IDB_NAME = "workout-tracker-web-app";
+    var IDB_STORE = "sqlite";
+    var IDB_KEY = "sets";
     var SCHED = "workout-tracker-web-app.schedule.v1";
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
@@ -697,13 +715,91 @@
         var perfDate = document.getElementById("perfDate").value || today();
         var perfSets = sets.filter(function (s) { return s.date === perfDate; });
         if (document.getElementById("perfBodyMap")) renderBodyMap(perfSets, document.getElementById("perfBodyMap"));
-        if (document.getElementById("chartsBodyMap")) renderBodyMap(sets, document.getElementById("chartsBodyMap"));
+        if (document.getElementById("chartsBodyMap")) renderBodyMap(sets.filter(function (s) { return inRange(s.date); }), document.getElementById("chartsBodyMap"));
       }
-    function loadSets() {
-      try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
+    function idbOpen() {
+      return new Promise(function (resolve, reject) {
+        var req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = function () {
+          if (!req.result.objectStoreNames.contains(IDB_STORE)) req.result.createObjectStore(IDB_STORE);
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+      });
     }
+    function idbGet() {
+      return idbOpen().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(IDB_STORE, "readonly");
+          var req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+          req.onsuccess = function () { resolve(req.result || null); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+    function idbPut(bytes) {
+      return idbOpen().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(IDB_STORE, "readwrite");
+          tx.objectStore(IDB_STORE).put(bytes, IDB_KEY);
+          tx.oncomplete = function () { resolve(); };
+          tx.onerror = function () { reject(tx.error); };
+        });
+      });
+    }
+    function ensureSchema() {
+      sqlDb.run("CREATE TABLE IF NOT EXISTS sets (id TEXT PRIMARY KEY, exercise TEXT NOT NULL, weight REAL NOT NULL, reps INTEGER NOT NULL, date TEXT NOT NULL, created_at INTEGER NOT NULL)");
+    }
+    function rowsFromSql() {
+      if (!sqlDb) return [];
+      var stmt = sqlDb.prepare("SELECT id, exercise, weight, reps, date, created_at FROM sets");
+      var rows = [];
+      while (stmt.step()) {
+        var row = stmt.getAsObject();
+        rows.push({ id: String(row.id), exercise: String(row.exercise || ""), weight: Number(row.weight) || 0, reps: Number(row.reps) || 0, date: String(row.date || ""), createdAt: Number(row.created_at) || 0 });
+      }
+      stmt.free();
+      return rows;
+    }
+    function replaceSqlSets(sets) {
+      if (!sqlDb) return false;
+      sqlDb.run("BEGIN");
+      sqlDb.run("DELETE FROM sets");
+      var stmt = sqlDb.prepare("INSERT INTO sets (id, exercise, weight, reps, date, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+      sets.forEach(function (set) {
+        stmt.run([String(set.id), String(set.exercise || ""), Number(set.weight) || 0, Math.floor(Number(set.reps) || 0), String(set.date || ""), Number(set.createdAt) || Date.now()]);
+      });
+      stmt.free();
+      sqlDb.run("COMMIT");
+      return true;
+    }
+    function persistSql() {
+      if (!sqlDb) return;
+      try { idbPut(sqlDb.export()); } catch (e) {}
+    }
+    function loadSets() { return memoryStore.sets.slice(); }
     function saveSets(sets) {
-      localStorage.setItem(KEY, JSON.stringify(sets));
+      memoryStore.sets = sets.slice();
+      if (sqlDb) { replaceSqlSets(memoryStore.sets); persistSql(); }
+      else { try { localStorage.setItem("workout-tracker-web-app.sets.v1", JSON.stringify(sets)); } catch (e) {} }
+    }
+    function initSql() {
+      if (typeof initSqlJs !== "function") return Promise.resolve();
+      return initSqlJs({ locateFile: function (f) { return "vendor/" + f; } }).then(function (SQL) {
+        SQL_LIB = SQL;
+        return idbGet().catch(function () { return null; }).then(function (saved) {
+          sqlDb = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
+          ensureSchema();
+          var rows = rowsFromSql();
+          if (rows.length) memoryStore.sets = rows;
+          else {
+            try {
+              var legacy = JSON.parse(localStorage.getItem("workout-tracker-web-app.sets.v1") || "[]");
+              if (Array.isArray(legacy) && legacy.length) { memoryStore.sets = legacy; replaceSqlSets(legacy); persistSql(); }
+            } catch (e) {}
+          }
+        });
+      }).catch(function () { sqlDb = null; });
     }
     function loadSched() {
       try {
@@ -720,7 +816,48 @@
     function fromKg(v) { return unit === "lbs" ? Number(v) * 2.20462 : Number(v); }
     function fmt(v) { return (Math.round(fromKg(v) * 10) / 10) + " " + unit; }
 
-    function unique(sets) {
+    function lastWeightFor(exercise, excludeDate) {
+      var name = String(exercise || "").trim().toLowerCase();
+      if (!name) return null;
+      var best = null, bestDate = "";
+      loadSets().forEach(function (s) {
+        if (String(s.exercise || "").trim().toLowerCase() !== name) return;
+        if (!s.date || (excludeDate && s.date >= excludeDate)) return;
+        if (!bestDate || s.date > bestDate || (s.date === bestDate && (Number(s.weight) || 0) > (best || 0))) {
+          bestDate = s.date; best = Number(s.weight) || 0;
+        }
+      });
+      return best;
+    }
+    function updateLastHint() {
+      var hint = document.getElementById("lastWeightHint");
+      if (!hint) return;
+      var w = lastWeightFor(document.getElementById("exercise").value, document.getElementById("sessionDate").value);
+      hint.textContent = w == null ? "" : "上次 " + fmt(w);
+    }
+    function timeAgo(ts) {
+      var d = Date.now() - (Number(ts) || 0);
+      var m = Math.floor(d / 60000);
+      if (m < 1) return "剛剛";
+      if (m < 60) return m + " 分鐘前";
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + " 小時前";
+      return Math.floor(h / 24) + " 天前";
+    }
+    function applyGender() {
+      document.querySelectorAll(".body-svg").forEach(function (el) {
+        el.classList.toggle("is-off", el.getAttribute("data-gender") !== gender);
+      });
+      document.querySelectorAll("#genderSeg button").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-gender") === gender);
+      });
+    }
+    function inRange(date) {
+      if (chartRange === "all") return true;
+      var days = Number(chartRange) || 90;
+      var cut = new Date(); cut.setDate(cut.getDate() - days);
+      return date >= cut.toISOString().slice(0, 10);
+    }
       var seen = {}, out = [];
       sets.forEach(function (s) {
         var n = String(s.exercise || "").trim();
@@ -743,6 +880,7 @@
       document.getElementById("chips").innerHTML = names.map(function (n) {
         return "<button class=\"chip\" data-chip=\"" + n + "\">" + n + "</button>";
       }).join("");
+      updateLastHint();
       renderPerf();
       renderSched();
       renderFromList();
@@ -803,7 +941,7 @@
 
     var chart;
     function renderCharts() {
-      var sets = loadSets();
+      var sets = loadSets().filter(function (s) { return inRange(s.date); });
       var by = {};
       sets.forEach(function (s) {
         var k = s.exercise;
@@ -881,11 +1019,38 @@
       render();
     });
 
+    document.getElementById("exercise").addEventListener("input", updateLastHint);
+    document.getElementById("sessionDate").addEventListener("change", updateLastHint);
+    document.getElementById("chartRange").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-range]"); if (!b) return;
+      chartRange = b.getAttribute("data-range");
+      document.querySelectorAll("#chartRange button").forEach(function (x) { x.classList.toggle("active", x === b); });
+      renderCharts(); updateBodyMaps();
+    });
+    document.getElementById("genderSeg").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-gender]"); if (!b) return;
+      gender = b.getAttribute("data-gender");
+      localStorage.setItem("workout-tracker-web-app.gender", gender);
+      applyGender();
+    });
     document.getElementById("logList").addEventListener("click", function (e) {
+      var edit = e.target.closest("[data-edit]");
+      if (edit) {
+        var id = edit.getAttribute("data-edit");
+        var sets = loadSets();
+        var s = sets.filter(function (x) { return x.id === id; })[0];
+        if (!s) return;
+        var name = prompt("動作", s.exercise); if (name == null) return;
+        var w = prompt("重量 (" + unit + ")", String(Math.round(fromKg(s.weight) * 10) / 10)); if (w == null) return;
+        var r = prompt("次數", String(s.reps)); if (r == null) return;
+        s.exercise = name.trim() || s.exercise;
+        s.weight = toKg(w);
+        s.reps = Number(r) || s.reps;
+        saveSets(sets); render(); return;
+      }
       var btn = e.target.closest("[data-del]");
       if (!btn) return;
-      var id = btn.getAttribute("data-del");
-      saveSets(loadSets().filter(function (s) { return s.id !== id; }));
+      saveSets(loadSets().filter(function (s) { return s.id !== btn.getAttribute("data-del"); }));
       render();
     });
 
@@ -1010,7 +1175,52 @@
       var parent = pane.parentElement;
       if (parent) parent.querySelectorAll(".tab-pane").forEach(function (p) { p.classList.toggle("active", p === pane); p.classList.toggle("show", p === pane); });
     });
-    render();
+    document.getElementById("exportSqlBtn").addEventListener("click", function () {
+      if (!sqlDb) return;
+      var bytes = sqlDb.export();
+      var blob = new Blob([bytes], { type: "application/x-sqlite3" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "workout.sqlite";
+      a.click();
+    });
+    document.getElementById("importFile").addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        var name = file.name.toLowerCase();
+        if (name.endsWith(".json")) {
+          try {
+            var data = JSON.parse(reader.result);
+            var rows = Array.isArray(data) ? data : (data.sets || []);
+            if (rows.length) { saveSets(rows); render(); }
+          } catch (err) {}
+        } else if (SQL_LIB) {
+          try {
+            sqlDb = new SQL_LIB.Database(new Uint8Array(reader.result));
+            ensureSchema();
+            memoryStore.sets = rowsFromSql();
+            persistSql();
+            render();
+          } catch (err) {}
+        }
+      };
+      if (file.name.toLowerCase().endsWith(".json")) reader.readAsText(file);
+      else reader.readAsArrayBuffer(file);
+      e.target.value = "";
+    });
+    fetch("muscles.json").then(function (r) { return r.json(); }).then(function (data) {
+      if (data && (data.exercises || data.keywords)) MUSCLE_DATA = data;
+    }).catch(function () {});
+    setInterval(function () {
+      document.querySelectorAll("[data-ago]").forEach(function (el) {
+        el.textContent = timeAgo(el.getAttribute("data-ago"));
+      });
+    }, 30000);
+    applyGender();
+    setUnit(unit);
+    initSql().then(function () { render(); });
   })();
   </script>
 </body>
