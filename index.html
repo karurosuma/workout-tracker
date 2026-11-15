@@ -346,18 +346,18 @@
 
     .app-nav-bar {
       position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: max(8px, env(safe-area-inset-bottom, 0px));
-      width: auto;
-      background: rgba(40, 34, 12, 0.55);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      background: rgba(20, 16, 4, 0.72);
       backdrop-filter: saturate(180%) blur(32px);
       -webkit-backdrop-filter: saturate(180%) blur(32px);
-      border: 0.5px solid rgba(255, 214, 10, 0.28);
-      border-radius: 28px;
-      box-shadow: 0 10px 36px rgba(0, 0, 0, 0.4), inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
+      border-top: 0.5px solid rgba(255, 214, 10, 0.28);
+      border-radius: 0;
+      box-shadow: none;
       z-index: 1030;
-      padding: 6px 6px;
+      padding: 6px 12px max(6px, env(safe-area-inset-bottom, 0px));
     }
 
     .app-nav-bar .container {
