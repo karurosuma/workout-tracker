@@ -1278,6 +1278,7 @@
           <p class="mb-0 small text-muted-2" data-i18n="chartsHint">每個動作的最高重量與訓練容量</p>
           <div class="chart-range mt-2">
             <select class="form-select" id="chartRangePreset">
+              <option value="7" data-i18n="range7">近 7 天</option>
               <option value="30" data-i18n="range30">近 30 天</option>
               <option value="90" selected data-i18n="range90">近 90 天</option>
               <option value="all" data-i18n="rangeAll">全部日期</option>
@@ -1342,7 +1343,11 @@
           <div class="body-unmatched" id="bodyUnmatched"></div>
         </section>
         <div id="chartsList"></div>
-        <div id="weekSets" class="mb-4"></div>
+        <div class="section-head mb-2">
+          <h3 class="h6 mb-0" data-i18n="weekSets">本週組數</h3>
+          <span class="small text-muted-2" data-i18n="weekSetsHint">本週各動作總組數</span>
+        </div>
+        <section class="card-panel p-3 mb-4" id="weekSets"></section>
         <div class="section-head mb-2">
           <ul class="nav nav-pills body-tabs" id="chartModeTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -1357,12 +1362,15 @@
       </div>
 
       <div class="tab-pane fade" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" tabindex="0">
-        <div class="section-head mb-2">
-          <h2 class="h5 mb-0" data-i18n="scheduleTitle">課表</h2>
-          <span class="small text-muted-2" data-i18n="scheduleHint">先建立清單並命名，再加入動作</span>
-        </div>
-        <section class="card-panel p-3 mb-4" id="scheduleList"></section>
+        <div id="settingsMain">
         <section class="card-panel p-4">
+          <button class="settings-row w-100" id="openSchedule" type="button" style="background:transparent;border:0;text-align:left">
+            <div>
+              <div class="fw-semibold" data-i18n="scheduleTitle">課表</div>
+              <p class="small text-muted-2 mb-0" data-i18n="scheduleHint">先建立清單並命名，再加入動作</p>
+            </div>
+            <i class="bi bi-chevron-right"></i>
+          </button>
           <div class="settings-row" id="installRow">
             <div>
               <div class="fw-semibold" data-i18n="installTitle">安裝到主畫面</div>
@@ -1418,6 +1426,17 @@
             </div>
           </div>
         </section>
+        </div>
+        <div id="settingsSchedule" hidden>
+          <button class="btn btn-ghost mb-3" id="closeSchedule" type="button">
+            <i class="bi bi-chevron-left me-1"></i><span data-i18n="back">返回</span>
+          </button>
+          <div class="section-head mb-2">
+            <h2 class="h5 mb-0" data-i18n="scheduleTitle">課表</h2>
+            <span class="small text-muted-2" data-i18n="scheduleHint">先建立清單並命名，再加入動作</span>
+          </div>
+          <section class="card-panel p-3 mb-4" id="scheduleList"></section>
+        </div>
       </div>
     </div>
   </main>
@@ -1598,6 +1617,7 @@
           chartVolume: "容量",
           weekSets: "本週組數",
           weekSetsHint: "本週各動作總組數",
+          weekSetsEmpty: "本週尚無組數",
           chartsEmpty: "記錄至少一組後即可看到各動作圖表。",
           chartsEmptyRange: "這個日期範圍沒有紀錄。",
           chartsFail: "無法載入圖表，請確認已連上網路。",
@@ -1765,7 +1785,7 @@
           chartsHint: "Best weight and volume for each exercise",
           chartWeight: "Best weight",
           weekSets: "Sets this week",
-          weekSetsHint: "Total sets per exercise this week",
+          weekSetsEmpty: "No sets this week",
           chartsEmpty: "Log at least one set to see per-exercise charts.",
           chartsEmptyRange: "No sets in this date range.",
           chartsFail: "Charts could not load. Check your network connection.",
@@ -1781,7 +1801,7 @@
           tabCharts: "Charts",
           tabSettings: "Settings",
           tabSchedule: "Schedule",
-          scheduleTitle: "Schedule",
+          back: "Back",
           logModeAdd: "Add",
           logModeList: "From list",
           logFromListHint: "Pick a schedule list and log sets",
@@ -3391,19 +3411,15 @@
         });
         var names = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
         if (!names.length) {
-          box.innerHTML = "";
+          box.innerHTML = "<div class=\"small text-muted-2\">" + escapeHtml(t("weekSetsEmpty")) + "</div>";
           return;
         }
-        box.innerHTML = "<div class=\"section-head mb-2\"><h3 class=\"h6 mb-0\">" + escapeHtml(t("weekSets")) + "</h3>" +
-          "<span class=\"small text-muted-2\">" + escapeHtml(t("weekSetsHint")) + "</span></div>" +
-          "<section class=\"card-panel p-3\">" +
-          names.map(function (name) {
-            return "<div class=\"d-flex justify-content-between align-items-center py-1\">" +
-              "<span>" + escapeHtml(name) + "</span>" +
-              "<span class=\"fw-semibold\">" + counts[name] + "</span>" +
-              "</div>";
-          }).join("") +
-          "</section>";
+        box.innerHTML = names.map(function (name) {
+          return "<div class=\"d-flex justify-content-between align-items-center py-2 border-bottom\">" +
+            "<span>" + escapeHtml(name) + "</span>" +
+            "<span class=\"fw-semibold\">" + counts[name] + "</span>" +
+            "</div>";
+        }).join("");
       }
       function render() {
         var sets = loadSets().sort(function (a, b) {
@@ -3832,6 +3848,15 @@
         showStatus("ok", t("cleared"));
       }
 
+      document.getElementById("openSchedule").addEventListener("click", function () {
+        document.getElementById("settingsMain").hidden = true;
+        document.getElementById("settingsSchedule").hidden = false;
+        renderSchedule();
+      });
+      document.getElementById("closeSchedule").addEventListener("click", function () {
+        document.getElementById("settingsSchedule").hidden = true;
+        document.getElementById("settingsMain").hidden = false;
+      });
       document.getElementById("clearAllBtn").addEventListener("click", function () {
         showClearPrompt();
       });
