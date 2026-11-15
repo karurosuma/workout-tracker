@@ -1342,7 +1342,7 @@
       <div class="tab-pane fade" id="tab-schedule" role="tabpanel" aria-labelledby="tab-schedule-btn" tabindex="0">
         <div class="section-head mb-2">
           <h2 class="h5 mb-0" data-i18n="scheduleTitle">課表</h2>
-          <span class="small text-muted-2" data-i18n="scheduleHint">預先設定每週訓練動作</span>
+          <span class="small text-muted-2" data-i18n="scheduleHint">預先設定動作清單</span>
         </div>
         <section class="card-panel p-3 mb-4" id="scheduleList"></section>
       </div>
@@ -1603,7 +1603,7 @@
           tabSettings: "設定",
           tabSchedule: "課表",
           scheduleTitle: "課表",
-          scheduleHint: "預先設定每週訓練動作",
+          scheduleHint: "預先設定動作清單",
           scheduleAdd: "新增",
           scheduleEmpty: "尚無動作",
           schedulePlaceholder: "動作名稱",
@@ -1760,7 +1760,7 @@
           tabSettings: "Settings",
           tabSchedule: "Schedule",
           scheduleTitle: "Schedule",
-          scheduleHint: "Predefine weekly exercises",
+          scheduleHint: "Predefine exercise list",
           scheduleAdd: "Add",
           scheduleEmpty: "No exercises",
           schedulePlaceholder: "Exercise name",
@@ -2203,61 +2203,44 @@
         }
       }
 
-      var SCHEDULE_DAYS = [
-        { id: "mon", key: "dayMon" },
-        { id: "tue", key: "dayTue" },
-        { id: "wed", key: "dayWed" },
-        { id: "thu", key: "dayThu" },
-        { id: "fri", key: "dayFri" },
-        { id: "sat", key: "daySat" },
-        { id: "sun", key: "daySun" }
-      ];
-
-      function emptySchedule() {
-        var s = {};
-        SCHEDULE_DAYS.forEach(function (d) { s[d.id] = []; });
-        return s;
-      }
-
       function loadSchedule() {
         try {
           var raw = localStorage.getItem(SCHEDULE_KEY);
-          if (!raw) return emptySchedule();
+          if (!raw) return [];
           var parsed = JSON.parse(raw);
-          var s = emptySchedule();
-          SCHEDULE_DAYS.forEach(function (d) {
-            if (Array.isArray(parsed[d.id])) s[d.id] = parsed[d.id].filter(function (x) { return String(x || "").trim(); });
-          });
-          return s;
-        } catch (err) { return emptySchedule(); }
+          if (Array.isArray(parsed)) return parsed.filter(function (x) { return String(x || "").trim(); });
+          if (parsed && typeof parsed === "object") {
+            var names = [];
+            Object.keys(parsed).forEach(function (k) {
+              if (Array.isArray(parsed[k])) parsed[k].forEach(function (n) { if (String(n || "").trim()) names.push(String(n).trim()); });
+            });
+            return names;
+          }
+          return [];
+        } catch (err) { return []; }
       }
 
-      function saveSchedule(schedule) {
-        try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(schedule)); } catch (err) {}
+      function saveSchedule(list) {
+        try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(list)); } catch (err) {}
       }
 
       function renderSchedule() {
         var list = document.getElementById("scheduleList");
         if (!list) return;
-        var schedule = loadSchedule();
-        list.innerHTML = SCHEDULE_DAYS.map(function (d) {
-          var items = schedule[d.id] || [];
-          var rows = items.length
-            ? items.map(function (name, i) {
-                return "<div class=\"d-flex justify-content-between align-items-center gap-2 mb-2\">" +
-                  "<span class=\"fw-semibold\">" + escapeHtml(name) + "</span>" +
-                  "<button class=\"btn btn-ghost btn-sm text-danger\" type=\"button\" data-sched-del=\"" + d.id + "\" data-sched-idx=\"" + i + "\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-x-lg\"></i></button>" +
-                  "</div>";
-              }).join("")
-            : "<div class=\"small text-muted-2 mb-2\">" + escapeHtml(t("scheduleEmpty")) + "</div>";
-          return "<div class=\"mb-4\">" +
-            "<div class=\"fw-semibold mb-2\">" + escapeHtml(t(d.key)) + "</div>" +
-            rows +
-            "<div class=\"d-flex gap-2\">" +
-            "<input class=\"form-control\" data-sched-input=\"" + d.id + "\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" />" +
-            "<button class=\"btn btn-accent\" type=\"button\" data-sched-add=\"" + d.id + "\">" + escapeHtml(t("scheduleAdd")) + "</button>" +
-            "</div></div>";
-        }).join("");
+        var names = loadSchedule();
+        var rows = names.length
+          ? names.map(function (name, i) {
+              return "<div class=\"d-flex justify-content-between align-items-center gap-2 mb-2\">" +
+                "<span class=\"fw-semibold\">" + escapeHtml(name) + "</span>" +
+                "<button class=\"btn btn-ghost btn-sm text-danger\" type=\"button\" data-sched-del=\"" + i + "\" aria-label=\"" + escapeHtml(t("clear")) + "\"><i class=\"bi bi-x-lg\"></i></button>" +
+                "</div>";
+            }).join("")
+          : "<div class=\"small text-muted-2 mb-3\">" + escapeHtml(t("scheduleEmpty")) + "</div>";
+        list.innerHTML = rows +
+          "<div class=\"d-flex gap-2 mt-2\">" +
+          "<input class=\"form-control\" id=\"scheduleInput\" placeholder=\"" + escapeHtml(t("schedulePlaceholder")) + "\" />" +
+          "<button class=\"btn btn-accent\" type=\"button\" id=\"scheduleAddBtn\">" + escapeHtml(t("scheduleAdd")) + "</button>" +
+          "</div>";
       }
 
       var SQL_READY = null;
@@ -3757,42 +3740,37 @@
       });
 
       document.getElementById("scheduleList").addEventListener("click", function (event) {
-        var addBtn = event.target.closest("[data-sched-add]");
+        var addBtn = event.target.closest("#scheduleAddBtn");
         var delBtn = event.target.closest("[data-sched-del]");
-        var schedule = loadSchedule();
+        var names = loadSchedule();
         if (addBtn) {
-          var day = addBtn.getAttribute("data-sched-add");
-          var input = document.querySelector("[data-sched-input=\"" + day + "\"]");
+          var input = document.getElementById("scheduleInput");
           var name = input ? String(input.value || "").trim() : "";
           if (!name) return;
-          schedule[day] = schedule[day] || [];
-          schedule[day].push(name);
-          saveSchedule(schedule);
+          names.push(name);
+          saveSchedule(names);
           renderSchedule();
           return;
         }
         if (delBtn) {
-          var day2 = delBtn.getAttribute("data-sched-del");
-          var idx = Number(delBtn.getAttribute("data-sched-idx"));
-          if (schedule[day2] && isFinite(idx)) {
-            schedule[day2].splice(idx, 1);
-            saveSchedule(schedule);
+          var idx = Number(delBtn.getAttribute("data-sched-del"));
+          if (isFinite(idx)) {
+            names.splice(idx, 1);
+            saveSchedule(names);
             renderSchedule();
           }
         }
       });
       document.getElementById("scheduleList").addEventListener("keydown", function (event) {
         if (event.key !== "Enter") return;
-        var input = event.target.closest("[data-sched-input]");
+        var input = event.target.closest("#scheduleInput");
         if (!input) return;
         event.preventDefault();
-        var day = input.getAttribute("data-sched-input");
         var name = String(input.value || "").trim();
         if (!name) return;
-        var schedule = loadSchedule();
-        schedule[day] = schedule[day] || [];
-        schedule[day].push(name);
-        saveSchedule(schedule);
+        var names = loadSchedule();
+        names.push(name);
+        saveSchedule(names);
         renderSchedule();
       });
       renderSchedule();
