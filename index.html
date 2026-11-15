@@ -28,10 +28,17 @@
     html, body {
       margin: 0;
       height: 100%;
-      background: var(--bg);
+      background: #000;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", system-ui, sans-serif;
       overflow: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -100px;
+      background: #000;
+      z-index: -1;
     }
     .top {
       position: fixed;
@@ -94,10 +101,20 @@
       position: fixed;
       left: 0; right: 0; bottom: 0;
       display: flex;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      background: #000;
       border-top: 0.5px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      z-index: 20;
+    }
+    .tabs::after {
+      content: "";
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: env(safe-area-inset-bottom, 34px);
+      background: #000;
+      z-index: 19;
+      pointer-events: none;
+    }
       padding-bottom: env(safe-area-inset-bottom);
       z-index: 20;
     }
