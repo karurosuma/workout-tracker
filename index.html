@@ -706,8 +706,11 @@
         return s;
       }
       function escapeHtml(s) {
-        return String(s || "").replace(/[&<>"]/g, function (c) {
-          return c === "&" ? "&" : c === "<" ? "<" : c === ">" ? ">" : """;
+        return String(s || "").replace(/[&<>\"]/g, function (c) {
+          if (c === "&") return "\u0026amp;";
+          if (c === "<") return "\u003c";
+          if (c === ">") return "\u003e";
+          return "\u0022";
         });
       }
       function updateBodyMaps() {
@@ -858,6 +861,7 @@
       var cut = new Date(); cut.setDate(cut.getDate() - days);
       return date >= cut.toISOString().slice(0, 10);
     }
+    function unique(sets) {
       var seen = {}, out = [];
       sets.forEach(function (s) {
         var n = String(s.exercise || "").trim();
