@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
   <title>workout-tracker</title>
   <meta name="color-scheme" content="dark" />
-  <meta name="theme-color" content="#3a2e08" />
+  <meta name="theme-color" content="#2a2208" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Workout" />
@@ -15,134 +15,116 @@
   <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
   <style>
     :root {
-      --bg: #000;
-      --card: #1c1c1e;
-      --field: #2c2c2e;
+      --bg: #3a2e08;
+      --bg-deep: #2a2208;
+      --card: rgba(28, 28, 30, 0.62);
+      --field: rgba(44, 44, 46, 0.78);
       --text: #fff;
-      --muted: #8e8e93;
+      --muted: #aeaeb2;
       --accent: #ffd60a;
-      --line: rgba(255,255,255,0.1);
+      --line: rgba(255, 255, 255, 0.12);
       --danger: #ff453a;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       margin: 0;
       height: 100%;
       min-height: 100%;
       min-height: -webkit-fill-available;
-      background: #3a2e08;
+      min-height: 100dvh;
+      background-color: var(--bg);
+      background-image: linear-gradient(180deg, #8a6c16 0%, #4a380c 22%, #3a2e08 55%, #2a2208 100%);
+      background-attachment: fixed;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang TC", system-ui, sans-serif;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
     }
-    body::after {
-      content: "";
-      position: fixed;
-      left: 0; right: 0; bottom: -40px;
-      height: 140px;
-      background: #3a2e08;
-      z-index: 25;
-      pointer-events: none;
-    }
+    button, input, select { font-family: inherit; font-size: 16px; }
+    button { cursor: pointer; }
+    button:active { transform: scale(0.97); }
+    ul, ol { margin: 0; padding: 0; list-style: none; }
     .top {
       position: fixed;
       top: 0; left: 0; right: 0;
-      height: calc(52px + env(safe-area-inset-top));
-      padding-top: env(safe-area-inset-top);
-      display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: 10px;
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: saturate(180%) blur(40px);
-      -webkit-backdrop-filter: saturate(180%) blur(40px);
-      border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
-      z-index: 30;
-    }
-    .top h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
-    .pages {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: calc(64px + env(safe-area-inset-top)) 16px 88px;
-    }
-    .top {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: calc(52px + env(safe-area-inset-top));
+      height: calc(48px + env(safe-area-inset-top));
       padding-top: env(safe-area-inset-top);
       display: flex; align-items: flex-end; justify-content: center;
       padding-bottom: 8px;
-      background: rgba(0,0,0,0.72);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 0.5px solid var(--line);
-      z-index: 20;
+      background: rgba(42, 34, 8, 0.55);
+      backdrop-filter: saturate(180%) blur(28px);
+      -webkit-backdrop-filter: saturate(180%) blur(28px);
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+      z-index: 40;
     }
-    .top h1 { margin: 0; font-size: 17px; font-weight: 600; }
+    .top h1 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -0.02em; }
     .pages {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
+      max-width: 480px;
+      margin: 0 auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(60px + env(safe-area-inset-top)) 16px 120px;
+      padding: calc(56px + env(safe-area-inset-top)) 16px 92px;
+      z-index: 1;
+      background: transparent;
     }
-    .card { overflow: visible; }
-    input, select { max-width: 100%; min-width: 0; box-sizing: border-box; }
-    .row { display: flex; gap: 8px; align-items: center; width: 100%; }
-    .row > input { flex: 1; min-width: 0; margin: 0; }
-    .row .seg { flex: 0 0 120px; margin: 0; }
     .page { display: none; }
     .page.active { display: block; }
+    .hidden { display: none !important; }
     .card {
-      background: rgba(28, 28, 30, 0.55);
-      backdrop-filter: saturate(160%) blur(28px);
-      -webkit-backdrop-filter: saturate(160%) blur(28px);
+      background: var(--card);
+      backdrop-filter: saturate(160%) blur(24px);
+      -webkit-backdrop-filter: saturate(160%) blur(24px);
       border-radius: 22px;
       padding: 16px;
-      margin-bottom: 14px;
-      border: 0.5px solid rgba(255, 255, 255, 0.12);
-      box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
+      margin-bottom: 12px;
+      border: 0.5px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.16);
     }
-    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; letter-spacing: -0.01em; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px; font-weight: 560; }
     input, select {
       display: block;
       width: 100%;
       max-width: 100%;
       min-width: 0;
-      background: rgba(44, 44, 46, 0.7);
+      background: var(--field);
       color: var(--text);
       border: 0.5px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
-      padding: 13px 14px;
+      padding: 12px 14px;
       margin: 0 0 12px;
-      box-sizing: border-box;
     }
+    input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+    .row { display: flex; gap: 8px; align-items: center; width: 100%; min-width: 0; margin-bottom: 12px; }
+    .row > input { flex: 1 1 auto; width: auto; margin: 0; min-width: 0; }
+    .row .seg { flex: 0 0 132px; margin: 0; }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       background: linear-gradient(180deg, #ffe566 0%, #ffd60a 100%);
       color: #000;
       border: 0; border-radius: 16px;
-      padding: 14px 16px; font-weight: 600;
+      padding: 14px 16px; font-weight: 650;
       width: 100%;
-      box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.45);
+      box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.55);
     }
-    .btn-ghost { background: rgba(44, 44, 46, 0.8); color: var(--text); box-shadow: none; }
+    .btn-ghost { background: rgba(44, 44, 46, 0.85); color: var(--text); box-shadow: none; }
     .btn-danger { background: var(--danger); color: #fff; box-shadow: none; }
     .seg {
       display: flex;
-      background: rgba(44, 44, 46, 0.65);
+      background: rgba(44, 44, 46, 0.72);
       border-radius: 12px;
       padding: 3px;
       margin-bottom: 12px;
-      border: 0.5px solid rgba(255, 255, 255, 0.08);
-    }
-    .seg button { flex: 1; background: transparent; color: var(--muted); border: 0; border-radius: 9px; padding: 8px; font-weight: 600; }
-    .seg button.active { background: var(--accent); color: #000; }
-    .chip {
-      background: rgba(44, 44, 46, 0.7);
-      color: var(--text);
       border: 0.5px solid rgba(255, 255, 255, 0.1);
+    }
+    .seg button { flex: 1; background: transparent; color: var(--muted); border: 0; border-radius: 9px; padding: 8px 6px; font-weight: 650; }
+    .seg button.active { background: var(--accent); color: #000; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      background: rgba(44, 44, 46, 0.75);
+      color: var(--text);
+      border: 0.5px solid rgba(255, 255, 255, 0.12);
       border-radius: 999px;
       padding: 7px 14px;
       font-size: 14px;
@@ -151,76 +133,97 @@
       position: fixed;
       left: 50%;
       transform: translateX(-50%);
-      width: min(448px, calc(100% - 32px));
-      bottom: 0;
-      height: 56px;
+      width: min(448px, calc(100% - 20px));
+      bottom: 6px;
+      height: 58px;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       gap: 2px;
       padding: 4px;
-      background: rgba(44, 44, 46, 0.62);
-      backdrop-filter: saturate(180%) blur(40px);
-      -webkit-backdrop-filter: saturate(180%) blur(40px);
-      border: 0.5px solid rgba(255, 255, 255, 0.22);
-      border-radius: 28px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 0.5px 0 rgba(255, 255, 255, 0.28);
-      z-index: 30;
+      background: rgba(58, 46, 8, 0.55);
+      backdrop-filter: saturate(180%) blur(32px);
+      -webkit-backdrop-filter: saturate(180%) blur(32px);
+      border: 0.5px solid rgba(255, 214, 10, 0.28);
+      border-radius: 29px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28), inset 0 0.5px 0 rgba(255, 255, 255, 0.28);
+      z-index: 40;
     }
     .tabs button {
       flex: 1;
-      height: 48px;
+      height: auto;
       background: transparent;
-      color: #8e8e93;
+      color: #d1d1d6;
       border: 0;
-      padding: 4px 2px;
+      padding: 2px 2px 1px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 2px;
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 650;
       line-height: 1;
-      border-radius: 22px;
+      border-radius: 24px;
     }
     .tabs button i { font-size: 20px; line-height: 1; }
-    .tabs button.active {
-      color: #000;
-      background: var(--accent);
-    }
-    .pages { z-index: 1; }
-    .top, .tabs { z-index: 30; pointer-events: auto; }
-    button, .chip, .seg button, .tabs button { cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
-    button { type: button; }
-    .set { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
+    .tabs button.active { color: #000; background: var(--accent); }
+    .set { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
     .set:last-child { border-bottom: 0; }
+    .set .btn-ghost { width: auto; padding: 8px 12px; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.16); }
     .muted { color: var(--muted); font-size: 13px; }
-
-    .body-figure { position: relative; width: 100%; max-width: 420px; aspect-ratio: 2/3; margin: 0 auto; max-height: 60vh; }
+    .body-tabs {
+      display: flex;
+      width: 100%;
+      gap: 0;
+      background: rgba(44, 44, 46, 0.8);
+      border-radius: 12px;
+      padding: 3px;
+      margin: 0 0 12px;
+    }
+    .body-tabs .nav-item { flex: 1 1 0; display: flex; min-width: 0; }
+    .body-tabs .nav-link {
+      flex: 1;
+      width: 100%;
+      display: block;
+      text-align: center;
+      background: transparent;
+      color: var(--muted);
+      border: 0;
+      border-radius: 9px;
+      padding: 8px 4px;
+      font-weight: 650;
+    }
+    .body-tabs .nav-link.active { background: var(--accent); color: #000; }
+    .tab-pane { display: none; }
+    .tab-pane.active, .tab-pane.show { display: block; }
+    .body-map, .body-col, .body-stage { position: relative; width: 100%; max-width: 100%; }
+    .body-figure {
+      position: relative;
+      width: min(100%, 280px);
+      aspect-ratio: 2 / 3;
+      margin: 0 auto;
+      max-height: 52vh;
+    }
     .body-svg { width: 100%; height: 100%; display: block; }
-    .body-svg.is-off { display: none; }
+    .body-svg.is-off { display: none !important; }
     .body-region { stroke: none; pointer-events: none; }
     .body-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-    .body-pct { position: absolute; width: 68px; padding: 4px; border-radius: 8px; background: #1c1c1e; border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; text-align: center; }
+    .body-pct {
+      position: absolute;
+      width: 64px;
+      padding: 4px;
+      border-radius: 8px;
+      background: rgba(28, 28, 30, 0.9);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
     .body-pct[data-side="left"] { left: 0; }
     .body-pct[data-side="right"] { right: 0; }
-    .body-stage { position: relative; }
-    .tab-pane { display: none; }
-    .hidden { display: none !important; }
-    input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; display: block; }
-    .body-figure { max-width: 100%; overflow: hidden; }
-    .body-map, .body-col, .body-stage { max-width: 100%; overflow: hidden; }
-    #page-perf .card, #page-charts .card { overflow: hidden; }
-    .tab-pane.active, .tab-pane.show { display: block; }
-    .pages { max-width: 480px; margin: 0 auto; left: 0; right: 0; }
-    .body-tabs { display: flex; gap: 4px; background: var(--field); border-radius: 12px; padding: 3px; margin-bottom: 12px; list-style: none; }
-    .body-tabs .nav-item { flex: 1; list-style: none; }
-    .body-tabs .nav-link { display: block; width: 100%; text-align: center; background: transparent; color: var(--muted); border: 0; border-radius: 9px; padding: 8px; font-weight: 600; }
-    .body-tabs .nav-link.active { background: var(--accent); color: #000; }
-    .body-figure { position: relative; width: 100%; max-width: 320px; aspect-ratio: 2/3; margin: 0 auto; }
-    .body-svg { width: 100%; height: 100%; display: block; }
-    .body-map, .body-col, .body-stage { width: 100%; max-width: 100%; }
-    #page-perf .card, #page-charts .card { overflow: visible; }
+    .section-head { margin: 8px 4px; }
+    .section-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -424,6 +427,7 @@
     var IDB_KEY = "sets";
     var SCHED = "workout-tracker-web-app.schedule.v1";
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
+    var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
       zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", load: "Load", save: "Save" },
       en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", load: "Load", save: "Save" }
@@ -431,7 +435,10 @@
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
       var set = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text; };
-      set("title", t.title);
+      var active = document.querySelector(".page.active");
+      var pageId = active ? active.id.replace("page-", "") : "log";
+      var titles = { log: t.title, perf: t.perf, charts: t.charts, set: t.set, lists: (locale === "en" ? "Lists" : "課表") };
+      set("title", titles[pageId] || t.title);
       document.querySelectorAll("#logMode button").forEach(function (b) {
         b.textContent = b.getAttribute("data-mode") === "add" ? t.add : t.fromList;
       });
@@ -1083,8 +1090,7 @@
         document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.toggle("active", b === btn); });
         var page = btn.getAttribute("data-page");
         document.querySelectorAll(".page").forEach(function (p) { p.classList.toggle("active", p.id === "page-" + page); });
-        var titles = { log: "記錄", perf: "表現", charts: "圖表", sched: "課表", set: "設定" };
-        document.getElementById("title").textContent = titles[page] || "";
+        applyLang();
         if (page === "charts") renderCharts();
       });
     });
