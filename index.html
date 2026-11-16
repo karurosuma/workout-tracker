@@ -22,6 +22,10 @@
       --text: #fff;
       --muted: #aeaeb2;
       --accent: #ffd60a;
+      --bg-top: #8a6c16;
+      --bg-mid: #4a380c;
+      --bg-bot: #2a2208;
+      --bar: rgba(58, 46, 8, 0.55);
       --line: rgba(255, 255, 255, 0.12);
       --danger: #ff453a;
     }
@@ -32,8 +36,8 @@
       min-height: 100%;
       min-height: -webkit-fill-available;
       min-height: 100dvh;
-      background-color: var(--bg);
-      background-image: linear-gradient(180deg, #8a6c16 0%, #4a380c 22%, #3a2e08 55%, #2a2208 100%);
+      background-color: var(--bg-bot);
+      background-image: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 40%, var(--bg-bot) 100%);
       background-attachment: fixed;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang TC", system-ui, sans-serif;
@@ -159,10 +163,10 @@
       align-items: stretch;
       gap: 2px;
       padding: 4px;
-      background: rgba(58, 46, 8, 0.55);
+      background: var(--bar);
       backdrop-filter: saturate(180%) blur(32px);
       -webkit-backdrop-filter: saturate(180%) blur(32px);
-      border: 0.5px solid rgba(255, 214, 10, 0.28);
+      border: 0.5px solid color-mix(in srgb, var(--accent) 45%, transparent);
       border-radius: 29px;
       box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28), inset 0 0.5px 0 rgba(255, 255, 255, 0.28);
       z-index: 40;
@@ -224,13 +228,18 @@
     .tab-pane.active { display: block !important; }
     .body-map, .body-col, .body-stage { position: relative; width: 100%; max-width: 100%; }
     .body-region.hot { fill-opacity: 0.78; }
-    #themeSeg { flex-wrap: wrap; }
-    #themeSeg button[data-theme="red"] { color: #ff453a; }
-    #themeSeg button[data-theme="green"] { color: #30d158; }
-    #themeSeg button[data-theme="yellow"] { color: #ffd60a; }
-    #themeSeg button[data-theme="blue"] { color: #0a84ff; }
-    #themeSeg button[data-theme="orange"] { color: #ff9f0a; }
-    #themeSeg button.active { color: #000; background: var(--accent); }
+    .swatches { display: flex; gap: 14px; align-items: center; margin: 0 0 16px; }
+    .swatches button {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 2px solid transparent; padding: 0; flex: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+    }
+    .swatches button[data-theme="red"] { background: #ff453a; }
+    .swatches button[data-theme="green"] { background: #30d158; }
+    .swatches button[data-theme="yellow"] { background: #ffd60a; }
+    .swatches button[data-theme="blue"] { background: #0a84ff; }
+    .swatches button[data-theme="orange"] { background: #ff9f0a; }
+    .swatches button.active { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.35); }
     .chip.on { background: var(--accent); color: #000; }
     .body-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     .body-pct {
@@ -429,12 +438,12 @@
           <button type="button" data-gender="female" data-i18n="female">女</button>
         </div>
         <label data-i18n="theme">主題色</label>
-        <div class="seg" id="themeSeg">
-          <button type="button" data-theme="red" data-i18n="red">紅</button>
-          <button type="button" data-theme="green" data-i18n="green">綠</button>
-          <button type="button" class="active" data-theme="yellow" data-i18n="yellow">黃</button>
-          <button type="button" data-theme="blue" data-i18n="blue">藍</button>
-          <button type="button" data-theme="orange" data-i18n="orange">橙</button>
+        <div class="swatches" id="themeSeg">
+          <button type="button" data-theme="red" aria-label="Red"></button>
+          <button type="button" data-theme="green" aria-label="Green"></button>
+          <button type="button" class="active" data-theme="yellow" aria-label="Yellow"></button>
+          <button type="button" data-theme="blue" aria-label="Blue"></button>
+          <button type="button" data-theme="orange" aria-label="Orange"></button>
         </div>
         <div class="file-btn">
           <button type="button" class="btn btn-ghost" id="loadBtn">Load</button>
@@ -451,12 +460,12 @@
           <button type="button" class="active" data-unit="kg">kg</button>
           <button type="button" data-unit="lbs">lbs</button>
         </div>
-        <button type="button" class="btn btn-ghost" id="exportBtn" style="margin-bottom:8px">匯出 JSON</button>
+        <button type="button" class="btn btn-ghost" id="exportBtn" data-i18n="exportJson" style="margin-bottom:8px">匯出 JSON</button>
         <button type="button" class="btn btn-danger" id="clearBtn">清除全部</button>
       </div>
     </section>
     <section class="page" id="page-lists">
-      <button type="button" class="btn btn-ghost" id="backSettings" style="margin-bottom:12px">返回</button>
+      <button type="button" class="btn btn-ghost" id="backSettings" data-i18n="back" style="margin-bottom:12px">返回</button>
       <div class="card" id="sched"></div>
     </section>
   </main>
@@ -472,7 +481,13 @@
   (function () {
     var gender = localStorage.getItem("workout-tracker-web-app.gender") || "male";
     var theme = localStorage.getItem("workout-tracker-web-app.theme") || "yellow";
-    var THEMES = { red: "#ff453a", green: "#30d158", yellow: "#ffd60a", blue: "#0a84ff", orange: "#ff9f0a" };
+    var THEMES = {
+      red:    { accent: "#ff453a", top: "#6b2418", mid: "#3a120c", bot: "#1c0a08", bar: "rgba(80, 24, 16, 0.62)" },
+      green:  { accent: "#30d158", top: "#1c5a28", mid: "#0e3016", bot: "#08180c", bar: "rgba(16, 60, 28, 0.62)" },
+      yellow: { accent: "#ffd60a", top: "#8a6c16", mid: "#4a380c", bot: "#2a2208", bar: "rgba(58, 46, 8, 0.62)" },
+      blue:   { accent: "#0a84ff", top: "#1a3f7a", mid: "#0e2244", bot: "#081018", bar: "rgba(16, 36, 72, 0.62)" },
+      orange: { accent: "#ff9f0a", top: "#7a4010", mid: "#3e2008", bot: "#1c1006", bar: "rgba(80, 40, 8, 0.62)" }
+    };
     var chartRange = "90";
     var sqlDb = null;
     var SQL_LIB = null;
@@ -484,8 +499,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "與上次同動作比較組數與容量", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Sets and volume vs last time", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "與上次同動作比較組數與容量", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "清除全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Sets and volume vs last time", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Clear all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -511,6 +526,10 @@
       set("loadBtn", t.load);
       set("saveBtn", t.save);
       set("clearBtn", t.clear);
+      set("exportBtn", t.exportJson);
+      set("backSettings", t.back);
+      var ex = document.getElementById("exercise");
+      if (ex) ex.placeholder = t.phExercise;
       document.querySelectorAll("[data-i18n], [data-i18n-key]").forEach(function (el) {
         if (el.children && el.children.length) return;
         var k = el.getAttribute("data-i18n") || el.getAttribute("data-i18n-key");
@@ -991,16 +1010,16 @@
       var hint = document.getElementById("lastWeightHint");
       if (!hint) return;
       var w = lastWeightFor(document.getElementById("exercise").value, document.getElementById("sessionDate").value);
-      hint.textContent = w == null ? "" : "上次 " + fmt(w);
+      hint.textContent = w == null ? "" : t("lastTime") + " " + fmt(w);
     }
     function timeAgo(ts) {
       var d = Date.now() - (Number(ts) || 0);
       var m = Math.floor(d / 60000);
-      if (m < 1) return "剛剛";
-      if (m < 60) return m + " 分鐘前";
+      if (m < 1) return t("justNow");
+      if (m < 60) return t("minAgo", { n: m });
       var h = Math.floor(m / 60);
-      if (h < 24) return h + " 小時前";
-      return Math.floor(h / 24) + " 天前";
+      if (h < 24) return t("hourAgo", { n: h });
+      return t("dayAgo", { n: Math.floor(h / 24) });
     }
     function applyGender() {
       document.querySelectorAll(".body-svg").forEach(function (el) { el.classList.remove("is-off"); });
@@ -1016,10 +1035,15 @@
       });
     }
     function applyTheme() {
-      var color = THEMES[theme] || THEMES.yellow;
-      document.documentElement.style.setProperty("--accent", color);
+      var pack = THEMES[theme] || THEMES.yellow;
+      var root = document.documentElement.style;
+      root.setProperty("--accent", pack.accent);
+      root.setProperty("--bg-top", pack.top);
+      root.setProperty("--bg-mid", pack.mid);
+      root.setProperty("--bg-bot", pack.bot);
+      root.setProperty("--bar", pack.bar);
       var meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", color);
+      if (meta) meta.setAttribute("content", pack.bot);
       document.querySelectorAll("#themeSeg button").forEach(function (b) {
         b.classList.toggle("active", b.getAttribute("data-theme") === theme);
       });
@@ -1148,11 +1172,11 @@
           return "<div class=\"set\"><span>" + n + "</span><button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
         }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
         return "<div style=\"margin-bottom:16px\"><div class=\"row\" style=\"align-items:center\"><b>" + item.name + "</b>" +
-          "<button class=\"btn-ghost\" data-sl=\"" + i + "\" style=\"width:auto;padding:6px 10px\">刪清單</button></div>" + rows +
-          "<div class=\"row\"><input data-se=\"" + i + "\" placeholder=\"動作\" /><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">加</button></div></div>";
+          "<button class=\"btn-ghost\" data-sl=\"" + i + "\" style=\"width:auto;padding:6px 10px\">" + t("deleteList") + "</button></div>" + rows +
+          "<div class=\"row\"><input data-se=\"" + i + "\" placeholder=\"" + t("phExercise") + "\" /><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">" + t("addItem") + "</button></div></div>";
       }).join("");
       document.getElementById("sched").innerHTML = html +
-        "<div class=\"row\"><input id=\"newList\" placeholder=\"清單名稱\" /><button class=\"btn\" id=\"addList\" style=\"width:auto\">建立</button></div>";
+        "<div class=\"row\"><input id=\"newList\" placeholder=\"" + t("phList") + "\" /><button class=\"btn\" id=\"addList\" style=\"width:auto\">" + t("create") + "</button></div>";
     }
 
     function renderFromList() {
@@ -1169,9 +1193,9 @@
       }).join("");
       var rows = (lists[idx].exercises || []).map(function (n, i) {
         return "<div style=\"margin-bottom:12px\"><b>" + n + "</b><div class=\"row\">" +
-          "<input data-lw=\"" + i + "\" placeholder=\"重量\" inputmode=\"decimal\" />" +
-          "<input data-lr=\"" + i + "\" placeholder=\"次數\" inputmode=\"numeric\" />" +
-          "<button class=\"btn\" data-ll=\"" + i + "\" data-ln=\"" + n + "\" style=\"width:auto\">記</button></div></div>";
+          "<input data-lw=\"" + i + "\" placeholder=\"" + t("phWeight") + "\" inputmode=\"decimal\" />" +
+          "<input data-lr=\"" + i + "\" placeholder=\"" + t("phReps") + "\" inputmode=\"numeric\" />" +
+          "<button class=\"btn\" data-ll=\"" + i + "\" data-ln=\"" + n + "\" style=\"width:auto\">" + t("logOne") + "</button></div></div>";
       }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
       document.getElementById("fromList").innerHTML = "<select id=\"listPick\">" + opts + "</select>" + rows;
     }
@@ -1467,7 +1491,7 @@
       a.click();
     });
     bind("clearBtn", "click", function () {
-      if (!confirm("清除全部紀錄？")) return;
+      if (!confirm(t("confirmClear"))) return;
       saveSets([]);
       render();
     });
