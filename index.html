@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content" />
   <title>workout-tracker</title>
   <meta name="color-scheme" content="dark" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#3a2e08" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Workout" />
@@ -140,7 +140,7 @@
       position: fixed;
       left: 16px;
       right: 16px;
-      bottom: 12px;
+      bottom: 0;
       height: 56px;
       display: flex;
       align-items: center;
@@ -194,6 +194,11 @@
     .body-pct[data-side="right"] { right: 0; }
     .body-stage { position: relative; }
     .tab-pane { display: none; }
+    .hidden { display: none !important; }
+    input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; display: block; }
+    .body-figure { max-width: 100%; overflow: hidden; }
+    .body-map, .body-col, .body-stage { max-width: 100%; overflow: hidden; }
+    #page-perf .card, #page-charts .card { overflow: hidden; }
     .tab-pane.active, .tab-pane.show { display: block; }
     .body-tabs { display: flex; gap: 4px; background: var(--field); border-radius: 10px; padding: 2px; margin-bottom: 12px; }
     .body-tabs .nav-link { flex: 1; background: transparent; color: var(--muted); border: 0; border-radius: 8px; padding: 8px; }
@@ -210,11 +215,11 @@
       </div>
       <div id="pane-add">
         <div class="card">
-          <label>訓練日期</label>
+          <label data-i18n-key="date">訓練日期</label>
           <input id="sessionDate" type="date" />
-          <label>動作</label>
+          <label data-i18n-key="exercise">動作</label>
           <input id="exercise" placeholder="臥推" autocomplete="off" />
-          <label>重量 <span class="muted" id="lastWeightHint"></span></label>
+          <label data-i18n-key="weight">重量 <span class="muted" id="lastWeightHint"></span></label>
           <div class="row">
             <input id="weight" inputmode="decimal" placeholder="60" />
             <div class="seg" id="unitSeg" style="margin:0">
@@ -222,18 +227,18 @@
               <button type="button" data-unit="lbs">lbs</button>
             </div>
           </div>
-          <label>次數</label>
+          <label data-i18n-key="reps">次數</label>
           <input id="reps" inputmode="numeric" placeholder="8" />
           <button type="button" class="btn" id="addBtn">新增組數</button>
         </div>
-        <div class="muted" style="margin-bottom:8px">常用動作</div>
+        <div class="muted" data-i18n-key="recent" style="margin-bottom:8px">常用動作</div>
         <div class="chips" id="chips"></div>
       </div>
       <div id="pane-list" class="hidden">
         <div class="card" id="fromList"></div>
       </div>
       <div class="card" style="margin-top:16px">
-        <div class="muted" style="margin-bottom:8px">訓練日誌</div>
+        <div class="muted" data-i18n-key="log" style="margin-bottom:8px">訓練日誌</div>
         <div id="logList"></div>
       </div>
     </section>
@@ -352,16 +357,16 @@
       <div class="card" id="charts"></div>
     </section>
         <section class="page" id="page-set">
-      <div class="card" id="sched"></div>
       <div class="card">
+        <button type="button" class="btn btn-ghost" id="openLists" style="margin-bottom:12px">課表</button>
         <label>性別</label>
         <div class="seg" id="genderSeg">
           <button type="button" class="active" data-gender="male">男</button>
           <button type="button" data-gender="female">女</button>
         </div>
-        <label>匯入 SQLite</label>
-        <input id="importFile" type="file" accept=".sqlite,.db,.sqlite3,.json" />
-        <button type="button" class="btn btn-ghost" id="exportSqlBtn" style="margin-bottom:8px">匯出 SQLite</button>
+        <button type="button" class="btn btn-ghost" id="loadBtn" style="margin-bottom:8px">Load</button>
+        <button type="button" class="btn btn-ghost" id="saveBtn" style="margin-bottom:8px">Save</button>
+        <input id="importFile" type="file" accept=".sqlite,.db,.sqlite3,.json" hidden />
         <label>語言</label>
         <div class="seg" id="langSeg">
           <button type="button" class="active" data-lang="zh">繁中</button>
@@ -375,6 +380,10 @@
         <button type="button" class="btn btn-ghost" id="exportBtn" style="margin-bottom:8px">匯出 JSON</button>
         <button type="button" class="btn btn-danger" id="clearBtn">清除全部</button>
       </div>
+    </section>
+    <section class="page" id="page-lists">
+      <button type="button" class="btn btn-ghost" id="backSettings" style="margin-bottom:12px">返回</button>
+      <div class="card" id="sched"></div>
     </section>
   </main>
   <nav class="tabs">
@@ -397,7 +406,36 @@
     var IDB_KEY = "sets";
     var SCHED = "workout-tracker-web-app.schedule.v1";
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
-    var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
+    var I18N = {
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", load: "Load", save: "Save" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", load: "Load", save: "Save" }
+    };
+    function applyLang() {
+      var t = I18N[locale] || I18N.zh;
+      var set = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text; };
+      set("title", t.title);
+      document.querySelectorAll("#logMode button").forEach(function (b) {
+        b.textContent = b.getAttribute("data-mode") === "add" ? t.add : t.fromList;
+      });
+      document.querySelectorAll(".tabs button").forEach(function (b) {
+        var map = { log: t.title, perf: t.perf, charts: t.charts, set: t.set };
+        var label = b.querySelector("span") || b;
+        if (b.getAttribute("data-page") && map[b.getAttribute("data-page")]) {
+          var icon = b.querySelector("i");
+          b.innerHTML = "";
+          if (icon) b.appendChild(icon);
+          b.appendChild(document.createTextNode(map[b.getAttribute("data-page")]));
+        }
+      });
+      set("addBtn", t.addSet);
+      set("loadBtn", t.load);
+      set("saveBtn", t.save);
+      set("clearBtn", t.clear);
+      document.querySelectorAll("[data-i18n-key]").forEach(function (el) {
+        var k = el.getAttribute("data-i18n-key");
+        if (t[k]) el.textContent = t[k];
+      });
+    }
     var chartMode = "weight";
     var logMode = "add";
 
@@ -958,7 +996,7 @@
     function renderFromList() {
       var lists = loadSched();
       if (!lists.length) {
-        document.getElementById("fromList").innerHTML = "<div class=\"muted\">尚無課表</div>";
+        document.getElementById("fromList").innerHTML = "<div class=\"muted\">" + (I18N[locale] || I18N.zh).noList + "</div>";
         return;
       }
       var idx = window.__li || 0;
@@ -1186,12 +1224,23 @@
       var b = e.target.closest("[data-unit]"); if (b) setUnit(b.getAttribute("data-unit"));
     });
 
+    bind("openLists", "click", function () {
+      document.querySelectorAll(".page").forEach(function (p) { p.classList.toggle("active", p.id === "page-lists"); });
+      document.getElementById("title").textContent = locale === "en" ? "Lists" : "課表";
+      renderSched();
+    });
+    bind("backSettings", "click", function () {
+      document.querySelectorAll(".page").forEach(function (p) { p.classList.toggle("active", p.id === "page-set"); });
+      document.getElementById("title").textContent = locale === "en" ? "Settings" : "設定";
+    });
     bind("langSeg", "click", function (e) {
       var b = e.target.closest("[data-lang]");
       if (!b) return;
       locale = b.getAttribute("data-lang");
       localStorage.setItem("workout-tracker-web-app.locale", locale);
       document.querySelectorAll("#langSeg button").forEach(function (x) { x.classList.toggle("active", x === b); });
+      applyLang();
+      render();
     });
 
     bind("exportBtn", "click", function () {
@@ -1218,7 +1267,11 @@
       var parent = pane.parentElement;
       if (parent) parent.querySelectorAll(".tab-pane").forEach(function (p) { p.classList.toggle("active", p === pane); p.classList.toggle("show", p === pane); });
     });
-    bind("exportSqlBtn", "click", function () {
+    bind("loadBtn", "click", function () {
+      var input = document.getElementById("importFile");
+      if (input) input.click();
+    });
+    bind("saveBtn", "click", function () {
       if (!sqlDb) return;
       var bytes = sqlDb.export();
       var blob = new Blob([bytes], { type: "application/x-sqlite3" });
@@ -1263,6 +1316,7 @@
     }, 30000);
     applyGender();
     setUnit(unit);
+    applyLang();
     initSql().then(function () { render(); });
   })();
   </script>
