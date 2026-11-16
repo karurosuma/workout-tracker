@@ -52,7 +52,7 @@
       top: 0; left: 0; right: 0; bottom: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(64px + env(safe-area-inset-top)) 16px calc(80px + env(safe-area-inset-bottom));
+      padding: calc(64px + env(safe-area-inset-top)) 16px 88px;
     }
     .top {
       position: fixed;
@@ -73,7 +73,7 @@
       top: 0; left: 0; right: 0; bottom: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(60px + env(safe-area-inset-top)) 16px calc(84px + env(safe-area-inset-bottom));
+      padding: calc(60px + env(safe-area-inset-top)) 16px 88px;
     }
     .card { overflow: visible; }
     input, select { max-width: 100%; min-width: 0; box-sizing: border-box; }
@@ -136,7 +136,7 @@
       position: fixed;
       left: 16px;
       right: 16px;
-      bottom: max(10px, env(safe-area-inset-bottom, 0px));
+      bottom: 12px;
       height: 56px;
       display: flex;
       align-items: center;
