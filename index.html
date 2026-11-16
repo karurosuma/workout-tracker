@@ -73,7 +73,7 @@
       top: 0; left: 0; right: 0; bottom: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(60px + env(safe-area-inset-top)) 16px calc(88px + env(safe-area-inset-bottom));
+      padding: calc(60px + env(safe-area-inset-top)) 16px calc(84px + env(safe-area-inset-bottom));
     }
     .card { overflow: visible; }
     input, select { max-width: 100%; min-width: 0; box-sizing: border-box; }
@@ -134,27 +134,44 @@
     .chip { background: var(--field); color: var(--text); border: 0; border-radius: 999px; padding: 6px 12px; font-size: 14px; }
     .tabs {
       position: fixed;
-      left: 12px; right: 12px;
-      bottom: 0;
+      left: 16px;
+      right: 16px;
+      bottom: max(10px, env(safe-area-inset-bottom, 0px));
+      height: 56px;
       display: flex;
-      gap: 0;
-      padding: 4px 4px max(4px, env(safe-area-inset-bottom, 0px));
-      background: rgba(40, 40, 42, 0.72);
+      align-items: center;
+      gap: 2px;
+      padding: 4px;
+      background: rgba(44, 44, 46, 0.62);
       backdrop-filter: saturate(180%) blur(40px);
       -webkit-backdrop-filter: saturate(180%) blur(40px);
-      border: 0.5px solid rgba(255, 255, 255, 0.18);
-      border-bottom: 0;
-      border-radius: 24px 24px 0 0;
-      z-index: 20;
+      border: 0.5px solid rgba(255, 255, 255, 0.22);
+      border-radius: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 0.5px 0 rgba(255, 255, 255, 0.28);
+      z-index: 30;
     }
     .tabs button {
-      flex: 1; background: transparent; color: var(--muted);
-      border: 0; padding: 4px 2px 2px;
-      display: flex; flex-direction: column; align-items: center; gap: 1px;
-      font-size: 10px; font-weight: 500; line-height: 1;
-      border-radius: 20px;
+      flex: 1;
+      height: 48px;
+      background: transparent;
+      color: #8e8e93;
+      border: 0;
+      padding: 4px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1;
+      border-radius: 22px;
     }
-    .tabs button i { font-size: 20px; }
+    .tabs button i { font-size: 20px; line-height: 1; }
+    .tabs button.active {
+      color: #000;
+      background: var(--accent);
+    }
     .pages { z-index: 1; }
     .top, .tabs { z-index: 30; pointer-events: auto; }
     button, .chip, .seg button, .tabs button { cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
