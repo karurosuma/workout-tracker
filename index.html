@@ -74,7 +74,7 @@
       top: 0; left: 0; right: 0; bottom: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(60px + env(safe-area-inset-top)) 16px 88px;
+      padding: calc(60px + env(safe-area-inset-top)) 16px 120px;
     }
     .card { overflow: visible; }
     input, select { max-width: 100%; min-width: 0; box-sizing: border-box; }
@@ -138,9 +138,10 @@
     }
     .tabs {
       position: fixed;
-      left: 16px;
-      right: 16px;
-      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(448px, calc(100% - 32px));
+      bottom: 8px;
       height: 56px;
       display: flex;
       align-items: center;
