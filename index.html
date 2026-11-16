@@ -114,7 +114,7 @@
     .row .seg { flex: 0 0 132px; margin: 0; }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      background: linear-gradient(180deg, #ffe566 0%, #ffd60a 100%);
+      background: var(--accent);
       color: #000;
       border: 0; border-radius: 16px;
       padding: 14px 16px; font-weight: 650;
@@ -224,8 +224,17 @@
       max-height: 52vh;
     }
     .body-svg { width: 100%; height: 100%; display: block; }
-    .body-svg.is-off { display: none !important; }
-    .body-region { stroke: none; pointer-events: none; }
+    .body-svg image.is-off { display: none; }
+    .body-region { stroke: none; pointer-events: none; fill-opacity: 0.22; }
+    .body-region.hot { fill-opacity: 0.78; }
+    #themeSeg { flex-wrap: wrap; }
+    #themeSeg button[data-theme="red"] { color: #ff453a; }
+    #themeSeg button[data-theme="green"] { color: #30d158; }
+    #themeSeg button[data-theme="yellow"] { color: #ffd60a; }
+    #themeSeg button[data-theme="blue"] { color: #0a84ff; }
+    #themeSeg button[data-theme="orange"] { color: #ff9f0a; }
+    #themeSeg button.active { color: #000; background: var(--accent); }
+    .chip.on { background: var(--accent); color: #000; }
     .body-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     .body-pct {
       position: absolute;
@@ -340,7 +349,12 @@
       </div>
       <div class="card">
         <label data-i18n="date">日期</label>
-        <input id="perfDate" type="date" />
+        <div class="row">
+          <button type="button" class="btn btn-ghost" id="perfPrev" style="flex:0 0 48px;width:48px;padding:12px 0">◀</button>
+          <input id="perfDate" type="date" />
+          <button type="button" class="btn btn-ghost" id="perfNext" style="flex:0 0 48px;width:48px;padding:12px 0">▶</button>
+        </div>
+        <div class="chips" id="perfDays"></div>
         <div id="perfList"></div>
       </div>
     </section>
@@ -417,6 +431,14 @@
           <button type="button" class="active" data-gender="male" data-i18n="male">男</button>
           <button type="button" data-gender="female" data-i18n="female">女</button>
         </div>
+        <label data-i18n="theme">主題色</label>
+        <div class="seg" id="themeSeg">
+          <button type="button" data-theme="red" data-i18n="red">紅</button>
+          <button type="button" data-theme="green" data-i18n="green">綠</button>
+          <button type="button" class="active" data-theme="yellow" data-i18n="yellow">黃</button>
+          <button type="button" data-theme="blue" data-i18n="blue">藍</button>
+          <button type="button" data-theme="orange" data-i18n="orange">橙</button>
+        </div>
         <div class="file-btn">
           <button type="button" class="btn btn-ghost" id="loadBtn">Load</button>
           <input id="importFile" type="file" />
@@ -452,6 +474,8 @@
   <script>
   (function () {
     var gender = localStorage.getItem("workout-tracker-web-app.gender") || "male";
+    var theme = localStorage.getItem("workout-tracker-web-app.theme") || "yellow";
+    var THEMES = { red: "#ff453a", green: "#30d158", yellow: "#ffd60a", blue: "#0a84ff", orange: "#ff9f0a" };
     var chartRange = "90";
     var sqlDb = null;
     var SQL_LIB = null;
@@ -463,8 +487,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "與上次同動作比較組數與容量", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Sets and volume vs last time", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "與上次同動作比較組數與容量", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", noDay: "這天沒有紀錄" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Sets and volume vs last time", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", noDay: "No records this day" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -977,11 +1001,23 @@
       return Math.floor(h / 24) + " 天前";
     }
     function applyGender() {
-      document.querySelectorAll(".body-svg").forEach(function (el) {
-        el.classList.toggle("is-off", el.getAttribute("data-gender") !== gender);
+      document.querySelectorAll(".body-svg").forEach(function (el) { el.classList.remove("is-off"); });
+      document.querySelectorAll(".body-svg image").forEach(function (img) {
+        var href = img.getAttribute("href") || "";
+        var female = href.indexOf("female") !== -1;
+        img.classList.toggle("is-off", female !== (gender === "female"));
       });
       document.querySelectorAll("#genderSeg button").forEach(function (b) {
         b.classList.toggle("active", b.getAttribute("data-gender") === gender);
+      });
+    }
+    function applyTheme() {
+      var color = THEMES[theme] || THEMES.yellow;
+      document.documentElement.style.setProperty("--accent", color);
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", color);
+      document.querySelectorAll("#themeSeg button").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-theme") === theme);
       });
     }
     function inRange(date) {
@@ -1033,20 +1069,64 @@
       });
     }
 
+    var perfReady = false;
+    function trainedDates() {
+      var seen = {};
+      loadSets().forEach(function (s) { if (s.date) seen[s.date] = 1; });
+      return Object.keys(seen).sort();
+    }
     function renderPerf() {
-      var date = document.getElementById("perfDate").value || today();
+      var el = document.getElementById("perfDate");
+      var dates = trainedDates();
+      if (!perfReady) {
+        perfReady = true;
+        if (dates.length) el.value = dates[dates.length - 1];
+      }
+      var date = (el && el.value) || (dates.length ? dates[dates.length - 1] : today());
+      if (el && !el.value) el.value = date;
       var sets = loadSets().filter(function (s) { return s.date === date; });
-      var by = {};
-      sets.forEach(function (s) {
-        by[s.exercise] = by[s.exercise] || { sets: 0, vol: 0 };
-        by[s.exercise].sets++;
-        by[s.exercise].vol += (Number(s.weight) || 0) * (Number(s.reps) || 0);
-      });
-      document.getElementById("perfList").innerHTML = Object.keys(by).length
-        ? Object.keys(by).map(function (k) {
-            return "<div class=\"set\"><div><b>" + k + "</b><div class=\"muted\">" + by[k].sets + " " + t("setsWord") + " · " + fmt(by[k].vol) + "</div></div></div>";
+      var days = document.getElementById("perfDays");
+      if (days) {
+        days.innerHTML = dates.slice(-8).reverse().map(function (d) {
+          return "<button type=\"button\" class=\"chip" + (d === date ? " on" : "") + "\" data-day=\"" + d + "\">" + d.slice(5) + "</button>";
+        }).join("");
+      }
+      document.getElementById("perfList").innerHTML = sets.length
+        ? sets.slice().reverse().map(function (s) {
+            return "<div class=\"set\"><div><b>" + escapeHtml(s.exercise) + "</b><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>" +
+              "<button type=\"button\" class=\"btn-ghost\" data-edit=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">" + t("edit") + "</button></div>";
           }).join("")
-        : "<div class=\"muted\">這天沒有紀錄</div>";
+        : "<div class=\"muted\">" + t("noDay") + "</div>";
+    }
+    function shiftPerf(dir) {
+      var dates = trainedDates();
+      var el = document.getElementById("perfDate");
+      var cur = el.value || today();
+      var next = "";
+      if (dir < 0) {
+        for (var i = dates.length - 1; i >= 0; i--) if (dates[i] < cur) { next = dates[i]; break; }
+      } else {
+        for (var j = 0; j < dates.length; j++) if (dates[j] > cur) { next = dates[j]; break; }
+      }
+      if (!next) return;
+      el.value = next;
+      renderPerf();
+      updateBodyMaps();
+    }
+    function editSet(id) {
+      var sets = loadSets();
+      var s = sets.filter(function (x) { return x.id === id; })[0];
+      if (!s) return;
+      var name = prompt(t("exercise"), s.exercise); if (name == null) return;
+      var w = prompt(t("weight") + " (" + unit + ")", String(Math.round(fromKg(s.weight) * 10) / 10)); if (w == null) return;
+      var r = prompt(t("reps"), String(s.reps)); if (r == null) return;
+      var d = prompt(t("date"), s.date); if (d == null) return;
+      s.exercise = name.trim() || s.exercise;
+      s.weight = toKg(w);
+      s.reps = Number(r) || s.reps;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(d))) s.date = d;
+      saveSets(sets);
+      render();
     }
 
     function renderSched() {
@@ -1144,7 +1224,7 @@
           theme: { mode: "dark" },
           series: [{ name: n, data: data }],
           xaxis: { type: "datetime" },
-          colors: ["#ffd60a"],
+          colors: [getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#ffd60a"],
           stroke: { width: 2 },
           grid: { borderColor: "rgba(255,255,255,0.08)" }
         });
@@ -1169,6 +1249,7 @@
         document.querySelectorAll(".page").forEach(function (p) { p.classList.toggle("active", p.id === "page-" + page); });
         applyLang();
         if (page === "charts") renderCharts();
+        if (page === "perf" || page === "charts") setTimeout(updateBodyMaps, 40);
       });
     });
 
@@ -1225,22 +1306,19 @@
       gender = b.getAttribute("data-gender");
       localStorage.setItem("workout-tracker-web-app.gender", gender);
       applyGender();
+    applyTheme();
+      updateBodyMaps();
+    });
+    bind("themeSeg", "click", function (e) {
+      var b = e.target.closest("[data-theme]"); if (!b) return;
+      theme = b.getAttribute("data-theme");
+      localStorage.setItem("workout-tracker-web-app.theme", theme);
+      applyTheme();
+      if (document.getElementById("page-charts").classList.contains("active")) renderCharts();
     });
     bind("logList", "click", function (e) {
       var edit = e.target.closest("[data-edit]");
-      if (edit) {
-        var id = edit.getAttribute("data-edit");
-        var sets = loadSets();
-        var s = sets.filter(function (x) { return x.id === id; })[0];
-        if (!s) return;
-        var name = prompt("動作", s.exercise); if (name == null) return;
-        var w = prompt("重量 (" + unit + ")", String(Math.round(fromKg(s.weight) * 10) / 10)); if (w == null) return;
-        var r = prompt("次數", String(s.reps)); if (r == null) return;
-        s.exercise = name.trim() || s.exercise;
-        s.weight = toKg(w);
-        s.reps = Number(r) || s.reps;
-        saveSets(sets); render(); return;
-      }
+      if (edit) { editSet(edit.getAttribute("data-edit")); return; }
       var btn = e.target.closest("[data-del]");
       if (!btn) return;
       saveSets(loadSets().filter(function (s) { return s.id !== btn.getAttribute("data-del"); }));
@@ -1253,7 +1331,20 @@
       document.getElementById("exercise").value = btn.getAttribute("data-chip");
     });
 
-    bind("perfDate", "change", renderPerf);
+    bind("perfDate", "change", function () { renderPerf(); updateBodyMaps(); });
+    bind("perfPrev", "click", function () { shiftPerf(-1); });
+    bind("perfNext", "click", function () { shiftPerf(1); });
+    bind("perfDays", "click", function (e) {
+      var b = e.target.closest("[data-day]");
+      if (!b) return;
+      document.getElementById("perfDate").value = b.getAttribute("data-day");
+      renderPerf();
+      updateBodyMaps();
+    });
+    bind("perfList", "click", function (e) {
+      var edit = e.target.closest("[data-edit]");
+      if (edit) editSet(edit.getAttribute("data-edit"));
+    });
 
     bind("chartMode", "click", function (e) {
       var btn = e.target.closest("[data-mode]");
@@ -1378,6 +1469,7 @@
       if (group) group.querySelectorAll(".nav-link").forEach(function (b) { b.classList.toggle("active", b === btn); });
       var parent = pane.parentElement;
       if (parent) parent.querySelectorAll(".tab-pane").forEach(function (p) { p.classList.toggle("active", p === pane); p.classList.toggle("show", p === pane); });
+      setTimeout(updateBodyMaps, 30);
     });
     bind("loadBtn", "click", function () {
       var input = document.getElementById("importFile");
