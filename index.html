@@ -230,6 +230,14 @@
     .body-pct[data-side="right"] { right: 0; }
     .section-head { margin: 8px 4px; }
     .section-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+    #chartRange { flex-wrap: wrap; }
+    #chartRange button { flex: 1 1 18%; min-width: 56px; }
+    .chart-title { font-weight: 650; margin-bottom: 8px; }
+    .muscle-table { width: 100%; border-collapse: collapse; }
+    .muscle-table td { padding: 8px 0; border-bottom: 0.5px solid var(--line); }
+    .muscle-table tr:last-child td { border-bottom: 0; }
+    .muscle-table td:last-child { text-align: right; color: var(--accent); font-weight: 650; }
+
   </style>
 </head>
 <body>
@@ -246,7 +254,7 @@
           <input id="sessionDate" type="date" />
           <label data-i18n-key="exercise">動作</label>
           <input id="exercise" placeholder="臥推" autocomplete="off" />
-          <label data-i18n-key="weight">重量 <span class="muted" id="lastWeightHint"></span></label>
+          <label><span data-i18n="weight">重量</span> <span class="muted" id="lastWeightHint"></span></label>
           <div class="row">
             <input id="weight" inputmode="decimal" placeholder="60" />
             <div class="seg" id="unitSeg" style="margin:0">
@@ -312,13 +320,13 @@
           </div>
           <div class="body-unmatched" id="perfBodyUnmatched"></div>
         </section>
-        <div class="section-head mb-2">
-          <h2 class="h5 mb-0" data-i18n="todaySummaryTitle">動作摘要</h2>
-          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較組數與容量</span>
-        </div>
-        </div>
+      </div>
+      <div class="section-head">
+        <h2 data-i18n="todaySummaryTitle">動作摘要</h2>
+        <span class="muted" data-i18n="todaySummaryHint">與上次同動作比較組數與容量</span>
+      </div>
       <div class="card">
-        <label>日期</label>
+        <label data-i18n="date">日期</label>
         <input id="perfDate" type="date" />
         <div id="perfList"></div>
       </div>
@@ -366,42 +374,45 @@
           </div>
           <div class="body-unmatched" id="chartsBodyUnmatched"></div>
         </section>
-        <div class="section-head mb-2">
-          <h2 class="h5 mb-0" data-i18n="todaySummaryTitle">動作摘要</h2>
-          <span class="small text-muted-2" data-i18n="todaySummaryHint">與上次同動作比較組數與容量</span>
-        </div>
-        </div>
-
+      </div>
       <div class="seg" id="chartRange">
-        <button type="button" data-range="30">30天</button>
-        <button type="button" class="active" data-range="90">90天</button>
-        <button type="button" data-range="all">全部</button>
+        <button type="button" data-range="7" data-i18n="range7">7天</button>
+        <button type="button" data-range="14" data-i18n="range14">14天</button>
+        <button type="button" data-range="30" data-i18n="range30">30天</button>
+        <button type="button" class="active" data-range="90" data-i18n="range90">90天</button>
+        <button type="button" data-range="all" data-i18n="rangeAll">全部</button>
+      </div>
+      <div class="row">
+        <input id="chartFrom" type="date" />
+        <input id="chartTo" type="date" />
       </div>
       <div class="seg" id="chartMode">
-        <button type="button" class="active" data-mode="weight">最高重量</button>
-        <button type="button" data-mode="volume">容量</button>
+        <button type="button" class="active" data-mode="weight" data-i18n="bestWeight">最高重量</button>
+        <button type="button" data-mode="volume" data-i18n="volume">容量</button>
       </div>
-      <div class="card" id="charts"></div>
+      <div class="section-head"><h2 data-i18n="muscleSets">肌群組數</h2></div>
+      <div class="card" id="muscleSets"></div>
+      <div id="charts"></div>
     </section>
         <section class="page" id="page-set">
       <div class="card">
-        <button type="button" class="btn btn-ghost" id="openLists" style="margin-bottom:12px">課表</button>
-        <label>性別</label>
+        <button type="button" class="btn btn-ghost" id="openLists" data-i18n="lists" style="margin-bottom:12px">課表</button>
+        <label data-i18n="gender">性別</label>
         <div class="seg" id="genderSeg">
-          <button type="button" class="active" data-gender="male">男</button>
-          <button type="button" data-gender="female">女</button>
+          <button type="button" class="active" data-gender="male" data-i18n="male">男</button>
+          <button type="button" data-gender="female" data-i18n="female">女</button>
         </div>
         <div class="file-btn">
           <button type="button" class="btn btn-ghost" id="loadBtn">Load</button>
           <input id="importFile" type="file" />
         </div>
         <button type="button" class="btn btn-ghost" id="saveBtn" style="margin-bottom:8px">Save</button>
-        <label>語言</label>
+        <label data-i18n="lang">語言</label>
         <div class="seg" id="langSeg">
           <button type="button" class="active" data-lang="zh">繁中</button>
           <button type="button" data-lang="en">EN</button>
         </div>
-        <label>單位</label>
+        <label data-i18n="unit">單位</label>
         <div class="seg" id="setUnit">
           <button type="button" class="active" data-unit="kg">kg</button>
           <button type="button" data-unit="lbs">lbs</button>
@@ -437,8 +448,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", load: "Load", save: "Save" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", load: "Load", save: "Save" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "與上次同動作比較組數與容量", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Sets and volume vs last time", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -464,9 +475,10 @@
       set("loadBtn", t.load);
       set("saveBtn", t.save);
       set("clearBtn", t.clear);
-      document.querySelectorAll("[data-i18n-key]").forEach(function (el) {
-        var k = el.getAttribute("data-i18n-key");
-        if (t[k]) el.textContent = t[k];
+      document.querySelectorAll("[data-i18n], [data-i18n-key]").forEach(function (el) {
+        if (el.children && el.children.length) return;
+        var k = el.getAttribute("data-i18n") || el.getAttribute("data-i18n-key");
+        if (k && t[k] != null) el.textContent = t[k];
       });
     }
     var chartMode = "weight";
@@ -802,9 +814,9 @@
 
 
       function t(key, vars) {
-        var map = { bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料" };
-        var s = map[key] || key;
-        if (vars) Object.keys(vars).forEach(function (k) { s = s.replace("{" + k + "}", vars[k]); });
+        var pack = (typeof I18N !== "undefined" && (I18N[locale] || I18N.zh)) || {};
+        var s = pack[key] != null ? pack[key] : key;
+        if (vars) Object.keys(vars).forEach(function (k) { s = String(s).replace("{" + k + "}", vars[k]); });
         return s;
       }
       function escapeHtml(s) {
@@ -958,6 +970,16 @@
       });
     }
     function inRange(date) {
+      if (!date) return false;
+      if (chartRange === "custom") {
+        var fromEl = document.getElementById("chartFrom");
+        var toEl = document.getElementById("chartTo");
+        var from = fromEl && fromEl.value;
+        var to = toEl && toEl.value;
+        if (from && date < from) return false;
+        if (to && date > to) return false;
+        return true;
+      }
       if (chartRange === "all") return true;
       var days = Number(chartRange) || 90;
       var cut = new Date(); cut.setDate(cut.getDate() - days);
@@ -982,7 +1004,7 @@
             return "<div class=\"set\"><div><b>" + s.exercise + "</b><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>" +
               "<button class=\"btn-ghost\" data-del=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">刪</button></div>";
           }).join("")
-        : "<div class=\"muted\">尚無紀錄</div>";
+        : "<div class=\"muted\">" + t("empty") + "</div>";
       var names = unique(sets).slice(0, 12);
       document.getElementById("chips").innerHTML = names.map(function (n) {
         return "<button class=\"chip\" data-chip=\"" + n + "\">" + n + "</button>";
@@ -1007,7 +1029,7 @@
       });
       document.getElementById("perfList").innerHTML = Object.keys(by).length
         ? Object.keys(by).map(function (k) {
-            return "<div class=\"set\"><div><b>" + k + "</b><div class=\"muted\">" + by[k].sets + " 組 · " + fmt(by[k].vol) + "</div></div></div>";
+            return "<div class=\"set\"><div><b>" + k + "</b><div class=\"muted\">" + by[k].sets + " " + t("setsWord") + " · " + fmt(by[k].vol) + "</div></div></div>";
           }).join("")
         : "<div class=\"muted\">這天沒有紀錄</div>";
     }
@@ -1017,7 +1039,7 @@
       var html = lists.map(function (item, i) {
         var rows = (item.exercises || []).map(function (n, j) {
           return "<div class=\"set\"><span>" + n + "</span><button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
-        }).join("") || "<div class=\"muted\">尚無動作</div>";
+        }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
         return "<div style=\"margin-bottom:16px\"><div class=\"row\" style=\"align-items:center\"><b>" + item.name + "</b>" +
           "<button class=\"btn-ghost\" data-sl=\"" + i + "\" style=\"width:auto;padding:6px 10px\">刪清單</button></div>" + rows +
           "<div class=\"row\"><input data-se=\"" + i + "\" placeholder=\"動作\" /><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">加</button></div></div>";
@@ -1043,45 +1065,77 @@
           "<input data-lw=\"" + i + "\" placeholder=\"重量\" inputmode=\"decimal\" />" +
           "<input data-lr=\"" + i + "\" placeholder=\"次數\" inputmode=\"numeric\" />" +
           "<button class=\"btn\" data-ll=\"" + i + "\" data-ln=\"" + n + "\" style=\"width:auto\">記</button></div></div>";
-      }).join("") || "<div class=\"muted\">尚無動作</div>";
+      }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
       document.getElementById("fromList").innerHTML = "<select id=\"listPick\">" + opts + "</select>" + rows;
     }
 
-    var chart;
+    var chartList = [];
+    function clearCharts() {
+      chartList.forEach(function (c) { try { c.destroy(); } catch (err) {} });
+      chartList = [];
+    }
+    function renderMuscleTable(sets) {
+      var el = document.getElementById("muscleSets");
+      if (!el) return;
+      var counts = {};
+      BODY_PARTS.forEach(function (part) { counts[part.id] = 0; });
+      sets.forEach(function (set) {
+        var parts = classifyBodyParts(set.exercise) || [];
+        var seen = {};
+        parts.forEach(function (id) {
+          if (counts[id] == null || seen[id]) return;
+          seen[id] = 1;
+          counts[id] += 1;
+        });
+      });
+      var rows = BODY_PARTS.filter(function (part) { return counts[part.id] > 0; });
+      if (!rows.length) { el.innerHTML = "<div class=\"muted\">" + t("noData") + "</div>"; return; }
+      el.innerHTML = "<table class=\"muscle-table\"><tbody>" + rows.map(function (part) {
+        return "<tr><td>" + t(part.label) + "</td><td>" + counts[part.id] + " " + t("setsWord") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+    }
     function renderCharts() {
       var sets = loadSets().filter(function (s) { return inRange(s.date); });
+      renderMuscleTable(sets);
+      var el = document.getElementById("charts");
+      clearCharts();
       var by = {};
       sets.forEach(function (s) {
         var k = s.exercise;
         by[k] = by[k] || [];
         by[k].push(s);
       });
-      var names = Object.keys(by).slice(0, 8);
-      var series = names.map(function (n) {
+      var names = Object.keys(by).sort();
+      if (!names.length) { el.innerHTML = "<div class=\"card\"><div class=\"muted\">" + t("noData") + "</div></div>"; return; }
+      el.innerHTML = names.map(function (n, i) {
+        return "<div class=\"card\"><div class=\"chart-title\">" + escapeHtml(n) + "</div><div id=\"chart-" + i + "\"></div></div>";
+      }).join("");
+      names.forEach(function (n, i) {
         var pts = by[n].slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+        var data;
         if (chartMode === "weight") {
           var best = {};
           pts.forEach(function (s) { best[s.date] = Math.max(best[s.date] || 0, Number(s.weight) || 0); });
-          return { name: n, data: Object.keys(best).sort().map(function (d) { return [d, Math.round(fromKg(best[d]) * 10) / 10]; }) };
+          data = Object.keys(best).sort().map(function (d) { return [d, Math.round(fromKg(best[d]) * 10) / 10]; });
+        } else {
+          var vol = {};
+          pts.forEach(function (s) { vol[s.date] = (vol[s.date] || 0) + (Number(s.weight) || 0) * (Number(s.reps) || 0); });
+          data = Object.keys(vol).sort().map(function (d) { return [d, Math.round(fromKg(vol[d]) * 10) / 10]; });
         }
-        var vol = {};
-        pts.forEach(function (s) { vol[s.date] = (vol[s.date] || 0) + (Number(s.weight) || 0) * (Number(s.reps) || 0); });
-        return { name: n, data: Object.keys(vol).sort().map(function (d) { return [d, Math.round(fromKg(vol[d]) * 10) / 10]; }) };
+        var node = document.getElementById("chart-" + i);
+        if (!node || typeof ApexCharts === "undefined") return;
+        var chart = new ApexCharts(node, {
+          chart: { type: "line", height: 220, background: "transparent", toolbar: { show: false } },
+          theme: { mode: "dark" },
+          series: [{ name: n, data: data }],
+          xaxis: { type: "datetime" },
+          colors: ["#ffd60a"],
+          stroke: { width: 2 },
+          grid: { borderColor: "rgba(255,255,255,0.08)" }
+        });
+        chart.render();
+        chartList.push(chart);
       });
-      var el = document.getElementById("charts");
-      if (chart) { chart.destroy(); chart = null; }
-      if (!series.length) { el.innerHTML = "<div class=\"muted\">尚無資料</div>"; return; }
-      el.innerHTML = "";
-      chart = new ApexCharts(el, {
-        chart: { type: "line", height: 280, background: "transparent", toolbar: { show: false } },
-        theme: { mode: "dark" },
-        series: series,
-        xaxis: { type: "datetime" },
-        colors: ["#ffd60a", "#ffe566", "#fff", "#8e8e93", "#ff453a", "#64d2ff", "#30d158", "#bf5af2"],
-        stroke: { width: 2 },
-        grid: { borderColor: "rgba(255,255,255,0.08)" }
-      });
-      chart.render();
     }
 
     function bind(id, event, fn) {
@@ -1138,8 +1192,19 @@
       var b = e.target.closest("[data-range]"); if (!b) return;
       chartRange = b.getAttribute("data-range");
       document.querySelectorAll("#chartRange button").forEach(function (x) { x.classList.toggle("active", x === b); });
+      var fromEl = document.getElementById("chartFrom");
+      var toEl = document.getElementById("chartTo");
+      if (fromEl) fromEl.value = "";
+      if (toEl) toEl.value = "";
       renderCharts(); updateBodyMaps();
     });
+    function onChartDates() {
+      chartRange = "custom";
+      document.querySelectorAll("#chartRange button").forEach(function (x) { x.classList.remove("active"); });
+      renderCharts(); updateBodyMaps();
+    }
+    bind("chartFrom", "change", onChartDates);
+    bind("chartTo", "change", onChartDates);
     bind("genderSeg", "click", function (e) {
       var b = e.target.closest("[data-gender]"); if (!b) return;
       gender = b.getAttribute("data-gender");
