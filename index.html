@@ -81,6 +81,8 @@
       margin-bottom: 12px;
       border: 0.5px solid rgba(255, 255, 255, 0.14);
       box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.16);
+      max-width: 100%;
+      min-width: 0;
     }
     label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px; font-weight: 560; }
     input, select {
@@ -95,9 +97,20 @@
       padding: 12px 14px;
       margin: 0 0 12px;
     }
-    input[type="date"] { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
-    .row { display: flex; gap: 8px; align-items: center; width: 100%; min-width: 0; margin-bottom: 12px; }
-    .row > input { flex: 1 1 auto; width: auto; margin: 0; min-width: 0; }
+    input[type="date"] {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0 !important;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+    input[type="date"]::-webkit-datetime-edit { min-width: 0; padding: 0; }
+    .row { display: flex; gap: 8px; align-items: center; width: 100%; min-width: 0; max-width: 100%; margin-bottom: 12px; }
+    .row > input { flex: 1 1 0; width: 0; margin: 0; min-width: 0; max-width: 100%; }
+    .row > input[type="date"] { flex: 1 1 0; width: 0 !important; min-width: 0 !important; max-width: 100% !important; margin: 0; }
     .row .seg { flex: 0 0 132px; margin: 0; }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
@@ -382,9 +395,11 @@
         <button type="button" class="active" data-range="90" data-i18n="range90">90天</button>
         <button type="button" data-range="all" data-i18n="rangeAll">全部</button>
       </div>
-      <div class="row">
-        <input id="chartFrom" type="date" />
-        <input id="chartTo" type="date" />
+      <div class="card">
+        <div class="row">
+          <input id="chartFrom" type="date" />
+          <input id="chartTo" type="date" />
+        </div>
       </div>
       <div class="seg" id="chartMode">
         <button type="button" class="active" data-mode="weight" data-i18n="bestWeight">最高重量</button>
