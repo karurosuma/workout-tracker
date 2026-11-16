@@ -213,19 +213,16 @@
       font-weight: 650;
     }
     .body-tabs .nav-link.active { background: var(--accent); color: #000; }
-    .tab-pane { display: none; }
-    .tab-pane.active, .tab-pane.show { display: block; }
-    .body-map, .body-col, .body-stage { position: relative; width: 100%; max-width: 100%; }
     .body-figure {
       position: relative;
       width: min(100%, 280px);
-      aspect-ratio: 2 / 3;
       margin: 0 auto;
-      max-height: 52vh;
     }
-    .body-svg { width: 100%; height: 100%; display: block; }
+    .body-svg { width: 100%; height: auto; display: block; }
     .body-svg image.is-off { display: none; }
-    .body-region { stroke: none; pointer-events: none; fill-opacity: 0.22; }
+    .tab-pane { display: none !important; }
+    .tab-pane.active { display: block !important; }
+    .body-map, .body-col, .body-stage { position: relative; width: 100%; max-width: 100%; }
     .body-region.hot { fill-opacity: 0.78; }
     #themeSeg { flex-wrap: wrap; }
     #themeSeg button[data-theme="red"] { color: #ff453a; }
@@ -487,8 +484,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "與上次同動作比較組數與容量", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", noDay: "這天沒有紀錄" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Sets and volume vs last time", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", noDay: "No records this day" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "與上次同動作比較組數與容量", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Sets and volume vs last time", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -967,7 +964,12 @@
       } catch (e) { return []; }
     }
     function saveSched(lists) { localStorage.setItem(SCHED, JSON.stringify(lists)); }
-    function today() { return new Date().toISOString().slice(0, 10); }
+    function today() {
+      var d = new Date();
+      var m = String(d.getMonth() + 1).padStart(2, "0");
+      var day = String(d.getDate()).padStart(2, "0");
+      return d.getFullYear() + "-" + m + "-" + day;
+    }
     function toKg(v) { return unit === "lbs" ? Number(v) / 2.20462 : Number(v); }
     function fromKg(v) { return unit === "lbs" ? Number(v) * 2.20462 : Number(v); }
     function fmt(v) { return (Math.round(fromKg(v) * 10) / 10) + " " + unit; }
@@ -1005,7 +1007,9 @@
       document.querySelectorAll(".body-svg image").forEach(function (img) {
         var href = img.getAttribute("href") || "";
         var female = href.indexOf("female") !== -1;
-        img.classList.toggle("is-off", female !== (gender === "female"));
+        var hide = female !== (gender === "female");
+        img.classList.toggle("is-off", hide);
+        img.style.display = hide ? "none" : "";
       });
       document.querySelectorAll("#genderSeg button").forEach(function (b) {
         b.classList.toggle("active", b.getAttribute("data-gender") === gender);
@@ -1034,7 +1038,12 @@
       if (chartRange === "all") return true;
       var days = Number(chartRange) || 90;
       var cut = new Date(); cut.setDate(cut.getDate() - days);
-      return date >= cut.toISOString().slice(0, 10);
+      return date >= localDay(cut);
+    }
+    function localDay(d) {
+      var m = String(d.getMonth() + 1).padStart(2, "0");
+      var day = String(d.getDate()).padStart(2, "0");
+      return d.getFullYear() + "-" + m + "-" + day;
     }
     function unique(sets) {
       var seen = {}, out = [];
@@ -1052,8 +1061,11 @@
       var day = sets.filter(function (s) { return s.date === date; });
       document.getElementById("logList").innerHTML = day.length
         ? day.slice().reverse().map(function (s) {
-            return "<div class=\"set\"><div><b>" + s.exercise + "</b><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>" +
-              "<button class=\"btn-ghost\" data-del=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">刪</button></div>";
+            return "<div class=\"set\"><div><b>" + escapeHtml(s.exercise) + "</b><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps +
+              " · <span data-ago=\"" + (s.createdAt || 0) + "\">" + timeAgo(s.createdAt) + "</span></div></div>" +
+              "<span style=\"display:flex;gap:6px\">" +
+              "<button type=\"button\" class=\"btn-ghost\" data-edit=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">" + t("edit") + "</button>" +
+              "<button type=\"button\" class=\"btn-ghost btn-danger\" data-del=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">" + t("del") + "</button></span></div>";
           }).join("")
         : "<div class=\"muted\">" + t("empty") + "</div>";
       var names = unique(sets).slice(0, 12);
@@ -1061,11 +1073,11 @@
         return "<button class=\"chip\" data-chip=\"" + n + "\">" + n + "</button>";
       }).join("");
       updateLastHint();
-      renderPerf();
-      renderSched();
-      renderFromList();
-      renderCharts();
-      updateBodyMaps();
+      safe(renderPerf);
+      safe(renderSched);
+      safe(renderFromList);
+      safe(renderCharts);
+      safe(updateBodyMaps);
       });
     }
 
@@ -1329,6 +1341,7 @@
       var btn = e.target.closest("[data-chip]");
       if (!btn) return;
       document.getElementById("exercise").value = btn.getAttribute("data-chip");
+      updateLastHint();
     });
 
     bind("perfDate", "change", function () { renderPerf(); updateBodyMaps(); });
@@ -1517,8 +1530,9 @@
       document.querySelectorAll("[data-ago]").forEach(function (el) {
         el.textContent = timeAgo(el.getAttribute("data-ago"));
       });
-    }, 30000);
+    }, 15000);
     applyGender();
+    applyTheme();
     setUnit(unit);
     applyLang();
     initSql().then(function () { render(); });
