@@ -222,8 +222,10 @@
       width: min(100%, 280px);
       margin: 0 auto;
     }
-    .body-svg { width: 100%; height: auto; display: block; }
-    .body-svg image.is-off { display: none; }
+    .body-svg { width: 100%; height: auto; display: block; overflow: hidden; }
+    .body-svg.is-off { display: none !important; }
+    .body-region { stroke: none; pointer-events: none; fill-opacity: 0.32; }
+    .body-region.hot { fill-opacity: 0.78; }
     .tab-pane { display: none !important; }
     .tab-pane.active { display: block !important; }
     .body-map, .body-col, .body-stage { position: relative; width: 100%; max-width: 100%; }
@@ -244,8 +246,8 @@
     .body-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     .body-pct {
       position: absolute;
-      width: 64px;
-      padding: 4px;
+      width: 76px;
+      padding: 4px 6px;
       border-radius: 8px;
       background: rgba(28, 28, 30, 0.9);
       border: 1px solid var(--line);
@@ -253,7 +255,10 @@
       font-size: 11px;
       font-weight: 700;
       text-align: center;
+      line-height: 1.15;
     }
+    .body-pct b, .body-pct small { display: block; }
+    .body-pct small { font-size: 10px; font-weight: 600; margin-top: 1px; }
     .body-pct[data-side="left"] { left: 0; }
     .body-pct[data-side="right"] { right: 0; }
     .section-head { margin: 8px 4px; }
@@ -680,7 +685,7 @@
           });
           ["left", "right"].forEach(function (side) {
             var items = sides[side].sort(function (a, b) { return a.y - b.y; });
-            var gap = 46;
+            var gap = 58;
             for (var i = 1; i < items.length; i++) {
               if (items[i].y - items[i - 1].y < gap) items[i].y = items[i - 1].y + gap;
             }
@@ -1022,13 +1027,11 @@
       return t("dayAgo", { n: Math.floor(h / 24) });
     }
     function applyGender() {
-      document.querySelectorAll(".body-svg").forEach(function (el) { el.classList.remove("is-off"); });
-      document.querySelectorAll(".body-svg image").forEach(function (img) {
-        var href = img.getAttribute("href") || "";
-        var female = href.indexOf("female") !== -1;
-        var hide = female !== (gender === "female");
-        img.classList.toggle("is-off", hide);
-        img.style.display = hide ? "none" : "";
+      document.querySelectorAll(".body-svg").forEach(function (el) {
+        var g = el.getAttribute("data-gender");
+        var hide = !!g && g !== gender;
+        el.classList.toggle("is-off", hide);
+        el.style.display = hide ? "none" : "block";
       });
       document.querySelectorAll("#genderSeg button").forEach(function (b) {
         b.classList.toggle("active", b.getAttribute("data-gender") === gender);
