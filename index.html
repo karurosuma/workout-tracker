@@ -155,7 +155,10 @@
       border-radius: 20px;
     }
     .tabs button i { font-size: 20px; }
-    .tabs button.active { color: var(--accent); background: rgba(255, 214, 10, 0.12); }
+    .pages { z-index: 1; }
+    .top, .tabs { z-index: 30; pointer-events: auto; }
+    button, .chip, .seg button, .tabs button { cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+    button { type: button; }
     .set { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
     .set:last-child { border-bottom: 0; }
     .muted { color: var(--muted); font-size: 13px; }
@@ -181,8 +184,8 @@
   <main class="pages">
     <section class="page active" id="page-log">
       <div class="seg" id="logMode">
-        <button class="active" data-mode="add">新增</button>
-        <button data-mode="list">從清單</button>
+        <button type="button" class="active" data-mode="add">新增</button>
+        <button type="button" data-mode="list">從清單</button>
       </div>
       <div id="pane-add">
         <div class="card">
@@ -194,13 +197,13 @@
           <div class="row">
             <input id="weight" inputmode="decimal" placeholder="60" />
             <div class="seg" id="unitSeg" style="margin:0">
-              <button class="active" data-unit="kg">kg</button>
-              <button data-unit="lbs">lbs</button>
+              <button type="button" class="active" data-unit="kg">kg</button>
+              <button type="button" data-unit="lbs">lbs</button>
             </div>
           </div>
           <label>次數</label>
           <input id="reps" inputmode="numeric" placeholder="8" />
-          <button class="btn" id="addBtn">新增組數</button>
+          <button type="button" class="btn" id="addBtn">新增組數</button>
         </div>
         <div class="muted" style="margin-bottom:8px">常用動作</div>
         <div class="chips" id="chips"></div>
@@ -317,13 +320,13 @@
         </div>
 
       <div class="seg" id="chartRange">
-        <button data-range="30">30天</button>
-        <button class="active" data-range="90">90天</button>
-        <button data-range="all">全部</button>
+        <button type="button" data-range="30">30天</button>
+        <button type="button" class="active" data-range="90">90天</button>
+        <button type="button" data-range="all">全部</button>
       </div>
       <div class="seg" id="chartMode">
-        <button class="active" data-mode="weight">最高重量</button>
-        <button data-mode="volume">容量</button>
+        <button type="button" class="active" data-mode="weight">最高重量</button>
+        <button type="button" data-mode="volume">容量</button>
       </div>
       <div class="card" id="charts"></div>
     </section>
@@ -332,32 +335,32 @@
       <div class="card">
         <label>性別</label>
         <div class="seg" id="genderSeg">
-          <button class="active" data-gender="male">男</button>
-          <button data-gender="female">女</button>
+          <button type="button" class="active" data-gender="male">男</button>
+          <button type="button" data-gender="female">女</button>
         </div>
         <label>匯入 SQLite</label>
         <input id="importFile" type="file" accept=".sqlite,.db,.sqlite3,.json" />
-        <button class="btn btn-ghost" id="exportSqlBtn" style="margin-bottom:8px">匯出 SQLite</button>
+        <button type="button" class="btn btn-ghost" id="exportSqlBtn" style="margin-bottom:8px">匯出 SQLite</button>
         <label>語言</label>
         <div class="seg" id="langSeg">
-          <button class="active" data-lang="zh">繁中</button>
-          <button data-lang="en">EN</button>
+          <button type="button" class="active" data-lang="zh">繁中</button>
+          <button type="button" data-lang="en">EN</button>
         </div>
         <label>單位</label>
         <div class="seg" id="setUnit">
-          <button class="active" data-unit="kg">kg</button>
-          <button data-unit="lbs">lbs</button>
+          <button type="button" class="active" data-unit="kg">kg</button>
+          <button type="button" data-unit="lbs">lbs</button>
         </div>
-        <button class="btn btn-ghost" id="exportBtn" style="margin-bottom:8px">匯出 JSON</button>
-        <button class="btn btn-danger" id="clearBtn">清除全部</button>
+        <button type="button" class="btn btn-ghost" id="exportBtn" style="margin-bottom:8px">匯出 JSON</button>
+        <button type="button" class="btn btn-danger" id="clearBtn">清除全部</button>
       </div>
     </section>
   </main>
   <nav class="tabs">
-    <button class="active" data-page="log"><i class="bi bi-plus-circle"></i>記錄</button>
-    <button data-page="perf"><i class="bi bi-speedometer2"></i>表現</button>
-    <button data-page="charts"><i class="bi bi-bar-chart"></i>圖表</button>
-    <button data-page="set"><i class="bi bi-gear"></i>設定</button>
+    <button type="button" class="active" data-page="log"><i class="bi bi-plus-circle"></i>記錄</button>
+    <button type="button" data-page="perf"><i class="bi bi-speedometer2"></i>表現</button>
+    <button type="button" data-page="charts"><i class="bi bi-bar-chart"></i>圖表</button>
+    <button type="button" data-page="set"><i class="bi bi-gear"></i>設定</button>
   </nav>
   <script src="vendor/sql-wasm.js"></script>
   <script src="vendor/apexcharts.min.js"></script>
@@ -878,6 +881,7 @@
     }
 
     function render() {
+      safe(function () {
       var sets = loadSets();
       var date = document.getElementById("sessionDate").value || today();
       var day = sets.filter(function (s) { return s.date === date; });
@@ -897,6 +901,7 @@
       renderFromList();
       renderCharts();
       updateBodyMaps();
+      });
     }
 
     function renderPerf() {
@@ -987,8 +992,14 @@
       chart.render();
     }
 
-    document.getElementById("sessionDate").value = today();
-    document.getElementById("perfDate").value = today();
+    function bind(id, event, fn) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener(event, fn);
+    }
+    function safe(fn) { try { fn(); } catch (err) { console.error(err); } }
+
+    safe(function () { document.getElementById("sessionDate").value = today(); });
+    safe(function () { document.getElementById("perfDate").value = today(); });
 
     document.querySelectorAll(".tabs button").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -1001,7 +1012,7 @@
       });
     });
 
-    document.getElementById("logMode").addEventListener("click", function (e) {
+    bind("logMode", "click", function (e) {
       var btn = e.target.closest("[data-mode]");
       if (!btn) return;
       logMode = btn.getAttribute("data-mode");
@@ -1011,7 +1022,7 @@
       if (logMode === "list") renderFromList();
     });
 
-    document.getElementById("addBtn").addEventListener("click", function () {
+    bind("addBtn", "click", function () {
       var name = document.getElementById("exercise").value.trim();
       var w = document.getElementById("weight").value.trim();
       var r = document.getElementById("reps").value.trim();
@@ -1030,21 +1041,21 @@
       render();
     });
 
-    document.getElementById("exercise").addEventListener("input", updateLastHint);
-    document.getElementById("sessionDate").addEventListener("change", updateLastHint);
-    document.getElementById("chartRange").addEventListener("click", function (e) {
+    bind("exercise", "input", updateLastHint);
+    bind("sessionDate", "change", updateLastHint);
+    bind("chartRange", "click", function (e) {
       var b = e.target.closest("[data-range]"); if (!b) return;
       chartRange = b.getAttribute("data-range");
       document.querySelectorAll("#chartRange button").forEach(function (x) { x.classList.toggle("active", x === b); });
       renderCharts(); updateBodyMaps();
     });
-    document.getElementById("genderSeg").addEventListener("click", function (e) {
+    bind("genderSeg", "click", function (e) {
       var b = e.target.closest("[data-gender]"); if (!b) return;
       gender = b.getAttribute("data-gender");
       localStorage.setItem("workout-tracker-web-app.gender", gender);
       applyGender();
     });
-    document.getElementById("logList").addEventListener("click", function (e) {
+    bind("logList", "click", function (e) {
       var edit = e.target.closest("[data-edit]");
       if (edit) {
         var id = edit.getAttribute("data-edit");
@@ -1065,15 +1076,15 @@
       render();
     });
 
-    document.getElementById("chips").addEventListener("click", function (e) {
+    bind("chips", "click", function (e) {
       var btn = e.target.closest("[data-chip]");
       if (!btn) return;
       document.getElementById("exercise").value = btn.getAttribute("data-chip");
     });
 
-    document.getElementById("perfDate").addEventListener("change", renderPerf);
+    bind("perfDate", "change", renderPerf);
 
-    document.getElementById("chartMode").addEventListener("click", function (e) {
+    bind("chartMode", "click", function (e) {
       var btn = e.target.closest("[data-mode]");
       if (!btn) return;
       chartMode = btn.getAttribute("data-mode");
@@ -1082,7 +1093,7 @@
       updateBodyMaps();
     });
 
-    document.getElementById("sched").addEventListener("click", function (e) {
+    bind("sched", "click", function (e) {
       var lists = loadSched();
       if (e.target.id === "addList") {
         var name = document.getElementById("newList").value.trim();
@@ -1112,12 +1123,12 @@
       }
     });
 
-    document.getElementById("fromList").addEventListener("change", function (e) {
+    bind("fromList", "change", function (e) {
       if (e.target.id !== "listPick") return;
       window.__li = Number(e.target.value) || 0;
       renderFromList();
     });
-    document.getElementById("fromList").addEventListener("click", function (e) {
+    bind("fromList", "click", function (e) {
       var btn = e.target.closest("[data-ll]");
       if (!btn) return;
       var i = btn.getAttribute("data-ll");
@@ -1147,14 +1158,14 @@
       });
       render();
     }
-    document.getElementById("unitSeg").addEventListener("click", function (e) {
+    bind("unitSeg", "click", function (e) {
       var b = e.target.closest("[data-unit]"); if (b) setUnit(b.getAttribute("data-unit"));
     });
-    document.getElementById("setUnit").addEventListener("click", function (e) {
+    bind("setUnit", "click", function (e) {
       var b = e.target.closest("[data-unit]"); if (b) setUnit(b.getAttribute("data-unit"));
     });
 
-    document.getElementById("langSeg").addEventListener("click", function (e) {
+    bind("langSeg", "click", function (e) {
       var b = e.target.closest("[data-lang]");
       if (!b) return;
       locale = b.getAttribute("data-lang");
@@ -1162,14 +1173,14 @@
       document.querySelectorAll("#langSeg button").forEach(function (x) { x.classList.toggle("active", x === b); });
     });
 
-    document.getElementById("exportBtn").addEventListener("click", function () {
+    bind("exportBtn", "click", function () {
       var blob = new Blob([JSON.stringify(loadSets(), null, 2)], { type: "application/json" });
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "workout.json";
       a.click();
     });
-    document.getElementById("clearBtn").addEventListener("click", function () {
+    bind("clearBtn", "click", function () {
       if (!confirm("清除全部紀錄？")) return;
       saveSets([]);
       render();
@@ -1186,7 +1197,7 @@
       var parent = pane.parentElement;
       if (parent) parent.querySelectorAll(".tab-pane").forEach(function (p) { p.classList.toggle("active", p === pane); p.classList.toggle("show", p === pane); });
     });
-    document.getElementById("exportSqlBtn").addEventListener("click", function () {
+    bind("exportSqlBtn", "click", function () {
       if (!sqlDb) return;
       var bytes = sqlDb.export();
       var blob = new Blob([bytes], { type: "application/x-sqlite3" });
@@ -1195,7 +1206,7 @@
       a.download = "workout.sqlite";
       a.click();
     });
-    document.getElementById("importFile").addEventListener("change", function (e) {
+    bind("importFile", "change", function (e) {
       var file = e.target.files && e.target.files[0];
       if (!file) return;
       var reader = new FileReader();
