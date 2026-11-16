@@ -28,11 +28,22 @@
     html, body {
       margin: 0;
       height: 100%;
-      background: #000;
+      min-height: 100%;
+      min-height: -webkit-fill-available;
+      background: #3a2e08;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang TC", system-ui, sans-serif;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      left: 0; right: 0; bottom: -40px;
+      height: 140px;
+      background: #3a2e08;
+      z-index: 25;
+      pointer-events: none;
     }
     .top {
       position: fixed;
