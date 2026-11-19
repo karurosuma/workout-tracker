@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v275";
+const CACHE = "workout-tracker-web-app-v276";
 const PRECACHE = [
   "./",
   "./index.html",
