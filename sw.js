@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v258";
+const CACHE = "workout-tracker-web-app-v259";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -8,6 +8,10 @@ const PRECACHE = [
   "./bodies/male-back.jpg",
   "./bodies/female-front.jpg",
   "./bodies/female-back.jpg",
+  "./bodies/map-perf-front.svg",
+  "./bodies/map-perf-back.svg",
+  "./bodies/map-charts-front.svg",
+  "./bodies/map-charts-back.svg",
   "./favicon.ico",
   "./favicon-16.png",
   "./favicon-32.png",
