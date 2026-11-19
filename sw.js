@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v261";
+const CACHE = "workout-tracker-web-app-v262";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -45,7 +45,7 @@ self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
       return Promise.all(PRECACHE.map(function (url) {
-        return cache.add(url).catch(function () {});
+        return cache.add(new Request(url, { cache: "reload" })).catch(function () {});
       }));
     }).then(function () {
       return self.skipWaiting();
@@ -70,23 +70,21 @@ self.addEventListener("activate", function (event) {
 self.addEventListener("fetch", function (event) {
   var req = event.request;
   if (req.method !== "GET") return;
-  var path = new URL(req.url).pathname;
-  if (/apple-touch-icon|icon-|favicon|manifest\.webmanifest/.test(path)) return;
-  if (req.url.indexOf("muscles.json") !== -1) return;
+  var url;
+  try { url = new URL(req.url); } catch (e) { return; }
+  if (url.origin !== self.location.origin) return;
   event.respondWith(
-    caches.match(req).then(function (cached) {
+    caches.match(req, { ignoreSearch: true }).then(function (cached) {
       if (cached) return cached;
       return fetch(req).then(function (res) {
-        var copy = res.clone();
-        if (res.ok && new URL(req.url).origin === self.location.origin) {
-          caches.open(CACHE).then(function (cache) {
-            cache.put(req, copy);
-          });
+        if (res && res.ok) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (cache) { cache.put(req, copy); });
         }
         return res;
       }).catch(function () {
         if (req.mode === "navigate") return caches.match("./index.html");
-        return caches.match(req);
+        return caches.match("./index.html");
       });
     })
   );
