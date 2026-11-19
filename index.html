@@ -324,6 +324,8 @@
     }
     .ex-group summary::-webkit-details-marker { display: none; }
     .ex-meta { display: inline-flex; align-items: center; gap: 8px; }
+    .ex-cmp { display: inline-flex; align-items: center; gap: 12px; }
+    .ex-cmp .cmp-val { display: inline; margin: 0; }
     .ex-meta::after {
       content: "";
       width: 7px;
@@ -567,11 +569,6 @@
           <div class="body-unmatched" id="perfBodyUnmatched"></div>
         </section>
       </div>
-      <div class="section-head">
-        <h2 data-i18n="todaySummaryTitle">動作摘要</h2>
-        <span class="muted" data-i18n="todaySummaryHint">點右側數值看百分比</span>
-      </div>
-      <div class="card" id="perfSummary"></div>
       <div class="card">
         <label data-i18n="date">日期</label>
         <div class="row">
@@ -579,6 +576,7 @@
           <select id="perfDate"></select>
           <button type="button" class="btn btn-ghost" id="perfNext" style="flex:0 0 48px;width:48px;padding:12px 0">▶</button>
         </div>
+        <div class="muted" data-i18n="todaySummaryHint" style="margin-bottom:4px">點組數看上次總組數</div>
         <div id="perfList"></div>
       </div>
     </section>
@@ -1528,7 +1526,7 @@
       var date = document.getElementById("sessionDate").value || today();
       var day = sets.filter(function (s) { return s.date === date; });
       document.getElementById("logList").innerHTML = day.length
-        ? groupedLog(day, date, first, { openLatest: true, time: true })
+        ? groupedLog(day, date, first, { openLatest: true, time: true, desc: true })
         : "<div class=\"muted\">" + t("empty") + "</div>";
       var names = recentNames(sets);
       document.getElementById("chips").innerHTML = names.slice(0, 12).map(function (n) {
@@ -1573,15 +1571,31 @@
         var at = Number(s.createdAt) || 0;
         if (at >= latestAt) { latestAt = at; latestKey = k; }
       });
+      if (opts.desc) {
+        order.sort(function (a, b) {
+          var aa = 0, bb = 0;
+          groups[a].forEach(function (s) { aa = Math.max(aa, Number(s.createdAt) || 0); });
+          groups[b].forEach(function (s) { bb = Math.max(bb, Number(s.createdAt) || 0); });
+          return bb - aa;
+        });
+      }
       return order.map(function (k) {
+        var rows = groups[k].slice();
+        if (opts.desc) rows.sort(function (a, b) { return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0); });
         var open = opts.openLatest ? k === latestKey : false;
-        var rows = groups[k].map(function (s) {
-          var time = opts.time
-            ? " · <span data-ago=\"" + (s.createdAt || 0) + "\">" + timeAgo(s.createdAt) + "</span>"
-            : "";
-          return "<div class=\"set\"><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + time + "</div></div>";
+        var vol = 0;
+        rows.forEach(function (s) { vol += (Number(s.weight) || 0) * (Number(s.reps) || 0); });
+        var body = rows.map(function (s) {
+          if (!opts.time) return "<div class=\"set\"><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>";
+          return "<div class=\"set\"><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div><span class=\"muted\" data-ago=\"" + (s.createdAt || 0) + "\">" + timeAgo(s.createdAt) + "</span></div>";
         }).join("");
-        return "<details class=\"ex-group\"" + (open ? " open" : "") + "><summary><span><b>" + escapeHtml(k) + "</b>" + newMark(first, k, date) + "</span><span class=\"ex-meta\"><span class=\"muted\">" + groups[k].length + " " + t("setsWord") + "</span></span></summary>" + rows + "</details>";
+        var meta = opts.compare
+          ? (function () {
+              var prev = lastSession(k, date);
+              return "<span class=\"ex-cmp\">" + cmpCell("sets", rows.length, prev && prev.sets) + cmpCell("vol", vol, prev && prev.vol) + "</span>";
+            })()
+          : "<span class=\"muted\">" + rows.length + " " + t("setsWord") + "</span>";
+        return "<details class=\"ex-group\"" + (open ? " open" : "") + "><summary><span><b>" + escapeHtml(k) + "</b>" + newMark(first, k, date) + "</span><span class=\"ex-meta\">" + meta + "</span></summary>" + body + "</details>";
       }).join("");
     }
     function renderPerf() {
@@ -1601,28 +1615,9 @@
         el.value = date;
       }
       var sets = loadSets().filter(function (s) { return s.date === date; });
-      var allSets = loadSets();
-      var first = firstDates(allSets);
-      var by = {};
-      sets.forEach(function (s) {
-        var k = s.exercise || "";
-        if (!by[k]) by[k] = { sets: 0, vol: 0 };
-        by[k].sets++;
-        by[k].vol += (Number(s.weight) || 0) * (Number(s.reps) || 0);
-      });
-      var summary = document.getElementById("perfSummary");
-      if (summary) {
-        var keys = Object.keys(by);
-        summary.innerHTML = keys.length ? "<table class=\"cmp-table\"><tbody>" + keys.map(function (k) {
-          var prev = lastSession(k, date);
-          return "<tr><td>" + escapeHtml(k) + newMark(first, k, date) + "</td><td>" +
-            cmpCell("sets", by[k].sets, prev && prev.sets) +
-            cmpCell("vol", by[k].vol, prev && prev.vol) +
-            "</td></tr>";
-        }).join("") + "</tbody></table>" : "<div class=\"muted\">" + t("noDay") + "</div>";
-      }
+      var first = firstDates(loadSets());
       document.getElementById("perfList").innerHTML = sets.length
-        ? groupedLog(sets, date, first)
+        ? groupedLog(sets, date, first, { compare: true })
         : "<div class=\"muted\">" + t("noDay") + "</div>";
     }
     function shiftPerf(dir) {
@@ -1992,13 +1987,15 @@
     });
     var perfDaysEl = document.getElementById("perfDays");
     if (perfDaysEl) perfDaysEl.addEventListener("touchmove", function (e) { e.stopPropagation(); }, { passive: true });
-    bind("perfSummary", "click", function (e) {
+    var perfListEl = document.getElementById("perfList");
+    if (perfListEl) perfListEl.addEventListener("click", function (e) {
       var btn = e.target.closest(".cmp-val");
       if (!btn || !btn.getAttribute("data-alt")) return;
+      e.preventDefault();
       var showing = btn.getAttribute("data-show") === "alt";
       btn.setAttribute("data-show", showing ? "val" : "alt");
       btn.textContent = showing ? btn.getAttribute("data-val") : btn.getAttribute("data-alt");
-    });
+    }, true);
     bind("muscleSets", "click", function (e) {
       var row = e.target.closest("[data-part]");
       if (!row) return;
