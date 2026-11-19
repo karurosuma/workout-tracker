@@ -324,8 +324,22 @@
     }
     .ex-group summary::-webkit-details-marker { display: none; }
     .ex-meta { display: inline-flex; align-items: center; gap: 8px; }
-    .ex-cmp { display: inline-flex; align-items: center; gap: 12px; }
-    .ex-cmp .cmp-val { display: inline; margin: 0; }
+    .ex-meta-stack { flex-direction: column; align-items: flex-end; gap: 2px; }
+    .ex-meta-stack::after { content: none; }
+    .ex-top { display: inline-flex; align-items: center; gap: 8px; }
+    .ex-top::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(-135deg);
+      margin-top: 4px;
+    }
+    .ex-group:not([open]) .ex-top::after { transform: rotate(45deg); margin-top: 0; }
+    .ex-vol { text-align: right; }
+    .ex-vol .cmp-val, .ex-top .cmp-val { display: inline; margin: 0; }
+    .ex-group summary { align-items: flex-start; }
     .ex-meta::after {
       content: "";
       width: 7px;
@@ -1592,7 +1606,7 @@
         var meta = opts.compare
           ? (function () {
               var prev = lastSession(k, date);
-              return "<span class=\"ex-cmp\">" + cmpCell("sets", rows.length, prev && prev.sets) + cmpCell("vol", vol, prev && prev.vol) + "</span>";
+              return "<span class=\"ex-meta ex-meta-stack\"><span class=\"ex-top\">" + cmpCell("sets", rows.length, prev && prev.sets) + "</span><span class=\"ex-vol\">" + cmpCell("vol", vol, prev && prev.vol) + "</span></span>";
             })()
           : "<span class=\"muted\">" + rows.length + " " + t("setsWord") + "</span>";
         return "<details class=\"ex-group\"" + (open ? " open" : "") + "><summary><span><b>" + escapeHtml(k) + "</b>" + newMark(first, k, date) + "</span><span class=\"ex-meta\">" + meta + "</span></summary>" + body + "</details>";
