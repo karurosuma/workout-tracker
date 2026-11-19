@@ -301,6 +301,22 @@
     .tabs button i { font-size: 20px; line-height: 1; }
     .tabs button.active { color: #000; background: var(--accent); }
     .set { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
+    .sched-row { justify-content: flex-start; }
+    .sched-name { flex: 1; min-width: 0; }
+    .drag-handle {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+      border: 0;
+      padding: 0;
+      background:
+        linear-gradient(currentColor, currentColor) 6px 7px / 14px 2px no-repeat,
+        linear-gradient(currentColor, currentColor) 6px 13px / 14px 2px no-repeat,
+        linear-gradient(currentColor, currentColor) 6px 19px / 14px 2px no-repeat;
+      color: var(--muted);
+      touch-action: none;
+    }
+    .sched-row.dragging { opacity: 0.45; }
     .set:last-child { border-bottom: 0; }
     .set .btn-ghost { width: auto; padding: 8px 12px; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.16); }
     .set .icon-btn {
@@ -1677,7 +1693,10 @@
       var lists = loadSched();
       var html = lists.map(function (item, i) {
         var rows = (item.exercises || []).map(function (n, j) {
-          return "<div class=\"set\"><span>" + n + "</span><button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
+          var label = String(n || "").replace(/[&<>"]/g, function (c) {
+            return c === "&" ? "&" : c === "<" ? "<" : c === ">" ? ">" : """;
+          });
+          return "<div class=\"set sched-row\" data-list=\"" + i + "\"><button type=\"button\" class=\"drag-handle\" aria-label=\"Move\"></button><span class=\"sched-name\">" + label + "</span><button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
         }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
         return "<div style=\"margin-bottom:16px\"><div class=\"row\" style=\"align-items:center\"><b>" + item.name + "</b>" +
           "<button class=\"btn-ghost\" data-sl=\"" + i + "\" style=\"width:auto;padding:6px 10px\">" + t("deleteList") + "</button></div>" + rows +
@@ -2111,6 +2130,66 @@
         saveSched(lists); render();
       }
     });
+    (function () {
+      var host = document.getElementById("sched");
+      if (!host) return;
+      var dragRow = null;
+      function rowsFor(list) {
+        return host.querySelectorAll(".sched-row[data-list=\"" + list + "\"]");
+      }
+      function place(row, y) {
+        var list = row.getAttribute("data-list");
+        var rows = rowsFor(list);
+        var i;
+        for (i = 0; i < rows.length; i++) {
+          var other = rows[i];
+          if (other === row) continue;
+          var box = other.getBoundingClientRect();
+          if (y < box.top + box.height / 2) {
+            other.parentNode.insertBefore(row, other);
+            return;
+          }
+        }
+        var last = rows[rows.length - 1];
+        if (last && last !== row) last.parentNode.insertBefore(row, last.nextSibling);
+      }
+      host.addEventListener("pointerdown", function (e) {
+        var handle = e.target.closest(".drag-handle");
+        if (!handle) return;
+        var row = handle.closest(".sched-row");
+        if (!row) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dragRow = row;
+        row.classList.add("dragging");
+        if (handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
+      });
+      host.addEventListener("pointermove", function (e) {
+        if (!dragRow) return;
+        e.preventDefault();
+        place(dragRow, e.clientY);
+      }, { passive: false });
+      function finish() {
+        if (!dragRow) return;
+        var listIndex = Number(dragRow.getAttribute("data-list"));
+        var names = [];
+        rowsFor(listIndex).forEach(function (row) {
+          var label = row.querySelector(".sched-name");
+          if (label) names.push(label.textContent);
+        });
+        dragRow.classList.remove("dragging");
+        dragRow = null;
+        var lists = loadSched();
+        if (!lists[listIndex]) return;
+        var before = (lists[listIndex].exercises || []).join("\n");
+        if (before === names.join("\n")) return;
+        lists[listIndex].exercises = names;
+        saveSched(lists);
+        render();
+      }
+      host.addEventListener("pointerup", finish);
+      host.addEventListener("pointercancel", finish);
+    })();
 
     bind("fromList", "change", function (e) {
       if (e.target.id !== "listPick") return;
