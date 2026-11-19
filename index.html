@@ -199,7 +199,7 @@
     .file-btn .btn { margin: 0; pointer-events: none; }
     .file-btn input[type="file"] {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      margin: 0; opacity: 0; font-size: 16px; z-index: 2;
+      margin: 0; opacity: 0.02; font-size: 16px; z-index: 2;
     }
     body::after {
       content: "";
@@ -572,7 +572,7 @@
         </div>
         <div class="file-btn">
           <button type="button" class="btn btn-ghost" id="loadBtn">Load</button>
-          <input id="importFile" type="file" accept=".sqlite,.db,.sqlite3,.json,application/json" />
+          <input id="importFile" type="file" />
         </div>
         <button type="button" class="btn btn-ghost" id="saveBtn">Save</button>
       </div>
@@ -638,8 +638,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "全部重設", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "重設全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱", cancel: "取消", secGeneral: "一般", secData: "資料", secReset: "重設", file: "檔案", setsChart: "組數", loaded: "已載入", saved: "已儲存", added: "已新增一組" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Reset all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Reset all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name", cancel: "Cancel", secGeneral: "General", secData: "Data", secReset: "Reset", file: "File", setsChart: "Sets", loaded: "Loaded", saved: "Saved", added: "Set added" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "全部重設", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "重設全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱", cancel: "取消", secGeneral: "一般", secData: "資料", secReset: "重設", file: "檔案", setsChart: "組數", loaded: "已載入", saved: "已儲存", added: "已新增一組", loadFail: "無法載入" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Reset all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Reset all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name", cancel: "Cancel", secGeneral: "General", secData: "Data", secReset: "Reset", file: "File", setsChart: "Sets", loaded: "Loaded", saved: "Saved", added: "Set added", loadFail: "Could not load" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -1802,33 +1802,45 @@
       notify(t("saved"));
     });
     bind("importFile", "change", function (e) {
-      var file = e.target.files && e.target.files[0];
+      var input = e.target;
+      var file = input.files && input.files[0];
       if (!file) return;
       var reader = new FileReader();
       reader.onload = function () {
-        var name = file.name.toLowerCase();
-        if (name.endsWith(".json")) {
-          try {
-            var data = JSON.parse(reader.result);
-            var rows = Array.isArray(data) ? data : (data.sets || []);
-            saveSets(rows);
-            render();
-            notify(t("loaded"));
-          } catch (err) {}
-        } else if (SQL_LIB) {
-          try {
-            sqlDb = new SQL_LIB.Database(new Uint8Array(reader.result));
-            ensureSchema();
-            memoryStore.sets = rowsFromSql();
-            persistSql();
-            render();
-            notify(t("loaded"));
-          } catch (err) {}
+        var buf = reader.result;
+        var bytes = new Uint8Array(buf);
+        var head = "";
+        for (var i = 0; i < 15 && i < bytes.length; i++) head += String.fromCharCode(bytes[i]);
+        var name = (file.name || "").toLowerCase();
+        var sqlite = head === "SQLite format 3" || /\.(sqlite3?|db)$/.test(name);
+        var finish = function () { input.value = ""; };
+        var fail = function () { finish(); notify(t("loadFail")); };
+        if (sqlite || (fileKind === "sqlite" && !name.endsWith(".json"))) {
+          initSql().then(function () {
+            if (!SQL_LIB) return fail();
+            try {
+              sqlDb = new SQL_LIB.Database(bytes);
+              ensureSchema();
+              memoryStore.sets = rowsFromSql();
+              persistSql();
+              render();
+              notify(t("loaded"));
+              finish();
+            } catch (err) { fail(); }
+          }).catch(fail);
+          return;
         }
+        try {
+          var data = JSON.parse(new TextDecoder().decode(bytes));
+          var rows = Array.isArray(data) ? data : (data.sets || []);
+          saveSets(rows);
+          render();
+          notify(t("loaded"));
+          finish();
+        } catch (err) { fail(); }
       };
-      if (file.name.toLowerCase().endsWith(".json")) reader.readAsText(file);
-      else reader.readAsArrayBuffer(file);
-      e.target.value = "";
+      reader.onerror = function () { input.value = ""; notify(t("loadFail")); };
+      reader.readAsArrayBuffer(file);
     });
     fetch("muscles.json").then(function (r) { return r.json(); }).then(function (data) {
       if (data && (data.exercises || data.keywords)) MUSCLE_DATA = data;
