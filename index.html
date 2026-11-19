@@ -1709,9 +1709,17 @@
     }
     function setExerciseUnit(name, next) {
       if (next !== "kg" && next !== "lbs") return;
-      exUnits[String(name || "").trim().toLowerCase()] = next;
+      var key = String(name || "").trim().toLowerCase();
+      exUnits[key] = next;
       localStorage.setItem("workout-tracker-web-app.exUnit", JSON.stringify(exUnits));
-      render();
+      document.querySelectorAll("[data-xn]").forEach(function (b) {
+        if (String(b.getAttribute("data-xn") || "").trim().toLowerCase() !== key) return;
+        b.classList.toggle("active", b.getAttribute("data-xu") === next);
+      });
+      document.querySelectorAll("[data-last-for]").forEach(function (el) {
+        if (String(el.getAttribute("data-last-for") || "").trim().toLowerCase() !== key) return;
+        el.textContent = lastWeightText(name);
+      });
     }
     function fmtAs(kg, u) {
       var n = u === "lbs" ? Number(kg) * 2.20462 : Number(kg);
@@ -1752,7 +1760,7 @@
           var label = htmlEscape(n);
           var last = lastWeightText(n);
           return "<div class=\"set sched-row\" data-list=\"" + i + "\"><button type=\"button\" class=\"drag-handle\" aria-label=\"Move\"></button><span class=\"sched-name\">" + label + "</span>" +
-            (last ? "<span class=\"muted sched-last\">" + htmlEscape(last) + "</span>" : "") +
+            (last ? "<span class=\"muted sched-last\" data-last-for=\"" + label + "\">" + htmlEscape(last) + "</span>" : "") +
             exerciseUnitSwitch(n) +
             "<button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
         }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
@@ -1778,11 +1786,12 @@
       }).join("");
       var rows = (lists[idx].exercises || []).map(function (n, i) {
         var last = lastWeightText(n);
-        return "<div style=\"margin-bottom:12px\"><div class=\"row\" style=\"margin-bottom:6px\"><b>" + htmlEscape(n) + "</b>" +
-          (last ? "<span class=\"muted\" style=\"margin-left:auto\">" + htmlEscape(last) + "</span>" : "<span style=\"margin-left:auto\"></span>") +
+        return "<div class=\"list-ex\" style=\"margin-bottom:14px\"><div class=\"row\" style=\"margin-bottom:6px\"><b>" + htmlEscape(n) + "</b>" +
+          "<span class=\"muted\" data-last-for=\"" + htmlEscape(n) + "\" style=\"margin-left:auto\">" + htmlEscape(last) + "</span></div>" +
+          "<div class=\"row\">" +
+          "<input data-lw=\"" + i + "\" placeholder=\"" + t("phWeight") + "\" inputmode=\"decimal\" />" +
           exerciseUnitSwitch(n) +
           "</div><div class=\"row\">" +
-          "<input data-lw=\"" + i + "\" placeholder=\"" + t("phWeight") + "\" inputmode=\"decimal\" />" +
           "<input data-lr=\"" + i + "\" placeholder=\"" + t("phReps") + "\" inputmode=\"numeric\" />" +
           "<button class=\"btn\" data-ll=\"" + i + "\" data-ln=\"" + htmlEscape(n) + "\" style=\"width:auto\">" + t("logOne") + "</button></div></div>";
       }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
@@ -1959,6 +1968,7 @@
           renderCharts();
         }
         if (page === "set") renderSched();
+        if (page === "log" && logMode === "list") renderFromList();
       });
     });
 
@@ -2187,18 +2197,18 @@
         var n = input ? input.value.trim() : "";
         if (!n || !lists[i]) return;
         lists[i].exercises.push(n);
-        saveSched(lists); render(); return;
+        saveSched(lists); render(); renderFromList(); return;
       }
       var del = e.target.closest("[data-sx]");
       if (del) {
         var p = del.getAttribute("data-sx").split(":");
         lists[Number(p[0])].exercises.splice(Number(p[1]), 1);
-        saveSched(lists); render(); return;
+        saveSched(lists); render(); renderFromList(); return;
       }
       var dl = e.target.closest("[data-sl]");
       if (dl) {
         lists.splice(Number(dl.getAttribute("data-sl")), 1);
-        saveSched(lists); render();
+        saveSched(lists); render(); renderFromList();
       }
     });
     (function () {
@@ -2257,6 +2267,7 @@
         lists[listIndex].exercises = names;
         saveSched(lists);
         render();
+        renderFromList();
       }
       host.addEventListener("pointerup", finish);
       host.addEventListener("pointercancel", finish);
