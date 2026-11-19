@@ -11,7 +11,11 @@
   <meta name="apple-mobile-web-app-title" content="Workout" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="favicon.ico" sizes="any" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=240" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=240" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=240" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=240" />
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="apple-touch-icon.png?v=240" />
   <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
   <style>
     :root {
@@ -32,16 +36,17 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       margin: 0;
-      height: 100%;
-      min-height: 100%;
-      min-height: -webkit-fill-available;
-      min-height: 100dvh;
+      width: 100%;
+      height: var(--app-h, 100dvh);
+      min-height: var(--app-h, 100dvh);
       background-color: var(--bg-bot);
       background-image: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 40%, var(--bg-bot) 100%);
       background-attachment: fixed;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang TC", system-ui, sans-serif;
       overflow: hidden;
+      position: fixed;
+      inset: 0;
       -webkit-font-smoothing: antialiased;
     }
     button, input, select { font-family: inherit; font-size: 16px; }
@@ -64,7 +69,8 @@
     .top h1 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -0.02em; }
     .pages {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0; left: 0; right: 0;
+      height: var(--app-h, 100dvh);
       max-width: 480px;
       margin: 0 auto;
       overflow-y: auto;
@@ -76,6 +82,22 @@
     .page { display: none; }
     .page.active { display: block; }
     .hidden { display: none !important; }
+    .sheet {
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: calc(64px + env(safe-area-inset-top)) 12px 12px;
+    }
+    .sheet-card {
+      width: min(448px, 100%);
+      background: #1c1c1e;
+      border-radius: 22px;
+      padding: 16px;
+      border: 0.5px solid rgba(255,255,255,0.14);
+      max-height: 80dvh;
+      overflow-y: auto;
+    }
+    .sheet-card h2 { margin: 0 0 12px; font-size: 20px; }
     .card {
       background: var(--card);
       backdrop-filter: saturate(160%) blur(24px);
@@ -488,6 +510,23 @@
       <div class="card" id="sched"></div>
     </section>
   </main>
+  <div id="editSheet" class="sheet hidden">
+    <div class="sheet-card">
+      <h2 data-i18n="edit">編輯</h2>
+      <label data-i18n="date">日期</label>
+      <input id="editDate" type="date" />
+      <label data-i18n="exercise">動作</label>
+      <input id="editExercise" list="exerciseList" autocomplete="off" />
+      <label data-i18n="weight">重量</label>
+      <input id="editWeight" inputmode="decimal" />
+      <label data-i18n="reps">次數</label>
+      <input id="editReps" inputmode="numeric" />
+      <div class="row" style="margin:0">
+        <button type="button" class="btn btn-ghost" id="editCancel" data-i18n="cancel">取消</button>
+        <button type="button" class="btn" id="editSave" data-i18n="save">儲存</button>
+      </div>
+    </div>
+  </div>
   <nav class="tabs">
     <button type="button" class="active" data-page="log"><i class="bi bi-plus-circle"></i>記錄</button>
     <button type="button" data-page="perf"><i class="bi bi-speedometer2"></i>表現</button>
@@ -518,8 +557,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "清除全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Clear all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "清除全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱", cancel: "取消" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Clear all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name", cancel: "Cancel" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -1029,12 +1068,21 @@
       var d = dates[dates.length - 1];
       return { date: d, sets: byDate[d].sets, vol: byDate[d].vol };
     }
-    function cmpCell(label, now, prev) {
-      if (prev == null || !prev) return "<button type=\"button\" class=\"cmp-val\">" + label + "</button>";
-      var p = Math.round(((now - prev) / prev) * 100);
-      var cls = p > 0 ? "up" : p < 0 ? "down" : "";
-      var pct = (p > 0 ? "+" : "") + p + "%";
-      return "<button type=\"button\" class=\"cmp-val " + cls + "\" data-val=\"" + escapeHtml(label) + "\" data-pct=\"" + pct + "\">" + label + "</button>";
+    function cmpCell(kind, now, prev) {
+      var plain = kind === "sets" ? (now + " " + t("setsWord")) : fmt(now);
+      if (prev == null || !prev) return "<button type=\"button\" class=\"cmp-val\">" + plain + "</button>";
+      var diff = now - prev;
+      var sign = diff > 0 ? "+" : diff < 0 ? "-" : "";
+      var abs = Math.abs(diff);
+      var pct = Math.round((diff / prev) * 100);
+      var pctText = (pct > 0 ? "+" : "") + pct + "%";
+      var frac = kind === "sets"
+        ? sign + abs + "/" + prev
+        : sign + fmt(abs) + "/" + fmt(prev);
+      var cls = diff > 0 ? "up" : diff < 0 ? "down" : "";
+      var shown = kind === "vol" ? pctText : frac;
+      var alt = kind === "vol" ? frac : pctText;
+      return "<button type=\"button\" class=\"cmp-val " + cls + "\" data-val=\"" + escapeHtml(shown) + "\" data-alt=\"" + escapeHtml(alt) + "\">" + shown + "</button>";
     }
     function lastWeightFor(exercise, excludeDate) {
       var name = String(exercise || "").trim().toLowerCase();
@@ -1183,8 +1231,8 @@
         summary.innerHTML = keys.length ? "<table class=\"cmp-table\"><tbody>" + keys.map(function (k) {
           var prev = lastSession(k, date);
           return "<tr><td>" + escapeHtml(k) + "</td><td>" +
-            cmpCell(by[k].sets + " " + t("setsWord"), by[k].sets, prev && prev.sets) +
-            cmpCell(fmt(by[k].vol), by[k].vol, prev && prev.vol) +
+            cmpCell("sets", by[k].sets, prev && prev.sets) +
+            cmpCell("vol", by[k].vol, prev && prev.vol) +
             "</td></tr>";
         }).join("") + "</tbody></table>" : "<div class=\"muted\">" + t("noDay") + "</div>";
       }
@@ -1210,20 +1258,21 @@
       renderPerf();
       updateBodyMaps();
     }
+    var editingId = null;
+    function closeEdit() {
+      editingId = null;
+      var sheet = document.getElementById("editSheet");
+      if (sheet) sheet.classList.add("hidden");
+    }
     function editSet(id) {
-      var sets = loadSets();
-      var s = sets.filter(function (x) { return x.id === id; })[0];
+      var s = loadSets().filter(function (x) { return x.id === id; })[0];
       if (!s) return;
-      var name = prompt(t("exercise"), s.exercise); if (name == null) return;
-      var w = prompt(t("weight") + " (" + unit + ")", String(Math.round(fromKg(s.weight) * 10) / 10)); if (w == null) return;
-      var r = prompt(t("reps"), String(s.reps)); if (r == null) return;
-      var d = prompt(t("date"), s.date); if (d == null) return;
-      s.exercise = name.trim() || s.exercise;
-      s.weight = toKg(w);
-      s.reps = Number(r) || s.reps;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(String(d))) s.date = d;
-      saveSets(sets);
-      render();
+      editingId = id;
+      document.getElementById("editDate").value = s.date || today();
+      document.getElementById("editExercise").value = s.exercise || "";
+      document.getElementById("editWeight").value = String(Math.round(fromKg(s.weight) * 10) / 10);
+      document.getElementById("editReps").value = s.reps;
+      document.getElementById("editSheet").classList.remove("hidden");
     }
 
     function renderSched() {
@@ -1337,6 +1386,18 @@
     function safe(fn) { try { fn(); } catch (err) { console.error(err); } }
 
     safe(function () { document.getElementById("sessionDate").value = today(); });
+    safe(function () {
+      var lock = function () {
+        document.documentElement.style.setProperty("--app-h", window.innerHeight + "px");
+      };
+      lock();
+      window.addEventListener("orientationchange", function () { setTimeout(lock, 250); });
+      document.addEventListener("focusin", function (e) {
+        var el = e.target;
+        if (!el || (el.tagName !== "INPUT" && el.tagName !== "SELECT")) return;
+        setTimeout(function () { try { el.scrollIntoView({ block: "center" }); } catch (err) {} }, 280);
+      });
+    });
     safe(function () { document.getElementById("perfDate").value = today(); });
 
     document.querySelectorAll(".tabs button").forEach(function (btn) {
@@ -1444,10 +1505,32 @@
     });
     bind("perfSummary", "click", function (e) {
       var btn = e.target.closest(".cmp-val");
-      if (!btn || !btn.getAttribute("data-pct")) return;
-      var showing = btn.getAttribute("data-show") === "pct";
-      btn.setAttribute("data-show", showing ? "val" : "pct");
-      btn.textContent = showing ? btn.getAttribute("data-val") : btn.getAttribute("data-pct");
+      if (!btn || !btn.getAttribute("data-alt")) return;
+      var showing = btn.getAttribute("data-show") === "alt";
+      btn.setAttribute("data-show", showing ? "val" : "alt");
+      btn.textContent = showing ? btn.getAttribute("data-val") : btn.getAttribute("data-alt");
+    });
+    bind("editCancel", "click", closeEdit);
+    bind("editSave", "click", function () {
+      if (!editingId) return;
+      var sets = loadSets();
+      var s = sets.filter(function (x) { return x.id === editingId; })[0];
+      if (!s) { closeEdit(); return; }
+      var name = document.getElementById("editExercise").value.trim();
+      var w = document.getElementById("editWeight").value.trim();
+      var r = document.getElementById("editReps").value.trim();
+      var d = document.getElementById("editDate").value;
+      if (!name || !w || !r) return;
+      s.exercise = name;
+      s.weight = toKg(w);
+      s.reps = Number(r) || s.reps;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(d))) s.date = d;
+      saveSets(sets);
+      closeEdit();
+      render();
+    });
+    bind("editSheet", "click", function (e) {
+      if (e.target.id === "editSheet") closeEdit();
     });
     bind("perfList", "click", function (e) {
       var edit = e.target.closest("[data-edit]");
