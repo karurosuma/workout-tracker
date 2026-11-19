@@ -1097,13 +1097,12 @@
       var plain = kind === "sets" ? (now + " " + t("setsWord")) : fmt(now);
       if (prev == null || !prev) return "<button type=\"button\" class=\"cmp-val\">" + plain + "</button>";
       var diff = now - prev;
-      var sign = diff > 0 ? "+" : diff < 0 ? "-" : "";
       var abs = Math.abs(diff);
-      var pct = Math.round((diff / prev) * 100);
-      var pctText = (pct > 0 ? "+" : "") + pct + "%";
+      var pct = Math.abs(Math.round((diff / prev) * 100));
+      var pctText = pct + "%";
       var frac = kind === "sets"
-        ? sign + abs + "/" + prev
-        : sign + fmt(abs) + "/" + fmt(prev);
+        ? abs + "/" + prev
+        : fmt(abs) + "/" + fmt(prev);
       var cls = diff > 0 ? "up" : diff < 0 ? "down" : "";
       var shown = kind === "vol" ? pctText : frac;
       var alt = kind === "vol" ? frac : pctText;
