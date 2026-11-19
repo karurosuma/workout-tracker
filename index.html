@@ -17,6 +17,13 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=240" />
   <link rel="apple-touch-icon-precomposed" sizes="180x180" href="apple-touch-icon.png?v=240" />
   <link rel="stylesheet" href="vendor/bootstrap-icons.min.css" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js").catch(function () {});
+      });
+    }
+  </script>
   <style>
     :root {
       --bg: #3a2e08;
@@ -2153,13 +2160,10 @@
       }
       notify(t("updating"));
       var done = function () { location.reload(); };
-      var clear = caches && caches.keys ? caches.keys().then(function (keys) {
-        return Promise.all(keys.map(function (key) { return caches.delete(key); }));
-      }) : Promise.resolve();
       var update = navigator.serviceWorker ? navigator.serviceWorker.getRegistration().then(function (reg) {
         return reg ? reg.update() : null;
       }) : Promise.resolve();
-      Promise.all([clear, update]).then(done).catch(done);
+      update.then(done).catch(done);
     }
     safe(function () {
       var scroller = document.querySelector(".pages");
