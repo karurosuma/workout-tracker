@@ -443,6 +443,17 @@
     .body-pct[data-side="right"] { right: 0; }
     .section-head { margin: 8px 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .section-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+    .fold summary { cursor: pointer; list-style: none; }
+    .fold summary::-webkit-details-marker { display: none; }
+    .fold summary::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(45deg);
+    }
+    .fold[open] summary::after { transform: rotate(-135deg); margin-top: 6px; }
     .link-btn {
       width: auto;
       border: 0;
@@ -702,12 +713,17 @@
         <button type="button" class="btn btn-ghost" id="openRename" data-i18n="renameTitle" style="margin-top:8px">改動作名稱</button>
         <button type="button" class="btn btn-ghost" id="openRecords" data-i18n="editLog" style="margin-top:8px">編輯紀錄</button>
         <button type="button" class="btn" id="updateBtn" data-i18n="updateBtn" style="margin-top:8px">檢查更新</button>
-        <button type="button" class="btn btn-danger" id="clearBtn" style="margin-top:8px">全部重設</button>
       </div>
       <div class="section-head"><h2 data-i18n="lists">課表</h2></div>
       <div class="card">
         <button type="button" class="btn btn-ghost" id="openLists" data-i18n="lists" style="margin:0">課表</button>
       </div>
+      <details class="fold">
+        <summary class="section-head"><h2 data-i18n="secReset">重設</h2></summary>
+        <div class="card">
+          <button type="button" class="btn btn-danger" id="clearBtn" style="margin:0">全部重設</button>
+        </div>
+      </details>
     </section>
     <section class="page" id="page-rename">
       <button type="button" class="btn btn-ghost back-settings" data-i18n="back" style="margin-bottom:12px">返回</button>
