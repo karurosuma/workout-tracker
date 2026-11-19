@@ -7,7 +7,7 @@
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#2a2208" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="Workout" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="favicon.ico" sizes="any" />
@@ -32,6 +32,8 @@
       --bar: rgba(58, 46, 8, 0.55);
       --line: rgba(255, 255, 255, 0.12);
       --danger: #ff453a;
+      --tab-h: 58px;
+      --tab-gap: max(12px, calc(env(safe-area-inset-bottom, 0px) - 16px));
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -41,6 +43,7 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang TC", system-ui, sans-serif;
       overflow: hidden;
+      overscroll-behavior: none;
       position: fixed;
       top: 0;
       right: 0;
@@ -54,8 +57,9 @@
       z-index: 0;
       left: 0;
       right: 0;
-      top: -60px;
-      bottom: -120px;
+      top: calc(-1 * env(safe-area-inset-top, 0px) - 20px);
+      bottom: calc(-1 * env(safe-area-inset-bottom, 0px) - 80px);
+      opacity: 0.99;
       pointer-events: none;
       background-color: var(--bg-bot);
       background-image: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 42%, var(--bg-bot) 100%);
@@ -85,7 +89,7 @@
       margin: 0 auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(56px + env(safe-area-inset-top)) 16px calc(78px + env(safe-area-inset-bottom));
+      padding: calc(56px + env(safe-area-inset-top)) 16px calc(var(--tab-h) + var(--tab-gap) + 16px);
       z-index: 1;
       background: transparent;
     }
@@ -197,13 +201,22 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       margin: 0; opacity: 0; font-size: 16px; z-index: 2;
     }
+    body::after {
+      content: "";
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: var(--tab-gap);
+      background: var(--bg-bot);
+      z-index: 35;
+      pointer-events: none;
+    }
     .tabs {
       position: fixed;
       left: 50%;
       transform: translateX(-50%);
       width: min(448px, calc(100% - 20px));
-      bottom: calc(10px + env(safe-area-inset-bottom));
-      height: 58px;
+      bottom: var(--tab-gap);
+      height: var(--tab-h);
       display: flex;
       align-items: stretch;
       gap: 2px;
