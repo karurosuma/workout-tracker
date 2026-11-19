@@ -313,29 +313,32 @@
     }
     .ex-group { border-bottom: 0.5px solid var(--line); }
     .ex-group:last-child { border-bottom: 0; }
-    .ex-group summary {
+    .ex-toggle {
       display: flex;
+      width: 100%;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       gap: 8px;
-      padding: 10px 0;
-      cursor: pointer;
-      list-style: none;
+      padding: 10px 0 2px;
+      margin: 0;
+      background: transparent;
+      border: 0;
+      color: inherit;
+      text-align: left;
     }
-    .ex-group summary::-webkit-details-marker { display: none; }
     .ex-meta { display: inline-flex; align-items: center; gap: 8px; }
-    .ex-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
-    .ex-stat .cmp-val { display: inline; margin: 0; text-align: left; }
-    .ex-meta::after {
-      content: "";
-      width: 7px;
-      height: 7px;
+    .ex-chevron {
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
       border-right: 2px solid var(--muted);
       border-bottom: 2px solid var(--muted);
-      transform: rotate(-135deg);
-      margin-top: 4px;
+      transform: rotate(45deg);
     }
-    .ex-group:not([open]) .ex-meta::after { transform: rotate(45deg); margin-top: 0; }
+    .ex-group.open .ex-chevron { transform: rotate(-135deg); margin-top: 4px; }
+    .ex-stat { display: block; text-align: left; padding: 1px 0 1px; }
+    .ex-body { display: none; }
+    .ex-group.open .ex-body { display: block; }
     .muted { color: var(--muted); font-size: 13px; }
     .body-tabs {
       display: flex;
@@ -409,6 +412,7 @@
     }
     .cmp-val.up { color: #30d158; }
     .cmp-val.down { color: #ff453a; }
+    .ex-stat .cmp-val { display: inline-block; margin: 0; width: auto; text-align: left; }
     .body-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     .body-pct {
       position: absolute;
@@ -1605,16 +1609,19 @@
           if (!opts.time) return "<div class=\"set\"><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>";
           return "<div class=\"set\"><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div><span class=\"muted\" data-ago=\"" + (s.createdAt || 0) + "\">" + timeAgo(s.createdAt) + "</span></div>";
         }).join("");
-        var title = "<span><b>" + escapeHtml(k) + "</b>" + newMark(first, k, date) + "</span>";
-        var side = "<span class=\"ex-meta\"><span class=\"muted\">" + rows.length + " " + t("setsWord") + "</span></span>";
+        var name = "<b>" + escapeHtml(k) + "</b>" + newMark(first, k, date);
+        var openCls = open ? " open" : "";
         if (opts.compare) {
           var prev = lastSession(k, date);
-          title = "<span class=\"ex-copy\">" + title +
-            "<span class=\"ex-stat\">" + cmpCell("sets", rows.length, prev && prev.sets) + "</span>" +
-            "<span class=\"ex-stat\">" + cmpCell("vol", vol, prev && prev.vol) + "</span></span>";
-          side = "<span class=\"ex-meta\"></span>";
+          return "<div class=\"ex-group" + openCls + "\"><div class=\"ex-head\">" +
+            "<button type=\"button\" class=\"ex-toggle\"><span>" + name + "</span><span class=\"ex-chevron\"></span></button>" +
+            "<div class=\"ex-stat\">" + cmpCell("sets", rows.length, prev && prev.sets) + "</div>" +
+            "<div class=\"ex-stat\">" + cmpCell("vol", vol, prev && prev.vol) + "</div>" +
+            "</div><div class=\"ex-body\">" + body + "</div></div>";
         }
-        return "<details class=\"ex-group\"" + (open ? " open" : "") + "><summary>" + title + side + "</summary>" + body + "</details>";
+        return "<div class=\"ex-group" + openCls + "\">" +
+          "<button type=\"button\" class=\"ex-toggle\"><span>" + name + "</span><span class=\"ex-meta\"><span class=\"muted\">" + rows.length + " " + t("setsWord") + "</span><span class=\"ex-chevron\"></span></span></button>" +
+          "<div class=\"ex-body\">" + body + "</div></div>";
       }).join("");
     }
     function renderPerf() {
@@ -1981,10 +1988,16 @@
     bind("logList", "click", function (e) {
       var edit = e.target.closest("[data-edit]");
       if (edit) { editSet(edit.getAttribute("data-edit")); return; }
-      var btn = e.target.closest("[data-del]");
-      if (!btn) return;
-      saveSets(loadSets().filter(function (s) { return s.id !== btn.getAttribute("data-del"); }));
-      render();
+      var del = e.target.closest("[data-del]");
+      if (del) {
+        saveSets(loadSets().filter(function (s) { return s.id !== del.getAttribute("data-del"); }));
+        render();
+        return;
+      }
+      var head = e.target.closest(".ex-toggle");
+      if (!head) return;
+      var group = head.closest(".ex-group");
+      if (group) group.classList.toggle("open");
     });
 
     bind("chips", "click", function (e) {
@@ -2006,6 +2019,13 @@
     });
     var perfDaysEl = document.getElementById("perfDays");
     if (perfDaysEl) perfDaysEl.addEventListener("touchmove", function (e) { e.stopPropagation(); }, { passive: true });
+    bind("perfList", "click", function (e) {
+      if (e.target.closest(".cmp-val")) return;
+      var head = e.target.closest(".ex-toggle");
+      if (!head) return;
+      var group = head.closest(".ex-group");
+      if (group) group.classList.toggle("open");
+    });
     var perfListEl = document.getElementById("perfList");
     if (perfListEl) perfListEl.addEventListener("click", function (e) {
       var btn = e.target.closest(".cmp-val");
@@ -2053,11 +2073,6 @@
     bind("editSheet", "click", function (e) {
       if (e.target.id === "editSheet") closeEdit();
     });
-    bind("perfList", "click", function (e) {
-      var edit = e.target.closest("[data-edit]");
-      if (edit) editSet(edit.getAttribute("data-edit"));
-    });
-
     bind("chartMode", "click", function (e) {
       var btn = e.target.closest("[data-mode]");
       if (!btn) return;
