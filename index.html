@@ -1519,10 +1519,7 @@
       var date = document.getElementById("sessionDate").value || today();
       var day = sets.filter(function (s) { return s.date === date; });
       document.getElementById("logList").innerHTML = day.length
-        ? day.slice().reverse().map(function (s) {
-            return "<div class=\"set\"><div><b>" + escapeHtml(s.exercise) + "</b>" + newMark(first, s.exercise, s.date) + "<div class=\"muted\">" + fmt(s.weight) + " × " + s.reps +
-              " · <span data-ago=\"" + (s.createdAt || 0) + "\">" + timeAgo(s.createdAt) + "</span></div></div></div>";
-          }).join("")
+        ? groupedLog(day, date, first)
         : "<div class=\"muted\">" + t("empty") + "</div>";
       var names = recentNames(sets);
       document.getElementById("chips").innerHTML = names.slice(0, 12).map(function (n) {
@@ -1553,6 +1550,21 @@
       var seen = {};
       loadSets().forEach(function (s) { if (s.date) seen[s.date] = 1; });
       return Object.keys(seen).sort();
+    }
+    function groupedLog(list, date, first) {
+      var groups = {};
+      var order = [];
+      list.forEach(function (s) {
+        var k = s.exercise || "";
+        if (!groups[k]) { groups[k] = []; order.push(k); }
+        groups[k].push(s);
+      });
+      return order.map(function (k) {
+        var rows = groups[k].map(function (s) {
+          return "<div class=\"set\"><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>";
+        }).join("");
+        return "<details class=\"ex-group\" open><summary><span><b>" + escapeHtml(k) + "</b>" + newMark(first, k, date) + "</span><span class=\"ex-meta\"><span class=\"muted\">" + groups[k].length + " " + t("setsWord") + "</span></span></summary>" + rows + "</details>";
+      }).join("");
     }
     function renderPerf() {
       var el = document.getElementById("perfDate");
@@ -1591,20 +1603,8 @@
             "</td></tr>";
         }).join("") + "</tbody></table>" : "<div class=\"muted\">" + t("noDay") + "</div>";
       }
-      var groups = {};
-      var order = [];
-      sets.forEach(function (s) {
-        var k = s.exercise || "";
-        if (!groups[k]) { groups[k] = []; order.push(k); }
-        groups[k].push(s);
-      });
-      document.getElementById("perfList").innerHTML = order.length
-        ? order.map(function (k) {
-            var rows = groups[k].map(function (s) {
-              return "<div class=\"set\"><div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>";
-            }).join("");
-            return "<details class=\"ex-group\" open><summary><span><b>" + escapeHtml(k) + "</b>" + newMark(first, k, date) + "</span><span class=\"ex-meta\"><span class=\"muted\">" + groups[k].length + " " + t("setsWord") + "</span></span></summary>" + rows + "</details>";
-          }).join("")
+      document.getElementById("perfList").innerHTML = sets.length
+        ? groupedLog(sets, date, first)
         : "<div class=\"muted\">" + t("noDay") + "</div>";
     }
     function shiftPerf(dir) {
