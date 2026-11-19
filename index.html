@@ -776,8 +776,16 @@
       function classifyBodyParts(name) {
         var text = String(name || "").trim();
         var lower = text.toLowerCase();
+        if (!classifyBodyParts.cache || classifyBodyParts.token !== MUSCLE_DATA) {
+          classifyBodyParts.cache = {};
+          classifyBodyParts.token = MUSCLE_DATA;
+        }
+        if (classifyBodyParts.cache[text]) return classifyBodyParts.cache[text];
         var exact = MUSCLE_DATA.exercises || {};
-        if (exact[text]) return exact[text].slice();
+        if (exact[text]) {
+          classifyBodyParts.cache[text] = exact[text].slice();
+          return classifyBodyParts.cache[text];
+        }
         var keys = MUSCLE_DATA.keywords || {};
         var hits = [];
         Object.keys(keys).forEach(function (id) {
@@ -789,6 +797,7 @@
             }
           }
         });
+        classifyBodyParts.cache[text] = hits;
         return hits;
       }
 
@@ -862,7 +871,7 @@
           var art = stage.querySelector(".body-svg:not(.is-off)");
           if (!svg || !art) return;
           var sr = stage.getBoundingClientRect();
-          if (!sr.width || !sr.height) { pending = true; return; }
+          if (!sr.width || !sr.height) return;
           svg.setAttribute("viewBox", "0 0 " + sr.width + " " + sr.height);
           svg.innerHTML = "";
           var regions = {};
@@ -1089,11 +1098,19 @@
         });
       }
       function updateBodyMaps() {
-        var sets = loadSets();
-        var perfDate = document.getElementById("perfDate").value || today();
-        var perfSets = sets.filter(function (s) { return s.date === perfDate; });
-        if (document.getElementById("perfBodyMap")) renderBodyMap(perfSets, document.getElementById("perfBodyMap"));
-        if (document.getElementById("chartsBodyMap")) renderBodyMap(sets.filter(function (s) { return inRange(s.date); }), document.getElementById("chartsBodyMap"));
+        var page = document.querySelector(".page.active");
+        var id = page ? page.id : "";
+        var sets = memoryStore.sets;
+        if (id === "page-perf") {
+          var perfDate = document.getElementById("perfDate").value || today();
+          var perfSets = [];
+          for (var i = 0; i < sets.length; i++) if (sets[i].date === perfDate) perfSets.push(sets[i]);
+          renderBodyMap(perfSets, document.getElementById("perfBodyMap"));
+        } else if (id === "page-charts") {
+          var ranged = [];
+          for (var j = 0; j < sets.length; j++) if (inRange(sets[j].date)) ranged.push(sets[j]);
+          renderBodyMap(ranged, document.getElementById("chartsBodyMap"));
+        }
       }
     function idbOpen() {
       return new Promise(function (resolve, reject) {
@@ -1151,14 +1168,25 @@
       sqlDb.run("COMMIT");
       return true;
     }
+    var persistTimer = 0;
+    function flushSql() {
+      if (!sqlDb) return;
+      clearTimeout(persistTimer);
+      persistTimer = 0;
+      try {
+        replaceSqlSets(memoryStore.sets);
+        idbPut(sqlDb.export());
+      } catch (e) {}
+    }
     function persistSql() {
       if (!sqlDb) return;
-      try { idbPut(sqlDb.export()); } catch (e) {}
+      clearTimeout(persistTimer);
+      persistTimer = setTimeout(flushSql, 400);
     }
     function loadSets() { return memoryStore.sets.slice(); }
     function saveSets(sets) {
       memoryStore.sets = sets.slice();
-      if (sqlDb) { replaceSqlSets(memoryStore.sets); persistSql(); }
+      if (sqlDb) persistSql();
       else { try { localStorage.setItem("workout-tracker-web-app.sets.v1", JSON.stringify(sets)); } catch (e) {} }
     }
     function initSql() {
@@ -1344,23 +1372,30 @@
       return out;
     }
 
-    function newMark(sets, exercise, date) {
+    function newMark(map, exercise, date) {
       var name = String(exercise || "").trim().toLowerCase();
       if (!name || !date) return "";
-      var earlier = sets.some(function (s) {
-        return String(s.exercise || "").trim().toLowerCase() === name && s.date && s.date < date;
+      return map[name] && map[name] < date ? "" : "<span class=\"badge-new\">" + escapeHtml(t("newBadge")) + "</span>";
+    }
+    function firstDates(sets) {
+      var map = {};
+      sets.forEach(function (s) {
+        var n = String(s.exercise || "").trim().toLowerCase();
+        if (!n || !s.date) return;
+        if (!map[n] || s.date < map[n]) map[n] = s.date;
       });
-      return earlier ? "" : "<span class=\"badge-new\">" + escapeHtml(t("newBadge")) + "</span>";
+      return map;
     }
 
     function render() {
       safe(function () {
       var sets = loadSets();
+      var first = firstDates(sets);
       var date = document.getElementById("sessionDate").value || today();
       var day = sets.filter(function (s) { return s.date === date; });
       document.getElementById("logList").innerHTML = day.length
         ? day.slice().reverse().map(function (s) {
-            return "<div class=\"set\"><div><b>" + escapeHtml(s.exercise) + "</b>" + newMark(sets, s.exercise, s.date) + "<div class=\"muted\">" + fmt(s.weight) + " × " + s.reps +
+            return "<div class=\"set\"><div><b>" + escapeHtml(s.exercise) + "</b>" + newMark(first, s.exercise, s.date) + "<div class=\"muted\">" + fmt(s.weight) + " × " + s.reps +
               " · <span data-ago=\"" + (s.createdAt || 0) + "\">" + timeAgo(s.createdAt) + "</span></div></div>" +
               "<span style=\"display:flex;gap:6px\">" +
               "<button type=\"button\" class=\"btn-ghost\" data-edit=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">" + t("edit") + "</button>" +
@@ -1374,11 +1409,13 @@
       var list = document.getElementById("exerciseList");
       if (list) list.innerHTML = names.map(function (n) { return "<option value=\"" + escapeHtml(n) + "\">"; }).join("");
       updateLastHint();
-      safe(renderPerf);
-      safe(renderSched);
-      safe(renderFromList);
-      safe(renderCharts);
-      safe(updateBodyMaps);
+      var page = document.querySelector(".page.active");
+      var pageId = page ? page.id : "page-log";
+      if (pageId === "page-perf") safe(renderPerf);
+      if (pageId === "page-set" || pageId === "page-lists") safe(renderSched);
+      if (pageId === "page-log" && logMode === "list") safe(renderFromList);
+      if (pageId === "page-charts") safe(renderCharts);
+      if (pageId === "page-perf" || pageId === "page-charts") safe(updateBodyMaps);
       });
     }
 
@@ -1406,6 +1443,7 @@
       }
       var sets = loadSets().filter(function (s) { return s.date === date; });
       var allSets = loadSets();
+      var first = firstDates(allSets);
       var by = {};
       sets.forEach(function (s) {
         var k = s.exercise || "";
@@ -1418,7 +1456,7 @@
         var keys = Object.keys(by);
         summary.innerHTML = keys.length ? "<table class=\"cmp-table\"><tbody>" + keys.map(function (k) {
           var prev = lastSession(k, date);
-          return "<tr><td>" + escapeHtml(k) + newMark(allSets, k, date) + "</td><td>" +
+          return "<tr><td>" + escapeHtml(k) + newMark(first, k, date) + "</td><td>" +
             cmpCell("sets", by[k].sets, prev && prev.sets) +
             cmpCell("vol", by[k].vol, prev && prev.vol) +
             "</td></tr>";
@@ -1426,7 +1464,7 @@
       }
       document.getElementById("perfList").innerHTML = sets.length
         ? sets.slice().reverse().map(function (s) {
-            return "<div class=\"set\"><div><b>" + escapeHtml(s.exercise) + "</b>" + newMark(allSets, s.exercise, s.date) + "<div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>" +
+            return "<div class=\"set\"><div><b>" + escapeHtml(s.exercise) + "</b>" + newMark(first, s.exercise, s.date) + "<div class=\"muted\">" + fmt(s.weight) + " × " + s.reps + "</div></div>" +
               "<button type=\"button\" class=\"btn-ghost\" data-edit=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">" + t("edit") + "</button></div>";
           }).join("")
         : "<div class=\"muted\">" + t("noDay") + "</div>";
@@ -1565,7 +1603,7 @@
         if (!node || typeof ApexCharts === "undefined") return;
         var accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#ffd60a";
         var chart = new ApexCharts(node, {
-          chart: { type: "area", height: 220, background: "transparent", toolbar: { show: false } },
+          chart: { type: "area", height: 220, animations: { enabled: false }, background: "transparent", toolbar: { show: false } },
           theme: { mode: "dark" },
           series: [{ name: n, data: values }],
           xaxis: {
@@ -1613,7 +1651,9 @@
         var scroller = document.querySelector(".pages");
         if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
         applyLang();
+        if (page === "perf") renderPerf();
         if (page === "charts") renderCharts();
+        if (page === "set") renderSched();
         if (page === "perf" || page === "charts") setTimeout(updateBodyMaps, 40);
       });
     });
@@ -1931,6 +1971,7 @@
       if (input) input.click();
     });
     function exportData() {
+      flushSql();
       if (fileKind === "json") {
         downloadBlob(new Blob([JSON.stringify(loadSets(), null, 2)], { type: "application/json" }), "workout.json");
         notify(t("saved"));
@@ -2045,6 +2086,10 @@
     applyFileKind();
     setUnit(unit);
     applyLang();
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") flushSql();
+    });
+    window.addEventListener("pagehide", flushSql);
     initSql().then(function () { render(); });
   })();
   </script>
