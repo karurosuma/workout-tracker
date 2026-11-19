@@ -303,6 +303,7 @@
     .set { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
     .sched-row { justify-content: flex-start; }
     .sched-name { flex: 1; min-width: 0; }
+    .sched-last { margin-left: auto; white-space: nowrap; }
     .drag-handle {
       width: 28px;
       height: 28px;
@@ -1689,23 +1690,50 @@
       document.getElementById("editSheet").classList.remove("hidden");
     }
 
+    function htmlEscape(s) {
+      return String(s || "").replace(/[&<>\"]/g, function (c) {
+        if (c === "&") return "\u0026amp;";
+        if (c === "<") return "\u003c";
+        if (c === ">") return "\u003e";
+        return "\u0022";
+      });
+    }
+    function lastWeightText(name) {
+      var w = lastWeightFor(name);
+      return w == null ? "" : t("lastTime") + " " + fmt(w);
+    }
+    function showListSuggest(input) {
+      var box = input.parentNode && input.parentNode.querySelector(".list-suggest");
+      if (!box) return;
+      document.querySelectorAll(".list-suggest").forEach(function (el) {
+        if (el !== box) { el.classList.add("hidden"); el.innerHTML = ""; }
+      });
+      var q = input.value.trim().toLowerCase();
+      var hits = unique(loadSets()).filter(function (n) {
+        return !q || n.toLowerCase().indexOf(q) !== -1;
+      }).slice(0, 8);
+      if (!hits.length) { box.classList.add("hidden"); box.innerHTML = ""; return; }
+      box.innerHTML = hits.map(function (n) {
+        return "<button type=\"button\" data-list-pick=\"" + htmlEscape(n) + "\">" + htmlEscape(n) + "</button>";
+      }).join("");
+      box.classList.remove("hidden");
+    }
     function renderSched() {
       var lists = loadSched();
+      var unitSwitch = "<div class=\"seg\" id=\"listUnit\" style=\"margin:0 0 12px\"><button type=\"button\" data-unit=\"kg\"" + (unit === "kg" ? " class=\"active\"" : "") + ">kg</button><button type=\"button\" data-unit=\"lbs\"" + (unit === "lbs" ? " class=\"active\"" : "") + ">lbs</button></div>";
       var html = lists.map(function (item, i) {
         var rows = (item.exercises || []).map(function (n, j) {
-          var label = String(n || "").replace(/[&<>"]/g, function (c) {
-            if (c === "&") return "\u0026amp;";
-            if (c === "<") return "\u003c";
-            if (c === ">") return "\u003e";
-            return "\u0022";
-          });
-          return "<div class=\"set sched-row\" data-list=\"" + i + "\"><button type=\"button\" class=\"drag-handle\" aria-label=\"Move\"></button><span class=\"sched-name\">" + label + "</span><button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
+          var label = htmlEscape(n);
+          var last = lastWeightText(n);
+          return "<div class=\"set sched-row\" data-list=\"" + i + "\"><button type=\"button\" class=\"drag-handle\" aria-label=\"Move\"></button><span class=\"sched-name\">" + label + "</span>" +
+            (last ? "<span class=\"muted sched-last\">" + htmlEscape(last) + "</span>" : "") +
+            "<button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
         }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
-        return "<div style=\"margin-bottom:16px\"><div class=\"row\" style=\"align-items:center\"><b>" + item.name + "</b>" +
+        return "<div style=\"margin-bottom:16px\"><div class=\"row\" style=\"align-items:center\"><b>" + htmlEscape(item.name) + "</b>" +
           "<button class=\"btn-ghost\" data-sl=\"" + i + "\" style=\"width:auto;padding:6px 10px\">" + t("deleteList") + "</button></div>" + rows +
-          "<div class=\"row\"><input data-se=\"" + i + "\" list=\"exerciseList\" placeholder=\"" + t("phExercise") + "\" /><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">" + t("addItem") + "</button></div></div>";
+          "<div class=\"row\"><div class=\"suggest-wrap\" style=\"flex:1;min-width:0\"><input data-se=\"" + i + "\" placeholder=\"" + t("phExercise") + "\" autocomplete=\"off\" /><div class=\"suggest list-suggest hidden\"></div></div><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">" + t("addItem") + "</button></div></div>";
       }).join("");
-      document.getElementById("sched").innerHTML = html +
+      document.getElementById("sched").innerHTML = unitSwitch + html +
         "<div class=\"row\"><input id=\"newList\" placeholder=\"" + t("phList") + "\" /><button class=\"btn\" id=\"addList\" style=\"width:auto\">" + t("create") + "</button></div>";
     }
 
@@ -1722,12 +1750,15 @@
         return "<option value=\"" + i + "\"" + (i === idx ? " selected" : "") + ">" + l.name + "</option>";
       }).join("");
       var rows = (lists[idx].exercises || []).map(function (n, i) {
-        return "<div style=\"margin-bottom:12px\"><b>" + n + "</b><div class=\"row\">" +
+        var last = lastWeightText(n);
+        return "<div style=\"margin-bottom:12px\"><div class=\"row\" style=\"margin-bottom:6px\"><b>" + htmlEscape(n) + "</b>" +
+          (last ? "<span class=\"muted\" style=\"margin-left:auto\">" + htmlEscape(last) + "</span>" : "") +
+          "</div><div class=\"row\">" +
           "<input data-lw=\"" + i + "\" placeholder=\"" + t("phWeight") + "\" inputmode=\"decimal\" />" +
           "<input data-lr=\"" + i + "\" placeholder=\"" + t("phReps") + "\" inputmode=\"numeric\" />" +
-          "<button class=\"btn\" data-ll=\"" + i + "\" data-ln=\"" + n + "\" style=\"width:auto\">" + t("logOne") + "</button></div></div>";
+          "<button class=\"btn\" data-ll=\"" + i + "\" data-ln=\"" + htmlEscape(n) + "\" style=\"width:auto\">" + t("logOne") + "</button></div></div>";
       }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
-      document.getElementById("fromList").innerHTML = "<select id=\"listPick\">" + opts + "</select>" + rows;
+      document.getElementById("fromList").innerHTML = "<div class=\"seg\" id=\"fromUnit\" style=\"margin:0 0 12px\"><button type=\"button\" data-unit=\"kg\"" + (unit === "kg" ? " class=\"active\"" : "") + ">kg</button><button type=\"button\" data-unit=\"lbs\"" + (unit === "lbs" ? " class=\"active\"" : "") + ">lbs</button></div><select id=\"listPick\">" + opts + "</select>" + rows;
     }
 
     var chartList = [];
@@ -1948,6 +1979,13 @@
       if (box.contains(e.target) || e.target === input) return;
       hideSuggest();
     });
+    document.addEventListener("pointerdown", function (e) {
+      if (e.target.closest(".list-suggest") || e.target.closest("[data-se]")) return;
+      document.querySelectorAll(".list-suggest").forEach(function (el) {
+        el.classList.add("hidden");
+        el.innerHTML = "";
+      });
+    });
     bind("exercise", "input", function () { updateLastHint(); showSuggest(); });
     bind("exercise", "focus", showSuggest);
     bind("exercise", "change", updateLastHint);
@@ -2105,6 +2143,8 @@
     });
 
     bind("sched", "click", function (e) {
+      var unitBtn = e.target.closest("[data-unit]");
+      if (unitBtn) { setUnit(unitBtn.getAttribute("data-unit")); return; }
       var lists = loadSched();
       if (e.target.id === "addList") {
         var name = document.getElementById("newList").value.trim();
@@ -2192,6 +2232,23 @@
       }
       host.addEventListener("pointerup", finish);
       host.addEventListener("pointercancel", finish);
+      host.addEventListener("input", function (e) {
+        if (e.target.matches("[data-se]")) showListSuggest(e.target);
+      });
+      host.addEventListener("focusin", function (e) {
+        if (e.target.matches("[data-se]")) showListSuggest(e.target);
+      });
+      host.addEventListener("pointerdown", function (e) {
+        var pick = e.target.closest("[data-list-pick]");
+        if (!pick) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var wrap = pick.closest(".suggest-wrap");
+        var input = wrap && wrap.querySelector("[data-se]");
+        if (input) input.value = pick.getAttribute("data-list-pick");
+        var box = wrap && wrap.querySelector(".list-suggest");
+        if (box) { box.classList.add("hidden"); box.innerHTML = ""; }
+      });
     })();
 
     bind("fromList", "change", function (e) {
@@ -2200,6 +2257,8 @@
       renderFromList();
     });
     bind("fromList", "click", function (e) {
+      var unitBtn = e.target.closest("[data-unit]");
+      if (unitBtn) { setUnit(unitBtn.getAttribute("data-unit")); return; }
       var btn = e.target.closest("[data-ll]");
       if (!btn) return;
       var i = btn.getAttribute("data-ll");
