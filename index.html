@@ -224,8 +224,8 @@
     }
     .body-svg { width: 100%; height: auto; display: block; overflow: hidden; }
     .body-svg.is-off { display: none !important; }
-    .body-region { stroke: none; pointer-events: none; fill-opacity: 0.32; }
-    .body-region.hot { fill-opacity: 0.78; }
+    .body-region { stroke: none; pointer-events: none; fill: #8e8e93; fill-opacity: 0.92; }
+    .body-region.hot { fill-opacity: 0.8; }
     .tab-pane { display: none !important; }
     .tab-pane.active { display: block !important; }
     .body-map, .body-col, .body-stage { position: relative; width: 100%; max-width: 100%; }
@@ -595,7 +595,7 @@
       }
 
       function bodyColor(pct) {
-        if (!pct) return "#b7bcc2";
+        if (!pct) return "#8e8e93";
         var t = Math.max(0, Math.min(1, pct / 30));
         var light = [255, 205, 200];
         var dark = [120, 8, 8];
@@ -630,6 +630,7 @@
             var color = bodyColor(pct[part.id]);
             node.setAttribute("fill", color);
             node.style.fill = color;
+            node.style.fillOpacity = pct[part.id] > 0 ? "0.8" : "0.92";
             node.classList.toggle("hot", pct[part.id] > 0);
           });
         });
