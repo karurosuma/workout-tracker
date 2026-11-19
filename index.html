@@ -1694,7 +1694,10 @@
       var html = lists.map(function (item, i) {
         var rows = (item.exercises || []).map(function (n, j) {
           var label = String(n || "").replace(/[&<>"]/g, function (c) {
-            return c === "&" ? "&" : c === "<" ? "<" : c === ">" ? ">" : """;
+            if (c === "&") return "\u0026amp;";
+            if (c === "<") return "\u003c";
+            if (c === ">") return "\u003e";
+            return "\u0022";
           });
           return "<div class=\"set sched-row\" data-list=\"" + i + "\"><button type=\"button\" class=\"drag-handle\" aria-label=\"Move\"></button><span class=\"sched-name\">" + label + "</span><button class=\"btn-ghost\" data-sx=\"" + i + ":" + j + "\" style=\"width:auto;padding:6px 10px\">×</button></div>";
         }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
