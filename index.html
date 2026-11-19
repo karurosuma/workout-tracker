@@ -320,8 +320,34 @@
     .body-pct[data-side="right"] { right: 0; }
     .section-head { margin: 8px 4px; }
     .section-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
-    #chartRange { flex-wrap: wrap; }
+    #perfDays {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin-bottom: 4px;
+    }
+    #perfDays::-webkit-scrollbar { display: none; }
+    #perfDays .chip { flex: 0 0 auto; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: calc(62px + env(safe-area-inset-top));
+      transform: translateX(-50%);
+      z-index: 80;
+      max-width: calc(100% - 32px);
+      background: rgba(28, 28, 30, 0.94);
+      color: #fff;
+      border: 0.5px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      padding: 10px 16px;
+      font-weight: 650;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    #chartRange, #chartMode { flex-wrap: wrap; }
     #chartRange button { flex: 1 1 18%; min-width: 56px; }
+    #chartMode button { flex: 1; min-width: 0; padding-left: 4px; padding-right: 4px; }
     .chart-title { font-weight: 650; margin-bottom: 8px; }
     .muscle-table { width: 100%; border-collapse: collapse; }
     .muscle-table td { padding: 8px 0; border-bottom: 0.5px solid var(--line); }
@@ -476,10 +502,10 @@
         </section>
       </div>
       <div class="seg" id="chartRange">
-        <button type="button" data-range="7" data-i18n="range7">7天</button>
+        <button type="button" class="active" data-range="7" data-i18n="range7">7天</button>
         <button type="button" data-range="14" data-i18n="range14">14天</button>
         <button type="button" data-range="30" data-i18n="range30">30天</button>
-        <button type="button" class="active" data-range="90" data-i18n="range90">90天</button>
+        <button type="button" data-range="90" data-i18n="range90">90天</button>
         <button type="button" data-range="all" data-i18n="rangeAll">全部</button>
       </div>
       <div class="card">
@@ -488,17 +514,28 @@
           <input id="chartTo" type="date" />
         </div>
       </div>
+      <div class="section-head"><h2 data-i18n="muscleSets">肌群組數</h2></div>
+      <div class="card" id="muscleSets"></div>
       <div class="seg" id="chartMode">
         <button type="button" class="active" data-mode="weight" data-i18n="bestWeight">最高重量</button>
         <button type="button" data-mode="volume" data-i18n="volume">容量</button>
+        <button type="button" data-mode="sets" data-i18n="setsChart">組數</button>
       </div>
-      <div class="section-head"><h2 data-i18n="muscleSets">肌群組數</h2></div>
-      <div class="card" id="muscleSets"></div>
       <div id="charts"></div>
     </section>
-        <section class="page" id="page-set">
+    <section class="page" id="page-set">
+      <div class="section-head"><h2 data-i18n="secGeneral">一般</h2></div>
       <div class="card">
-        <button type="button" class="btn btn-ghost" id="openLists" data-i18n="lists" style="margin-bottom:12px">課表</button>
+        <label data-i18n="lang">語言</label>
+        <div class="seg" id="langSeg">
+          <button type="button" class="active" data-lang="zh">繁中</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <label data-i18n="unit">單位</label>
+        <div class="seg" id="setUnit">
+          <button type="button" class="active" data-unit="kg">kg</button>
+          <button type="button" data-unit="lbs">lbs</button>
+        </div>
         <label data-i18n="gender">性別</label>
         <div class="seg" id="genderSeg">
           <button type="button" class="active" data-gender="male" data-i18n="male">男</button>
@@ -512,23 +549,27 @@
           <button type="button" data-theme="blue" aria-label="Blue"></button>
           <button type="button" data-theme="orange" aria-label="Orange"></button>
         </div>
+      </div>
+      <div class="section-head"><h2 data-i18n="secData">資料</h2></div>
+      <div class="card">
+        <label data-i18n="file">檔案</label>
+        <div class="seg" id="fileKind">
+          <button type="button" class="active" data-kind="sqlite">SQLite</button>
+          <button type="button" data-kind="json">JSON</button>
+        </div>
         <div class="file-btn">
           <button type="button" class="btn btn-ghost" id="loadBtn">Load</button>
-          <input id="importFile" type="file" />
+          <input id="importFile" type="file" accept=".sqlite,.db,.sqlite3,.json,application/json" />
         </div>
-        <button type="button" class="btn btn-ghost" id="saveBtn" style="margin-bottom:8px">Save</button>
-        <label data-i18n="lang">語言</label>
-        <div class="seg" id="langSeg">
-          <button type="button" class="active" data-lang="zh">繁中</button>
-          <button type="button" data-lang="en">EN</button>
-        </div>
-        <label data-i18n="unit">單位</label>
-        <div class="seg" id="setUnit">
-          <button type="button" class="active" data-unit="kg">kg</button>
-          <button type="button" data-unit="lbs">lbs</button>
-        </div>
-        <button type="button" class="btn btn-ghost" id="exportBtn" data-i18n="exportJson" style="margin-bottom:8px">匯出 JSON</button>
-        <button type="button" class="btn btn-danger" id="clearBtn">清除全部</button>
+        <button type="button" class="btn btn-ghost" id="saveBtn">Save</button>
+      </div>
+      <div class="section-head"><h2 data-i18n="lists">課表</h2></div>
+      <div class="card">
+        <button type="button" class="btn btn-ghost" id="openLists" data-i18n="lists" style="margin:0">課表</button>
+      </div>
+      <div class="section-head"><h2 data-i18n="secReset">重設</h2></div>
+      <div class="card">
+        <button type="button" class="btn btn-danger" id="clearBtn" style="margin:0">全部重設</button>
       </div>
     </section>
     <section class="page" id="page-lists">
@@ -553,6 +594,7 @@
       </div>
     </div>
   </div>
+  <div id="toast" class="toast" hidden></div>
   <nav class="tabs">
     <button type="button" class="active" data-page="log"><i class="bi bi-plus-circle"></i>記錄</button>
     <button type="button" data-page="perf"><i class="bi bi-speedometer2"></i>表現</button>
@@ -572,7 +614,7 @@
       blue:   { accent: "#0a84ff", top: "#1a3f7a", mid: "#0e2244", bot: "#081018", bar: "rgba(16, 36, 72, 0.62)" },
       orange: { accent: "#ff9f0a", top: "#7a4010", mid: "#3e2008", bot: "#1c1006", bar: "rgba(80, 40, 8, 0.62)" }
     };
-    var chartRange = "90";
+    var chartRange = "7";
     var sqlDb = null;
     var SQL_LIB = null;
     var memoryStore = { sets: [] };
@@ -583,8 +625,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "清除全部", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "清除全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱", cancel: "取消" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Clear all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Clear all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name", cancel: "Cancel" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "全部重設", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "重設全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱", cancel: "取消", secGeneral: "一般", secData: "資料", secReset: "重設", file: "檔案", setsChart: "組數", loaded: "已載入", saved: "已儲存", added: "已新增一組" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Reset all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Reset all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name", cancel: "Cancel", secGeneral: "General", secData: "Data", secReset: "Reset", file: "File", setsChart: "Sets", loaded: "Loaded", saved: "Saved", added: "Set added" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -610,7 +652,6 @@
       set("loadBtn", t.load);
       set("saveBtn", t.save);
       set("clearBtn", t.clear);
-      set("exportBtn", t.exportJson);
       set("backSettings", t.back);
       var ex = document.getElementById("exercise");
       if (ex) ex.placeholder = t.phExercise;
@@ -675,13 +716,7 @@
 
       function bodyColor(pct) {
         if (!pct) return "#8e8e93";
-        var t = Math.max(0, Math.min(1, pct / 30));
-        var light = [255, 205, 200];
-        var dark = [120, 8, 8];
-        var r = Math.round(light[0] + (dark[0] - light[0]) * t);
-        var g = Math.round(light[1] + (dark[1] - light[1]) * t);
-        var b = Math.round(light[2] + (dark[2] - light[2]) * t);
-        return "rgb(" + r + "," + g + "," + b + ")";
+        return "#c23b32";
       }
 
       function renderBodyMap(sets, root) {
@@ -799,14 +834,14 @@
             var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", "M" + best.x + " " + best.y + " L" + elbow + " " + best.y + " L" + lx + " " + ly);
             path.setAttribute("fill", "none");
-            path.setAttribute("stroke", label.classList.contains("on") ? "#3dff9a" : "#6d8296");
+            path.setAttribute("stroke", label.classList.contains("on") ? "rgba(255,255,255,0.72)" : "#6d6d72");
             path.setAttribute("stroke-width", "1.4");
             svg.appendChild(path);
             var mark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             mark.setAttribute("cx", best.x);
             mark.setAttribute("cy", best.y);
             mark.setAttribute("r", "3.5");
-            mark.setAttribute("fill", label.classList.contains("on") ? "#3dff9a" : "#6d8296");
+            mark.setAttribute("fill", label.classList.contains("on") ? "rgba(255,255,255,0.85)" : "#6d6d72");
             svg.appendChild(mark);
           });
         });
@@ -1098,16 +1133,13 @@
       var plain = kind === "sets" ? (now + " " + t("setsWord")) : fmt(now);
       if (prev == null || !prev) return "<button type=\"button\" class=\"cmp-val\">" + plain + "</button>";
       var diff = now - prev;
-      var abs = Math.abs(diff);
-      var pct = Math.abs(Math.round((diff / prev) * 100));
-      var pctText = pct + "%";
-      var frac = kind === "sets"
-        ? abs + "/" + prev
-        : fmt(abs) + "/" + fmt(prev);
+      var pct = Math.round((diff / prev) * 100);
+      var pctText = (pct > 0 ? "+" : "") + pct + "%";
+      var delta = kind === "sets"
+        ? ((diff > 0 ? "+" : "") + diff)
+        : ((diff > 0 ? "+" : "") + fmt(diff));
       var cls = diff > 0 ? "up" : diff < 0 ? "down" : "";
-      var shown = kind === "vol" ? pctText : frac;
-      var alt = kind === "vol" ? frac : pctText;
-      return "<button type=\"button\" class=\"cmp-val " + cls + "\" data-val=\"" + escapeHtml(shown) + "\" data-alt=\"" + escapeHtml(alt) + "\">" + shown + "</button>";
+      return "<button type=\"button\" class=\"cmp-val " + cls + "\" data-val=\"" + escapeHtml(delta) + "\" data-alt=\"" + escapeHtml(pctText) + "\">" + delta + "</button>";
     }
     function lastWeightFor(exercise, excludeDate) {
       var name = String(exercise || "").trim().toLowerCase();
@@ -1401,6 +1433,10 @@
           var best = {};
           pts.forEach(function (s) { best[s.date] = Math.max(best[s.date] || 0, Number(s.weight) || 0); });
           data = Object.keys(best).sort().map(function (d) { return [d, Math.round(fromKg(best[d]) * 10) / 10]; });
+        } else if (chartMode === "sets") {
+          var counts = {};
+          pts.forEach(function (s) { counts[s.date] = (counts[s.date] || 0) + 1; });
+          data = Object.keys(counts).sort().map(function (d) { return [d, counts[d]]; });
         } else {
           var vol = {};
           pts.forEach(function (s) { vol[s.date] = (vol[s.date] || 0) + (Number(s.weight) || 0) * (Number(s.reps) || 0); });
@@ -1408,13 +1444,19 @@
         }
         var node = document.getElementById("chart-" + i);
         if (!node || typeof ApexCharts === "undefined") return;
+        var accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#ffd60a";
         var chart = new ApexCharts(node, {
-          chart: { type: "line", height: 220, background: "transparent", toolbar: { show: false } },
+          chart: { type: "area", height: 220, background: "transparent", toolbar: { show: false } },
           theme: { mode: "dark" },
           series: [{ name: n, data: data }],
           xaxis: { type: "datetime" },
-          colors: [getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#ffd60a"],
-          stroke: { width: 2 },
+          colors: [accent],
+          stroke: { width: 2, curve: "smooth" },
+          fill: {
+            type: "gradient",
+            gradient: { shade: "dark", type: "vertical", shadeIntensity: 0.5, opacityFrom: 0.65, opacityTo: 0.02, stops: [0, 92, 100] }
+          },
+          dataLabels: { enabled: false },
           grid: { borderColor: "rgba(255,255,255,0.08)" }
         });
         chart.render();
@@ -1478,6 +1520,7 @@
       saveSets(sets);
       document.getElementById("reps").value = "";
       render();
+      notify(t("added"));
     });
 
     bind("exercise", "input", function () { updateLastHint(); showSuggest(); });
@@ -1648,6 +1691,7 @@
       saveSets(sets);
       w.value = ""; r.value = "";
       render();
+      notify(t("added"));
     });
 
     function setUnit(next) {
@@ -1684,12 +1728,33 @@
       render();
     });
 
-    bind("exportBtn", "click", function () {
-      var blob = new Blob([JSON.stringify(loadSets(), null, 2)], { type: "application/json" });
+    var toastTimer = 0;
+    function notify(msg) {
+      var el = document.getElementById("toast");
+      if (!el) return;
+      el.textContent = msg;
+      el.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { el.hidden = true; }, 5000);
+    }
+    function downloadBlob(blob, name) {
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "workout.json";
+      a.download = name;
       a.click();
+    }
+    var fileKind = localStorage.getItem("workout-tracker-web-app.file") || "sqlite";
+    function applyFileKind() {
+      document.querySelectorAll("#fileKind button").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-kind") === fileKind);
+      });
+    }
+    bind("fileKind", "click", function (e) {
+      var b = e.target.closest("[data-kind]");
+      if (!b) return;
+      fileKind = b.getAttribute("data-kind");
+      localStorage.setItem("workout-tracker-web-app.file", fileKind);
+      applyFileKind();
     });
     bind("clearBtn", "click", function () {
       if (!confirm(t("confirmClear"))) return;
@@ -1714,13 +1779,14 @@
       if (input) input.click();
     });
     bind("saveBtn", "click", function () {
+      if (fileKind === "json") {
+        downloadBlob(new Blob([JSON.stringify(loadSets(), null, 2)], { type: "application/json" }), "workout.json");
+        notify(t("saved"));
+        return;
+      }
       if (!sqlDb) return;
-      var bytes = sqlDb.export();
-      var blob = new Blob([bytes], { type: "application/x-sqlite3" });
-      var a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "workout.sqlite";
-      a.click();
+      downloadBlob(new Blob([sqlDb.export()], { type: "application/x-sqlite3" }), "workout.sqlite");
+      notify(t("saved"));
     });
     bind("importFile", "change", function (e) {
       var file = e.target.files && e.target.files[0];
@@ -1732,7 +1798,9 @@
           try {
             var data = JSON.parse(reader.result);
             var rows = Array.isArray(data) ? data : (data.sets || []);
-            if (rows.length) { saveSets(rows); render(); }
+            saveSets(rows);
+            render();
+            notify(t("loaded"));
           } catch (err) {}
         } else if (SQL_LIB) {
           try {
@@ -1741,6 +1809,7 @@
             memoryStore.sets = rowsFromSql();
             persistSql();
             render();
+            notify(t("loaded"));
           } catch (err) {}
         }
       };
@@ -1758,6 +1827,7 @@
     }, 15000);
     applyGender();
     applyTheme();
+    applyFileKind();
     setUnit(unit);
     applyLang();
     initSql().then(function () { render(); });
