@@ -329,6 +329,8 @@
       text-align: left;
     }
     .ex-meta { display: inline-flex; align-items: center; gap: 8px; }
+    .ex-name-row { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
+    .ex-now { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; font-size: 14px; white-space: nowrap; }
     .ex-chevron {
       width: 8px;
       height: 8px;
@@ -1615,7 +1617,7 @@
         if (opts.compare) {
           var prev = lastSession(k, date);
           return "<div class=\"ex-group" + openCls + "\"><div class=\"ex-head\">" +
-            "<button type=\"button\" class=\"ex-toggle\"><span>" + name + "</span><span class=\"ex-chevron\"></span></button>" +
+            "<button type=\"button\" class=\"ex-toggle\"><span class=\"ex-name-row\"><span class=\"ex-name\">" + name + "</span><span class=\"ex-now\"><span>" + rows.length + " " + t("setsWord") + "</span><span>" + fmt(vol) + "</span></span></span><span class=\"ex-chevron\"></span></button>" +
             "<div class=\"ex-stats\">" + cmpCell("sets", rows.length, prev && prev.sets) + cmpCell("vol", vol, prev && prev.vol) + "</div>" +
             "</div><div class=\"ex-body\">" + body + "</div></div>";
         }
