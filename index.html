@@ -217,6 +217,9 @@
       position: absolute; left: 0; right: 0; top: calc(100% - 8px);
       background: #2c2c2e; border: 0.5px solid rgba(255,255,255,0.16);
       border-radius: 14px; z-index: 30; max-height: 196px; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
       box-shadow: 0 10px 28px rgba(0,0,0,0.4);
     }
     .suggest button {
@@ -1433,7 +1436,7 @@
       var q = input.value.trim().toLowerCase();
       var hits = unique(loadSets()).filter(function (n) {
         return !q || n.toLowerCase().indexOf(q) !== -1;
-      }).slice(0, 8);
+      }).slice(0, 30);
       if (!hits.length) { box.classList.add("hidden"); box.innerHTML = ""; return; }
       box.innerHTML = hits.map(function (n) {
         return "<button type=\"button\" data-pick=\"" + escapeHtml(n) + "\">" + escapeHtml(n) + "</button>";
@@ -1745,7 +1748,7 @@
       var q = input.value.trim().toLowerCase();
       var hits = unique(loadSets()).filter(function (n) {
         return !q || n.toLowerCase().indexOf(q) !== -1;
-      }).slice(0, 8);
+      }).slice(0, 30);
       if (!hits.length) { box.classList.add("hidden"); box.innerHTML = ""; return; }
       box.innerHTML = hits.map(function (n) {
         return "<button type=\"button\" data-list-pick=\"" + htmlEscape(n) + "\">" + htmlEscape(n) + "</button>";
@@ -2023,17 +2026,49 @@
         el.innerHTML = "";
       });
     });
+    (function () {
+      var drag = null;
+      var pages = document.querySelector(".pages");
+      function lockPage(on) {
+        if (pages) pages.style.overflowY = on ? "hidden" : "";
+      }
+      document.addEventListener("pointerdown", function (e) {
+        var box = e.target.closest(".suggest");
+        if (!box || box.classList.contains("hidden")) return;
+        drag = { y: e.clientY, id: e.pointerId, pick: e.target.closest("[data-pick], [data-list-pick]") };
+        lockPage(true);
+      }, true);
+      document.addEventListener("pointermove", function (e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        if (Math.abs(e.clientY - drag.y) > 8) drag.pick = null;
+      }, true);
+      function finish(e) {
+        if (!drag || (e && e.pointerId !== drag.id)) return;
+        var pick = drag.pick;
+        drag = null;
+        lockPage(false);
+        if (!pick) return;
+        var name = pick.getAttribute("data-pick");
+        if (name != null) {
+          var input = document.getElementById("exercise");
+          if (input) input.value = name;
+          updateLastHint();
+          hideSuggest();
+          return;
+        }
+        name = pick.getAttribute("data-list-pick");
+        var wrap = pick.closest(".suggest-wrap");
+        var field = wrap && wrap.querySelector("[data-se]");
+        if (field) field.value = name;
+        var menu = wrap && wrap.querySelector(".list-suggest");
+        if (menu) { menu.classList.add("hidden"); menu.innerHTML = ""; }
+      }
+      document.addEventListener("pointerup", finish, true);
+      document.addEventListener("pointercancel", finish, true);
+    })();
     bind("exercise", "input", function () { updateLastHint(); showSuggest(); });
     bind("exercise", "focus", showSuggest);
     bind("exercise", "change", updateLastHint);
-    bind("exerciseSuggest", "pointerdown", function (e) {
-      var btn = e.target.closest("[data-pick]");
-      if (!btn) return;
-      e.preventDefault();
-      document.getElementById("exercise").value = btn.getAttribute("data-pick");
-      updateLastHint();
-      hideSuggest();
-    });
     bind("sessionDate", "change", updateLastHint);
     function syncChartDates() {
       var box = document.getElementById("chartDates");
@@ -2275,17 +2310,6 @@
       });
       host.addEventListener("focusin", function (e) {
         if (e.target.matches("[data-se]")) showListSuggest(e.target);
-      });
-      host.addEventListener("pointerdown", function (e) {
-        var pick = e.target.closest("[data-list-pick]");
-        if (!pick) return;
-        e.preventDefault();
-        e.stopPropagation();
-        var wrap = pick.closest(".suggest-wrap");
-        var input = wrap && wrap.querySelector("[data-se]");
-        if (input) input.value = pick.getAttribute("data-list-pick");
-        var box = wrap && wrap.querySelector(".list-suggest");
-        if (box) { box.classList.add("hidden"); box.innerHTML = ""; }
       });
     })();
 
