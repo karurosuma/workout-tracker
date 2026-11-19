@@ -166,8 +166,10 @@
       -webkit-appearance: none;
       appearance: none;
     }
-    input[type="date"]::-webkit-date-and-time-value { text-align: left; min-width: 0; }
-    input[type="date"]::-webkit-datetime-edit { min-width: 0; padding: 0; }
+    input[type="date"]::-webkit-date-and-time-value { text-align: center; min-width: 0; }
+    input[type="date"]::-webkit-datetime-edit { min-width: 0; padding: 0; text-align: center; width: 100%; }
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper { display: flex; justify-content: center; width: 100%; }
+    input[type="date"], #perfDate, #recDate, #editDate { text-align: center; }
     .row { display: flex; gap: 8px; align-items: center; width: 100%; min-width: 0; max-width: 100%; margin-bottom: 12px; }
     .row > input { flex: 1 1 0; width: 0; margin: 0; min-width: 0; max-width: 100%; }
     .row > select { flex: 1 1 0; width: 0; margin: 0; min-width: 0; max-width: 100%; }
@@ -337,6 +339,9 @@
     }
     .ex-group.open .ex-chevron { transform: rotate(-135deg); margin-top: 4px; }
     .ex-stat { display: block; text-align: left; padding: 1px 0 1px; }
+    .ex-stats { display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 2px 0 8px; }
+    .ex-stats .cmp-val { display: inline-flex; align-items: center; gap: 4px; margin: 0; width: auto; text-align: left; }
+    .ex-stats .cmp-val i { font-size: 14px; line-height: 1; }
     .ex-body { display: none; }
     .ex-group.open .ex-body { display: block; }
     .muted { color: var(--muted); font-size: 13px; }
@@ -412,7 +417,6 @@
     }
     .cmp-val.up { color: #30d158; }
     .cmp-val.down { color: #ff453a; }
-    .ex-stat .cmp-val { display: inline-block; margin: 0; width: auto; text-align: left; }
     .body-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     .body-pct {
       position: absolute;
@@ -1379,8 +1383,13 @@
       return { date: d, sets: byDate[d].sets, vol: byDate[d].vol };
     }
     function cmpCell(kind, now, prev) {
+      var icon = "<i class=\"bi " + (kind === "sets" ? "bi-stack" : "bi-bar-chart") + "\"></i>";
+      function button(cls, shown, alt) {
+        var attrs = alt == null ? "" : " data-val=\"" + escapeHtml(shown) + "\" data-alt=\"" + escapeHtml(alt) + "\"";
+        return "<button type=\"button\" class=\"cmp-val" + (cls ? " " + cls : "") + "\"" + attrs + ">" + icon + "<span class=\"cmp-text\">" + shown + "</span></button>";
+      }
       var plain = kind === "sets" ? (now + " " + t("setsWord")) : fmt(now);
-      if (prev == null || !prev) return "<button type=\"button\" class=\"cmp-val\">" + plain + "</button>";
+      if (prev == null || !prev) return button("", plain, null);
       var diff = now - prev;
       var pct = Math.round((diff / prev) * 100);
       var pctText = (pct > 0 ? "+" : "") + pct + "%";
@@ -1388,16 +1397,8 @@
         ? ((diff > 0 ? "+" : "") + diff)
         : ((diff > 0 ? "+" : "") + fmt(diff));
       var cls = diff > 0 ? "up" : diff < 0 ? "down" : "";
-      var shown;
-      var alt;
-      if (kind === "sets") {
-        shown = delta;
-        alt = prev + " " + t("setsWord");
-      } else {
-        shown = pctText;
-        alt = delta;
-      }
-      return "<button type=\"button\" class=\"cmp-val " + cls + "\" data-val=\"" + escapeHtml(shown) + "\" data-alt=\"" + escapeHtml(alt) + "\">" + shown + "</button>";
+      if (kind === "sets") return button(cls, delta, prev + " " + t("setsWord"));
+      return button(cls, pctText, delta);
     }
     function lastWeightFor(exercise, excludeDate) {
       var name = String(exercise || "").trim().toLowerCase();
@@ -1615,8 +1616,7 @@
           var prev = lastSession(k, date);
           return "<div class=\"ex-group" + openCls + "\"><div class=\"ex-head\">" +
             "<button type=\"button\" class=\"ex-toggle\"><span>" + name + "</span><span class=\"ex-chevron\"></span></button>" +
-            "<div class=\"ex-stat\">" + cmpCell("sets", rows.length, prev && prev.sets) + "</div>" +
-            "<div class=\"ex-stat\">" + cmpCell("vol", vol, prev && prev.vol) + "</div>" +
+            "<div class=\"ex-stats\">" + cmpCell("sets", rows.length, prev && prev.sets) + cmpCell("vol", vol, prev && prev.vol) + "</div>" +
             "</div><div class=\"ex-body\">" + body + "</div></div>";
         }
         return "<div class=\"ex-group" + openCls + "\">" +
@@ -2031,9 +2031,14 @@
       var btn = e.target.closest(".cmp-val");
       if (!btn || !btn.getAttribute("data-alt")) return;
       e.preventDefault();
-      var showing = btn.getAttribute("data-show") === "alt";
-      btn.setAttribute("data-show", showing ? "val" : "alt");
-      btn.textContent = showing ? btn.getAttribute("data-val") : btn.getAttribute("data-alt");
+      var box = btn.closest(".ex-stats") || btn;
+      box.querySelectorAll(".cmp-val").forEach(function (item) {
+        var text = item.querySelector(".cmp-text");
+        if (!item.getAttribute("data-alt") || !text) return;
+        var showing = item.getAttribute("data-show") === "alt";
+        item.setAttribute("data-show", showing ? "val" : "alt");
+        text.textContent = showing ? item.getAttribute("data-val") : item.getAttribute("data-alt");
+      });
     }, true);
     bind("muscleSets", "click", function (e) {
       var row = e.target.closest("[data-part]");
