@@ -175,6 +175,21 @@
     .seg button { flex: 1; background: transparent; color: var(--muted); border: 0; border-radius: 9px; padding: 8px 6px; font-weight: 650; }
     .seg button.active { background: var(--accent); color: #000; }
     .suggest-wrap { position: relative; }
+    .ex-row { display: flex; gap: 8px; align-items: flex-start; }
+    .ex-row .suggest-wrap { flex: 1; min-width: 0; }
+    .ex-clear {
+      flex: 0 0 46px;
+      width: 46px;
+      height: 46px;
+      margin: 0 0 12px;
+      border: 0.5px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      background: rgba(44, 44, 46, 0.85);
+      color: #d1d1d6;
+      font-size: 22px;
+      line-height: 1;
+      padding: 0;
+    }
     .suggest {
       position: absolute; left: 0; right: 0; top: calc(100% - 8px);
       background: #2c2c2e; border: 0.5px solid rgba(255,255,255,0.16);
@@ -398,9 +413,12 @@
           <label data-i18n-key="date">訓練日期</label>
           <input id="sessionDate" type="date" />
           <label data-i18n-key="exercise">動作</label>
-          <div class="suggest-wrap">
-            <input id="exercise" list="exerciseList" placeholder="臥推" autocomplete="off" />
-            <div id="exerciseSuggest" class="suggest hidden"></div>
+          <div class="ex-row">
+            <div class="suggest-wrap">
+              <input id="exercise" list="exerciseList" placeholder="臥推" autocomplete="off" />
+              <div id="exerciseSuggest" class="suggest hidden"></div>
+            </div>
+            <button type="button" class="ex-clear" id="clearExercise" aria-label="Clear">×</button>
           </div>
           <datalist id="exerciseList"></datalist>
           <label><span data-i18n="weight">重量</span> <span class="muted" id="lastWeightHint"></span></label>
@@ -742,9 +760,15 @@
         return hits;
       }
 
-      function bodyColor(pct) {
-        if (!pct) return "#8e8e93";
-        return "#7a403c";
+      function bodyColor(amount, max) {
+        if (!amount || !max) return "#8e8e93";
+        var t = Math.max(0.12, Math.min(1, amount / max));
+        var light = [255, 186, 176];
+        var dark = [92, 8, 8];
+        var r = Math.round(light[0] + (dark[0] - light[0]) * t);
+        var g = Math.round(light[1] + (dark[1] - light[1]) * t);
+        var b = Math.round(light[2] + (dark[2] - light[2]) * t);
+        return "rgb(" + r + "," + g + "," + b + ")";
       }
 
       function renderBodyMap(sets, root) {
@@ -766,14 +790,16 @@
           grand += volume;
         });
         var pct = {};
+        var maxVol = 0;
+        BODY_PARTS.forEach(function (part) { if (totals[part.id] > maxVol) maxVol = totals[part.id]; });
         BODY_PARTS.forEach(function (part) {
           pct[part.id] = grand > 0 ? Math.round((totals[part.id] / grand) * 100) : 0;
           scope.querySelectorAll('.body-region[data-part="' + part.id + '"]').forEach(function (node) {
-            var color = bodyColor(pct[part.id]);
+            var color = bodyColor(totals[part.id], maxVol);
             node.setAttribute("fill", color);
             node.style.fill = color;
-            node.style.fillOpacity = pct[part.id] > 0 ? "0.8" : "0.92";
-            node.classList.toggle("hot", pct[part.id] > 0);
+            node.style.fillOpacity = totals[part.id] > 0 ? "0.86" : "0.92";
+            node.classList.toggle("hot", totals[part.id] > 0);
           });
         });
         scope.querySelectorAll(".body-glow").forEach(function (el) {
@@ -1263,6 +1289,20 @@
       var day = String(d.getDate()).padStart(2, "0");
       return d.getFullYear() + "-" + m + "-" + day;
     }
+    function recentNames(sets) {
+      var ordered = sets.slice().sort(function (a, b) {
+        var ta = Number(a.createdAt) || 0;
+        var tb = Number(b.createdAt) || 0;
+        if (tb !== ta) return tb - ta;
+        return String(b.date || "").localeCompare(String(a.date || ""));
+      });
+      var seen = {}, out = [];
+      ordered.forEach(function (s) {
+        var n = String(s.exercise || "").trim();
+        if (n && !seen[n.toLowerCase()]) { seen[n.toLowerCase()] = 1; out.push(n); }
+      });
+      return out;
+    }
     function unique(sets) {
       var seen = {}, out = [];
       sets.forEach(function (s) {
@@ -1286,7 +1326,7 @@
               "<button type=\"button\" class=\"btn-ghost btn-danger\" data-del=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">" + t("del") + "</button></span></div>";
           }).join("")
         : "<div class=\"muted\">" + t("empty") + "</div>";
-      var names = unique(sets);
+      var names = recentNames(sets);
       document.getElementById("chips").innerHTML = names.slice(0, 12).map(function (n) {
         return "<button class=\"chip\" data-chip=\"" + escapeHtml(n) + "\">" + escapeHtml(n) + "</button>";
       }).join("");
@@ -1565,6 +1605,14 @@
       notify(t("added"));
     });
 
+    bind("clearExercise", "click", function () {
+      var el = document.getElementById("exercise");
+      if (!el) return;
+      el.value = "";
+      updateLastHint();
+      hideSuggest();
+      el.focus();
+    });
     bind("exercise", "input", function () { updateLastHint(); showSuggest(); });
     bind("exercise", "focus", showSuggest);
     bind("exercise", "change", updateLastHint);
