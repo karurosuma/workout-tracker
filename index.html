@@ -85,7 +85,7 @@
       margin: 0 auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(56px + env(safe-area-inset-top)) 16px 84px;
+      padding: calc(56px + env(safe-area-inset-top)) 16px calc(78px + env(safe-area-inset-bottom));
       z-index: 1;
       background: transparent;
     }
@@ -197,20 +197,12 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       margin: 0; opacity: 0; font-size: 16px; z-index: 2;
     }
-    #bottomFill {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      height: 0;
-      background: var(--bg-bot);
-      z-index: 39;
-      pointer-events: none;
-    }
     .tabs {
       position: fixed;
       left: 50%;
       transform: translateX(-50%);
       width: min(448px, calc(100% - 20px));
-      bottom: 0;
+      bottom: calc(10px + env(safe-area-inset-bottom));
       height: 58px;
       display: flex;
       align-items: stretch;
@@ -561,7 +553,6 @@
       </div>
     </div>
   </div>
-  <div id="bottomFill"></div>
   <nav class="tabs">
     <button type="button" class="active" data-page="log"><i class="bi bi-plus-circle"></i>記錄</button>
     <button type="button" data-page="perf"><i class="bi bi-speedometer2"></i>表現</button>
@@ -1439,36 +1430,6 @@
 
     safe(function () { document.getElementById("sessionDate").value = today(); });
     safe(function () {
-      var baseBottom = 0;
-      function pinBar() {
-        var bar = document.querySelector(".tabs");
-        if (!bar) return;
-        var vv = window.visualViewport;
-        var visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
-        var screen = Math.max(window.innerHeight || 0, visibleBottom || 0);
-        if (!baseBottom) baseBottom = screen;
-        if (screen < baseBottom - 140) return;
-        if (screen > baseBottom) baseBottom = screen;
-        bar.style.bottom = "0px";
-        bar.style.transform = "translateX(-50%)";
-        var rect = bar.getBoundingClientRect();
-        var shift = (baseBottom - rect.height) - rect.top;
-        if (shift > 1 && shift < 180) {
-          bar.style.transform = "translateX(-50%) translateY(" + Math.round(shift) + "px)";
-        }
-        var plate = document.getElementById("bottomFill");
-        if (plate) {
-          var after = bar.getBoundingClientRect();
-          plate.style.height = Math.max(0, Math.round(baseBottom - after.bottom)) + "px";
-        }
-      }
-      pinBar();
-      window.addEventListener("resize", pinBar);
-      window.addEventListener("orientationchange", function () { setTimeout(pinBar, 300); });
-      if (window.visualViewport) {
-        visualViewport.addEventListener("resize", pinBar);
-        visualViewport.addEventListener("scroll", pinBar);
-      }
       document.addEventListener("focusin", function (e) {
         var el = e.target;
         if (!el || (el.tagName !== "INPUT" && el.tagName !== "SELECT")) return;
