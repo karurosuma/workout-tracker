@@ -75,7 +75,7 @@
       margin: 0 auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: calc(56px + env(safe-area-inset-top)) 16px calc(78px + env(safe-area-inset-bottom));
+      padding: calc(56px + env(safe-area-inset-top)) 16px 86px;
       z-index: 1;
       background: transparent;
     }
@@ -187,12 +187,21 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       margin: 0; opacity: 0; font-size: 16px; z-index: 2;
     }
+    body::after {
+      content: "";
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: calc(env(safe-area-inset-bottom) + 4px);
+      background: var(--bg-bot);
+      z-index: 35;
+      pointer-events: none;
+    }
     .tabs {
       position: fixed;
       left: 50%;
       transform: translateX(-50%);
       width: min(448px, calc(100% - 20px));
-      bottom: calc(8px + env(safe-area-inset-bottom));
+      bottom: 8px;
       height: 58px;
       display: flex;
       align-items: stretch;
