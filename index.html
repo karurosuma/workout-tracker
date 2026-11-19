@@ -342,9 +342,9 @@
     }
     .ex-group.open .ex-chevron { transform: rotate(-135deg); margin-top: 4px; }
     .ex-stat { display: block; text-align: left; padding: 1px 0 1px; }
-    .ex-stats { display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 2px 0 8px; }
-    .ex-stats .cmp-val { display: inline-flex; align-items: center; gap: 4px; margin: 0; width: auto; text-align: left; }
-    .ex-stats .cmp-val i { font-size: 14px; line-height: 1; }
+    .ex-delta { display: flex; gap: 10px; padding: 0 0 8px; font-weight: 700; font-size: 15px; }
+    .ex-delta .up { color: #30d158; }
+    .ex-delta .down { color: #ff453a; }
     .ex-body { display: none; }
     .ex-group.open .ex-body { display: block; }
     .muted { color: var(--muted); font-size: 13px; }
@@ -598,7 +598,6 @@
           <select id="perfDate"></select>
           <button type="button" class="btn btn-ghost" id="perfNext" style="flex:0 0 48px;width:48px;padding:12px 0">▶</button>
         </div>
-        <div class="muted" data-i18n="todaySummaryHint" style="margin-bottom:4px">點一下看變化</div>
         <div id="perfList"></div>
       </div>
     </section>
@@ -1385,23 +1384,15 @@
       var d = dates[dates.length - 1];
       return { date: d, sets: byDate[d].sets, vol: byDate[d].vol };
     }
-    function cmpCell(kind, now, prev) {
-      var icon = "<i class=\"bi " + (kind === "sets" ? "bi-stack" : "bi-bar-chart") + "\"></i>";
-      function button(cls, shown, alt) {
-        var attrs = alt == null ? "" : " data-val=\"" + escapeHtml(shown) + "\" data-alt=\"" + escapeHtml(alt) + "\"";
-        return "<button type=\"button\" class=\"cmp-val" + (cls ? " " + cls : "") + "\"" + attrs + ">" + icon + "<span class=\"cmp-text\">" + shown + "</span></button>";
+    function deltaLine(sets, vol, prev) {
+      if (!prev || !prev.sets) return "";
+      var setDiff = sets - prev.sets;
+      var volPct = prev.vol ? Math.round(((vol - prev.vol) / prev.vol) * 100) : 0;
+      function bit(n, suffix) {
+        var cls = n > 0 ? "up" : n < 0 ? "down" : "";
+        return "<span class=\"" + cls + "\">" + (n > 0 ? "+" : "") + n + (suffix || "") + "</span>";
       }
-      var plain = kind === "sets" ? (now + " " + t("setsWord")) : fmt(now);
-      if (prev == null || !prev) return button("", plain, null);
-      var diff = now - prev;
-      var pct = Math.round((diff / prev) * 100);
-      var pctText = (pct > 0 ? "+" : "") + pct + "%";
-      var delta = kind === "sets"
-        ? ((diff > 0 ? "+" : "") + diff)
-        : ((diff > 0 ? "+" : "") + fmt(diff));
-      var cls = diff > 0 ? "up" : diff < 0 ? "down" : "";
-      if (kind === "sets") return button(cls, prev + " " + t("setsWord"), delta);
-      return button(cls, fmt(prev), pctText);
+      return "<div class=\"ex-delta\">" + bit(setDiff) + bit(volPct, "%") + "</div>";
     }
     function lastWeightFor(exercise, excludeDate) {
       var name = String(exercise || "").trim().toLowerCase();
@@ -1618,8 +1609,8 @@
         if (opts.compare) {
           var prev = lastSession(k, date);
           return "<div class=\"ex-group" + openCls + "\"><div class=\"ex-head\">" +
-            "<button type=\"button\" class=\"ex-toggle\"><span class=\"ex-name-row\"><span class=\"ex-name\">" + name + "</span><span class=\"ex-now\"><span>" + rows.length + " " + t("setsWord") + "</span><span>" + fmt(vol) + "</span></span></span><span class=\"ex-chevron\"></span></button>" +
-            "<div class=\"ex-stats\">" + cmpCell("sets", rows.length, prev && prev.sets) + cmpCell("vol", vol, prev && prev.vol) + "</div>" +
+            "<button type=\"button\" class=\"ex-toggle\"><span>" + name + "</span><span class=\"ex-chevron\"></span></button>" +
+            deltaLine(rows.length, vol, prev) +
             "</div><div class=\"ex-body\">" + body + "</div></div>";
         }
         return "<div class=\"ex-group" + openCls + "\">" +
