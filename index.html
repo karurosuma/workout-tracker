@@ -350,11 +350,13 @@
     .section-head { margin: 8px 4px; }
     .section-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
     #perfDays {
+      display: flex;
       flex-wrap: nowrap;
+      gap: 8px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
-      margin-bottom: 4px;
+      margin: 0 0 12px;
     }
     #perfDays::-webkit-scrollbar { display: none; }
     #perfDays .chip { flex: 0 0 auto; }
@@ -1359,9 +1361,13 @@
       var sets = loadSets().filter(function (s) { return s.date === date; });
       var days = document.getElementById("perfDays");
       if (days) {
-        days.innerHTML = dates.slice(-8).reverse().map(function (d) {
+        days.innerHTML = dates.slice().reverse().map(function (d) {
           return "<button type=\"button\" class=\"chip" + (d === date ? " on" : "") + "\" data-day=\"" + d + "\">" + d.slice(5) + "</button>";
         }).join("");
+        var activeDay = days.querySelector(".on");
+        if (activeDay) requestAnimationFrame(function () {
+          days.scrollLeft = Math.max(0, activeDay.offsetLeft - 12);
+        });
       }
       var by = {};
       sets.forEach(function (s) {
@@ -1613,6 +1619,13 @@
       hideSuggest();
       el.focus();
     });
+    document.addEventListener("pointerdown", function (e) {
+      var box = document.getElementById("exerciseSuggest");
+      var input = document.getElementById("exercise");
+      if (!box || box.classList.contains("hidden")) return;
+      if (box.contains(e.target) || e.target === input) return;
+      hideSuggest();
+    });
     bind("exercise", "input", function () { updateLastHint(); showSuggest(); });
     bind("exercise", "focus", showSuggest);
     bind("exercise", "change", updateLastHint);
@@ -1693,6 +1706,8 @@
       renderPerf();
       updateBodyMaps();
     });
+    var perfDaysEl = document.getElementById("perfDays");
+    if (perfDaysEl) perfDaysEl.addEventListener("touchmove", function (e) { e.stopPropagation(); }, { passive: true });
     bind("perfSummary", "click", function (e) {
       var btn = e.target.closest(".cmp-val");
       if (!btn || !btn.getAttribute("data-alt")) return;
