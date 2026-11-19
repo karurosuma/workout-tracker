@@ -329,8 +329,9 @@
       text-align: left;
     }
     .ex-meta { display: inline-flex; align-items: center; gap: 8px; }
-    .ex-name-row { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
-    .ex-now { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; font-size: 14px; white-space: nowrap; }
+    .ex-name-row { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; flex-wrap: nowrap; }
+    .ex-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ex-now { display: inline-flex; align-items: center; gap: 10px; flex: 0 0 auto; font-weight: 650; font-size: 14px; white-space: nowrap; }
     .ex-chevron {
       width: 8px;
       height: 8px;
