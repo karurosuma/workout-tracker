@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v239";
+const CACHE = "workout-tracker-web-app-v240";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -66,6 +66,8 @@ self.addEventListener("activate", function (event) {
 self.addEventListener("fetch", function (event) {
   var req = event.request;
   if (req.method !== "GET") return;
+  var path = new URL(req.url).pathname;
+  if (/apple-touch-icon|icon-|favicon|manifest\.webmanifest/.test(path)) return;
   if (req.url.indexOf("muscles.json") !== -1) return;
   event.respondWith(
     caches.match(req).then(function (cached) {
