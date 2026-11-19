@@ -1,4 +1,4 @@
-const CACHE = "workout-tracker-web-app-v276";
+const CACHE = "workout-tracker-web-app-v277";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -73,6 +73,24 @@ self.addEventListener("fetch", function (event) {
   var url;
   try { url = new URL(req.url); } catch (e) { return; }
   if (url.origin !== self.location.origin) return;
+  var path = url.pathname;
+  var shell = /\/(index\.html|sw\.js)?$/.test(path);
+  if (shell) {
+    event.respondWith(
+      fetch(req, { cache: "no-store" }).then(function (res) {
+        if (res && res.ok) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (cache) { cache.put(req, copy); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(req, { ignoreSearch: true }).then(function (cached) {
+          return cached || caches.match("./index.html");
+        });
+      })
+    );
+    return;
+  }
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then(function (cached) {
       if (cached) return cached;
