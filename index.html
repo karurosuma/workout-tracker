@@ -243,6 +243,9 @@
     .swatches button[data-theme="orange"] { background: #ff9f0a; }
     .swatches button.active { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.35); }
     .chip.on { background: var(--accent); color: #000; }
+    .cmp .up { color: #30d158; font-weight: 650; }
+    .cmp .down { color: #ff453a; font-weight: 650; }
+    .cmp .same { color: var(--muted); }
     .body-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     .body-pct {
       position: absolute;
@@ -286,7 +289,8 @@
           <label data-i18n-key="date">訓練日期</label>
           <input id="sessionDate" type="date" />
           <label data-i18n-key="exercise">動作</label>
-          <input id="exercise" placeholder="臥推" autocomplete="off" />
+          <input id="exercise" list="exerciseList" placeholder="臥推" autocomplete="off" />
+          <datalist id="exerciseList"></datalist>
           <label><span data-i18n="weight">重量</span> <span class="muted" id="lastWeightHint"></span></label>
           <div class="row">
             <input id="weight" inputmode="decimal" placeholder="60" />
@@ -358,6 +362,7 @@
         <h2 data-i18n="todaySummaryTitle">動作摘要</h2>
         <span class="muted" data-i18n="todaySummaryHint">與上次同動作比較組數與容量</span>
       </div>
+      <div class="card" id="perfSummary"></div>
       <div class="card">
         <label data-i18n="date">日期</label>
         <div class="row">
@@ -999,6 +1004,31 @@
     function fromKg(v) { return unit === "lbs" ? Number(v) * 2.20462 : Number(v); }
     function fmt(v) { return (Math.round(fromKg(v) * 10) / 10) + " " + unit; }
 
+    function lastSession(exercise, beforeDate) {
+      var name = String(exercise || "").trim().toLowerCase();
+      if (!name || !beforeDate) return null;
+      var byDate = {};
+      loadSets().forEach(function (s) {
+        if (String(s.exercise || "").trim().toLowerCase() !== name) return;
+        if (!s.date || s.date >= beforeDate) return;
+        if (!byDate[s.date]) byDate[s.date] = { sets: 0, vol: 0 };
+        byDate[s.date].sets++;
+        byDate[s.date].vol += (Number(s.weight) || 0) * (Number(s.reps) || 0);
+      });
+      var dates = Object.keys(byDate).sort();
+      if (!dates.length) return null;
+      var d = dates[dates.length - 1];
+      return { date: d, sets: byDate[d].sets, vol: byDate[d].vol };
+    }
+    function deltaMark(now, prev, asWeight) {
+      if (prev == null) return "";
+      var d = now - prev;
+      if (!d) return " <span class=\"same\">–</span>";
+      var cls = d > 0 ? "up" : "down";
+      var arrow = d > 0 ? "▲" : "▼";
+      var text = asWeight ? fmt(Math.abs(d)) : String(Math.abs(d));
+      return " <span class=\"" + cls + "\">" + arrow + text + "</span>";
+    }
     function lastWeightFor(exercise, excludeDate) {
       var name = String(exercise || "").trim().toLowerCase();
       if (!name) return null;
@@ -1096,10 +1126,12 @@
               "<button type=\"button\" class=\"btn-ghost btn-danger\" data-del=\"" + s.id + "\" style=\"width:auto;padding:8px 12px\">" + t("del") + "</button></span></div>";
           }).join("")
         : "<div class=\"muted\">" + t("empty") + "</div>";
-      var names = unique(sets).slice(0, 12);
-      document.getElementById("chips").innerHTML = names.map(function (n) {
-        return "<button class=\"chip\" data-chip=\"" + n + "\">" + n + "</button>";
+      var names = unique(sets);
+      document.getElementById("chips").innerHTML = names.slice(0, 12).map(function (n) {
+        return "<button class=\"chip\" data-chip=\"" + escapeHtml(n) + "\">" + escapeHtml(n) + "</button>";
       }).join("");
+      var list = document.getElementById("exerciseList");
+      if (list) list.innerHTML = names.map(function (n) { return "<option value=\"" + escapeHtml(n) + "\">"; }).join("");
       updateLastHint();
       safe(renderPerf);
       safe(renderSched);
@@ -1130,6 +1162,26 @@
         days.innerHTML = dates.slice(-8).reverse().map(function (d) {
           return "<button type=\"button\" class=\"chip" + (d === date ? " on" : "") + "\" data-day=\"" + d + "\">" + d.slice(5) + "</button>";
         }).join("");
+      }
+      var by = {};
+      sets.forEach(function (s) {
+        var k = s.exercise || "";
+        if (!by[k]) by[k] = { sets: 0, vol: 0 };
+        by[k].sets++;
+        by[k].vol += (Number(s.weight) || 0) * (Number(s.reps) || 0);
+      });
+      var summary = document.getElementById("perfSummary");
+      if (summary) {
+        var keys = Object.keys(by);
+        summary.innerHTML = keys.length ? keys.map(function (k) {
+          var prev = lastSession(k, date);
+          var line = by[k].sets + " " + t("setsWord") + deltaMark(by[k].sets, prev && prev.sets) +
+            " · " + t("vol") + " " + fmt(by[k].vol) + deltaMark(by[k].vol, prev && prev.vol, true);
+          var prevLine = prev
+            ? "<div class=\"muted\">" + t("lastTime") + " " + prev.date.slice(5) + " · " + prev.sets + " " + t("setsWord") + " · " + fmt(prev.vol) + "</div>"
+            : "";
+          return "<div class=\"set\"><div><b>" + escapeHtml(k) + "</b><div class=\"cmp\">" + line + prevLine + "</div></div></div>";
+        }).join("") : "<div class=\"muted\">" + t("noDay") + "</div>";
       }
       document.getElementById("perfList").innerHTML = sets.length
         ? sets.slice().reverse().map(function (s) {
@@ -1177,7 +1229,7 @@
         }).join("") || "<div class=\"muted\">" + t("noExercises") + "</div>";
         return "<div style=\"margin-bottom:16px\"><div class=\"row\" style=\"align-items:center\"><b>" + item.name + "</b>" +
           "<button class=\"btn-ghost\" data-sl=\"" + i + "\" style=\"width:auto;padding:6px 10px\">" + t("deleteList") + "</button></div>" + rows +
-          "<div class=\"row\"><input data-se=\"" + i + "\" placeholder=\"" + t("phExercise") + "\" /><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">" + t("addItem") + "</button></div></div>";
+          "<div class=\"row\"><input data-se=\"" + i + "\" list=\"exerciseList\" placeholder=\"" + t("phExercise") + "\" /><button class=\"btn\" data-sa=\"" + i + "\" style=\"width:auto\">" + t("addItem") + "</button></div></div>";
       }).join("");
       document.getElementById("sched").innerHTML = html +
         "<div class=\"row\"><input id=\"newList\" placeholder=\"" + t("phList") + "\" /><button class=\"btn\" id=\"addList\" style=\"width:auto\">" + t("create") + "</button></div>";
@@ -1284,9 +1336,11 @@
 
     document.querySelectorAll(".tabs button").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.toggle("active", b === btn); });
         var page = btn.getAttribute("data-page");
+        document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.toggle("active", b === btn); });
         document.querySelectorAll(".page").forEach(function (p) { p.classList.toggle("active", p.id === "page-" + page); });
+        var scroller = document.querySelector(".pages");
+        if (scroller) scroller.scrollTo({ top: 0, behavior: "smooth" });
         applyLang();
         if (page === "charts") renderCharts();
         if (page === "perf" || page === "charts") setTimeout(updateBodyMaps, 40);
@@ -1323,6 +1377,7 @@
     });
 
     bind("exercise", "input", updateLastHint);
+    bind("exercise", "change", updateLastHint);
     bind("sessionDate", "change", updateLastHint);
     bind("chartRange", "click", function (e) {
       var b = e.target.closest("[data-range]"); if (!b) return;
