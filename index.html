@@ -334,16 +334,6 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .boot {
-      position: fixed;
-      inset: 0;
-      z-index: 70;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(42, 34, 8, 0.28);
-      pointer-events: none;
-    }
     .body-svg { width: 100%; height: auto; display: block; overflow: hidden; }
     .body-svg.is-off { display: none !important; }
     .body-region { stroke: none; pointer-events: none; fill: #8e8e93; fill-opacity: 0.92; }
@@ -451,7 +441,6 @@
   </style>
 </head>
 <body>
-  <div id="boot" class="boot"><div class="spin"></div></div>
   <header class="top"><h1 id="title">記錄</h1><button type="button" class="top-save" id="titleSave" aria-label="Save"><i class="bi bi-floppy"></i></button></header>
   <div id="pull" class="pull"></div>
   <main class="pages">
@@ -704,7 +693,8 @@
     <button type="button" data-page="charts"><i class="bi bi-bar-chart"></i>圖表</button>
     <button type="button" data-page="set"><i class="bi bi-gear"></i>設定</button>
   </nav>
-      <script>
+  <script src="vendor/sql-wasm.js"></script>
+  <script>
   (function () {
     var gender = localStorage.getItem("workout-tracker-web-app.gender") || "male";
     var theme = localStorage.getItem("workout-tracker-web-app.theme") || "yellow";
@@ -1242,11 +1232,16 @@
           if (!r.ok) throw new Error("map");
           return r.text();
         }).then(function (html) {
-          fig.innerHTML = html;
+          var parsed = new DOMParser().parseFromString("<div id=\"map-root\">" + html + "</div>", "text/html");
+          var root = parsed.getElementById("map-root");
+          fig.innerHTML = "";
+          if (root) while (root.firstChild) fig.appendChild(root.firstChild);
           fig.setAttribute("data-loaded", "done");
           applyGender();
         }).catch(function () {
           fig.innerHTML = "";
+          fig.removeAttribute("data-loaded");
+          fig._promise = null;
         });
         fig._promise = p;
         pending.push(p);
@@ -1258,9 +1253,8 @@
       if (boot) boot.classList.add("hidden");
     }
     function initSql() {
-      return loadScript("vendor/sql-wasm.js").then(function () {
-        if (typeof initSqlJs !== "function") return;
-        return initSqlJs({ locateFile: function (f) { return "vendor/" + f; } }).then(function (SQL) {
+      if (typeof initSqlJs !== "function") return Promise.resolve();
+      return initSqlJs({ locateFile: function (f) { return "vendor/" + f; } }).then(function (SQL) {
         SQL_LIB = SQL;
         return idbGet().catch(function () { return null; }).then(function (saved) {
           sqlDb = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
@@ -1275,7 +1269,6 @@
           }
         });
       }).catch(function () { sqlDb = null; });
-      });
     }
     function loadSched() {
       try {
@@ -1501,7 +1494,6 @@
         ensureMaps(document.getElementById("chartsBodyMap")).then(function () { safe(updateBodyMaps); });
         safe(renderCharts);
       }
-      hideBoot();
       });
     }
 
