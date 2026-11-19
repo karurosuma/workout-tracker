@@ -536,8 +536,9 @@
         <button type="button" data-range="30" data-i18n="range30">30天</button>
         <button type="button" data-range="90" data-i18n="range90">90天</button>
         <button type="button" data-range="all" data-i18n="rangeAll">全部</button>
+        <button type="button" data-range="custom" data-i18n="rangeCustom">自訂</button>
       </div>
-      <div class="card">
+      <div class="card hidden" id="chartDates">
         <div class="row">
           <input id="chartFrom" type="date" />
           <input id="chartTo" type="date" />
@@ -550,6 +551,7 @@
         <button type="button" data-mode="volume" data-i18n="volume">容量</button>
         <button type="button" data-mode="sets" data-i18n="setsChart">組數</button>
       </div>
+      <div class="section-head"><h2 id="chartsHead">最高重量</h2></div>
       <div id="charts"></div>
     </section>
     <section class="page" id="page-set">
@@ -651,8 +653,8 @@
     var unit = localStorage.getItem("workout-tracker-web-app.unit") || "kg";
     var locale = localStorage.getItem("workout-tracker-web-app.locale") || "zh";
     var I18N = {
-      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "全部重設", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "重設全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱", cancel: "取消", secGeneral: "一般", secData: "資料", secReset: "重設", file: "檔案", setsChart: "組數", loaded: "已載入", saved: "已儲存", added: "已新增一組", loadFail: "無法載入", pullUpdate: "下拉更新", releaseUpdate: "放開以更新", updating: "更新中" },
-      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Reset all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Reset all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name", cancel: "Cancel", secGeneral: "General", secData: "Data", secReset: "Reset", file: "File", setsChart: "Sets", loaded: "Loaded", saved: "Saved", added: "Set added", loadFail: "Could not load", pullUpdate: "Pull to update", releaseUpdate: "Release to update", updating: "Updating" }
+      zh: { title: "記錄", perf: "表現", charts: "圖表", set: "設定", add: "新增", fromList: "從清單", date: "訓練日期", exercise: "動作", weight: "重量", reps: "次數", addSet: "新增組數", recent: "常用動作", log: "訓練日誌", empty: "尚無紀錄", noList: "尚無課表", noExercises: "尚無動作", noData: "尚無資料", gender: "性別", male: "男", female: "女", lang: "語言", unit: "單位", clear: "全部重設", lists: "課表", load: "Load", save: "Save", bestWeight: "最高重量", volume: "容量", range7: "7天", range14: "14天", range30: "30天", range90: "90天", rangeAll: "全部", rangeCustom: "自訂", todaySummaryTitle: "動作摘要", todaySummaryHint: "點右側數值看百分比", bodyFront: "正面", bodyBack: "背面", muscleSets: "肌群組數", setsWord: "組", partChest: "胸", partBack: "背", partTraps: "上背", partShoulders: "肩", partBiceps: "二頭", partTriceps: "三頭", partCore: "核心", partQuads: "股四", partHamstrings: "腿後", partGlutes: "臀", partCalves: "小腿", bodyUnmatched: "未對應：{names}", other: "其他", vol: "容量", sets: "組", chartsEmptyRange: "無資料", chartsFail: "圖表失敗", todayPieEmpty: "無資料", theme: "主題色", red: "紅", green: "綠", yellow: "黃", blue: "藍", orange: "橙", edit: "編輯", del: "刪", noDay: "這天沒有紀錄", exportJson: "匯出 JSON", back: "返回", deleteList: "刪清單", addItem: "加", create: "建立", logOne: "記", lastTime: "上次", justNow: "剛剛", minAgo: "{n} 分鐘前", hourAgo: "{n} 小時前", dayAgo: "{n} 天前", confirmClear: "重設全部紀錄？", phExercise: "臥推", phWeight: "重量", phReps: "次數", phList: "清單名稱", cancel: "取消", secGeneral: "一般", secData: "資料", secReset: "重設", file: "檔案", setsChart: "組數", loaded: "已載入", saved: "已儲存", added: "已新增一組", loadFail: "無法載入", pullUpdate: "下拉更新", releaseUpdate: "放開以更新", updating: "更新中" },
+      en: { title: "Log", perf: "Performance", charts: "Charts", set: "Settings", add: "Add", fromList: "From list", date: "Session date", exercise: "Exercise", weight: "Weight", reps: "Reps", addSet: "Add set", recent: "Recent", log: "Workout log", empty: "No records", noList: "No lists", noExercises: "No exercises", noData: "No data", gender: "Gender", male: "Male", female: "Female", lang: "Language", unit: "Units", clear: "Reset all", lists: "Lists", load: "Load", save: "Save", bestWeight: "Best weight", volume: "Volume", range7: "7 days", range14: "14 days", range30: "30 days", range90: "90 days", rangeAll: "All", rangeCustom: "Custom", todaySummaryTitle: "Exercise summary", todaySummaryHint: "Tap a value for percent", bodyFront: "Front", bodyBack: "Back", muscleSets: "Sets by muscle", setsWord: "sets", partChest: "Chest", partBack: "Back", partTraps: "Traps", partShoulders: "Shoulders", partBiceps: "Biceps", partTriceps: "Triceps", partCore: "Core", partQuads: "Quads", partHamstrings: "Hamstrings", partGlutes: "Glutes", partCalves: "Calves", bodyUnmatched: "Unmatched: {names}", other: "Other", vol: "Volume", sets: "sets", chartsEmptyRange: "No data", chartsFail: "Chart failed", todayPieEmpty: "No data", theme: "Theme", red: "Red", green: "Green", yellow: "Yellow", blue: "Blue", orange: "Orange", edit: "Edit", del: "Delete", noDay: "No records this day", exportJson: "Export JSON", back: "Back", deleteList: "Delete list", addItem: "Add", create: "Create", logOne: "Log", lastTime: "Last", justNow: "Just now", minAgo: "{n} min ago", hourAgo: "{n} hr ago", dayAgo: "{n} days ago", confirmClear: "Reset all records?", phExercise: "Bench press", phWeight: "Weight", phReps: "Reps", phList: "List name", cancel: "Cancel", secGeneral: "General", secData: "Data", secReset: "Reset", file: "File", setsChart: "Sets", loaded: "Loaded", saved: "Saved", added: "Set added", loadFail: "Could not load", pullUpdate: "Pull to update", releaseUpdate: "Release to update", updating: "Updating" }
     };
     function applyLang() {
       var t = I18N[locale] || I18N.zh;
@@ -742,7 +744,7 @@
 
       function bodyColor(pct) {
         if (!pct) return "#8e8e93";
-        return "#c23b32";
+        return "#7a403c";
       }
 
       function renderBodyMap(sets, root) {
@@ -1165,7 +1167,9 @@
         ? ((diff > 0 ? "+" : "") + diff)
         : ((diff > 0 ? "+" : "") + fmt(diff));
       var cls = diff > 0 ? "up" : diff < 0 ? "down" : "";
-      return "<button type=\"button\" class=\"cmp-val " + cls + "\" data-val=\"" + escapeHtml(delta) + "\" data-alt=\"" + escapeHtml(pctText) + "\">" + delta + "</button>";
+      var shown = kind === "vol" ? pctText : delta;
+      var alt = kind === "vol" ? delta : pctText;
+      return "<button type=\"button\" class=\"cmp-val " + cls + "\" data-val=\"" + escapeHtml(shown) + "\" data-alt=\"" + escapeHtml(alt) + "\">" + shown + "</button>";
     }
     function lastWeightFor(exercise, excludeDate) {
       var name = String(exercise || "").trim().toLowerCase();
@@ -1448,25 +1452,31 @@
         by[k].push(s);
       });
       var names = Object.keys(by).sort();
+      var head = document.getElementById("chartsHead");
+      if (head) head.textContent = t(chartMode === "volume" ? "volume" : chartMode === "sets" ? "setsChart" : "bestWeight");
       if (!names.length) { el.innerHTML = "<div class=\"card\"><div class=\"muted\">" + t("noData") + "</div></div>"; return; }
       el.innerHTML = names.map(function (n, i) {
         return "<div class=\"card\"><div class=\"chart-title\">" + escapeHtml(n) + "</div><div id=\"chart-" + i + "\"></div></div>";
       }).join("");
       names.forEach(function (n, i) {
         var pts = by[n].slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
-        var data;
+        var keys;
+        var values;
         if (chartMode === "weight") {
           var best = {};
           pts.forEach(function (s) { best[s.date] = Math.max(best[s.date] || 0, Number(s.weight) || 0); });
-          data = Object.keys(best).sort().map(function (d) { return [d, Math.round(fromKg(best[d]) * 10) / 10]; });
+          keys = Object.keys(best).sort();
+          values = keys.map(function (d) { return Math.round(fromKg(best[d]) * 10) / 10; });
         } else if (chartMode === "sets") {
           var counts = {};
           pts.forEach(function (s) { counts[s.date] = (counts[s.date] || 0) + 1; });
-          data = Object.keys(counts).sort().map(function (d) { return [d, counts[d]]; });
+          keys = Object.keys(counts).sort();
+          values = keys.map(function (d) { return counts[d]; });
         } else {
           var vol = {};
           pts.forEach(function (s) { vol[s.date] = (vol[s.date] || 0) + (Number(s.weight) || 0) * (Number(s.reps) || 0); });
-          data = Object.keys(vol).sort().map(function (d) { return [d, Math.round(fromKg(vol[d]) * 10) / 10]; });
+          keys = Object.keys(vol).sort();
+          values = keys.map(function (d) { return Math.round(fromKg(vol[d]) * 10) / 10; });
         }
         var node = document.getElementById("chart-" + i);
         if (!node || typeof ApexCharts === "undefined") return;
@@ -1474,15 +1484,21 @@
         var chart = new ApexCharts(node, {
           chart: { type: "area", height: 220, background: "transparent", toolbar: { show: false } },
           theme: { mode: "dark" },
-          series: [{ name: n, data: data }],
-          xaxis: { type: "datetime" },
+          series: [{ name: n, data: values }],
+          xaxis: {
+            type: "category",
+            categories: keys,
+            labels: { rotate: -45, hideOverlappingLabels: true }
+          },
           colors: [accent],
-          stroke: { width: 2, curve: "smooth" },
+          stroke: { width: 2, curve: "straight" },
+          markers: { size: 4, strokeWidth: 0 },
           fill: {
             type: "gradient",
-            gradient: { shade: "dark", type: "vertical", shadeIntensity: 0.5, opacityFrom: 0.65, opacityTo: 0.02, stops: [0, 92, 100] }
+            gradient: { shade: "dark", type: "vertical", shadeIntensity: 0.5, opacityFrom: 0.55, opacityTo: 0.02, stops: [0, 92, 100] }
           },
           dataLabels: { enabled: false },
+          tooltip: { intersect: true, shared: false },
           grid: { borderColor: "rgba(255,255,255,0.08)" }
         });
         chart.render();
@@ -1561,19 +1577,29 @@
       hideSuggest();
     });
     bind("sessionDate", "change", updateLastHint);
+    function syncChartDates() {
+      var box = document.getElementById("chartDates");
+      if (box) box.classList.toggle("hidden", chartRange !== "custom");
+    }
     bind("chartRange", "click", function (e) {
       var b = e.target.closest("[data-range]"); if (!b) return;
       chartRange = b.getAttribute("data-range");
       document.querySelectorAll("#chartRange button").forEach(function (x) { x.classList.toggle("active", x === b); });
-      var fromEl = document.getElementById("chartFrom");
-      var toEl = document.getElementById("chartTo");
-      if (fromEl) fromEl.value = "";
-      if (toEl) toEl.value = "";
-      renderCharts(); updateBodyMaps();
+      syncChartDates();
+      if (chartRange !== "custom") {
+        var fromEl = document.getElementById("chartFrom");
+        var toEl = document.getElementById("chartTo");
+        if (fromEl) fromEl.value = "";
+        if (toEl) toEl.value = "";
+        renderCharts(); updateBodyMaps();
+      }
     });
     function onChartDates() {
       chartRange = "custom";
-      document.querySelectorAll("#chartRange button").forEach(function (x) { x.classList.remove("active"); });
+      document.querySelectorAll("#chartRange button").forEach(function (x) {
+        x.classList.toggle("active", x.getAttribute("data-range") === "custom");
+      });
+      syncChartDates();
       renderCharts(); updateBodyMaps();
     }
     bind("chartFrom", "change", onChartDates);
